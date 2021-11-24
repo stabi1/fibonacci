@@ -1,0 +1,30 @@
+Commands are executed in the order in which they are provided!
+Usage:
+fibonacci:  -o -> output f|t|n (f=file, t=terminal, n=none)
+            -r -> radix d|h (d=decimal, h=hexadecimal)
+            -m -> enables multithreading
+            -f -> fibonacci n=number
+
+            e.g.: ./main -o f -r h -f n=10000000
+
+            the filename is output.txt | if it exists, it will be overwritten
+
+miscellaneous:  -h -> help file
+                -d -> debug
+                -t -> test
+                -b -> benchMark
+
+the OS must be Linux!
+
+cpu features needed:
+    sse
+    sse2
+    sse3
+    sse4
+    sse4a
+    sse4.1
+    sse4.2
+    avx
+    avx2
+    lzcnt
+
