@@ -46,7 +46,7 @@ char* uint64tToDecString(__attribute__((unused))uint64_t* array, size_t lenInByt
 //trims the leading '0's from str
 char *trimZeroes(char *str) {
     //Trim leading space
-    int counter = strlen(str);
+    int counter = (int) strlen(str);
     while (*str == '0' && counter > 1) {
         str++;
         counter--;

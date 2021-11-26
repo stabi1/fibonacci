@@ -1,19 +1,13 @@
 #include "BigInt.h"
 #include "util.h"
 #include "BigIntAsm.h"
-#include <immintrin.h>
 #include <stdbool.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <inttypes.h>
 
 extern jmp_buf exceptionJump; //Jump point when a error occurs
-
-void shiftAddHelper(bigInt *bigger, bigInt *smaller, bigInt *res, size_t biggerCount, size_t smallerCount, size_t i);
-
-void addHelper(bigInt *bigger, bigInt *smaller, bigInt *res);
 
 //allocates memory for a new BigInt of the given size
 bigInt *newBigInt(size_t len) {
@@ -125,7 +119,6 @@ bigInt *hexStringToBigInt(char hex[]) {
     if (i < length) {
         if (j == 7) {
             res->bigIntArray[resBigIntCounter] = akt;
-            resBigIntCounter--;
             j = 0;
         } else {
             akt <<= 4;
@@ -188,11 +181,6 @@ void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize
     start2 = (long long) x->start + (long long) (upperSize + (2 - 1) * lowerSize - offset);
     end2 = start2 + (long long) lowerSize - 1;
 
-    //printf("\n0 : X-start:%zu X-end:%zu\n", x->start, x->end);
-    //printf("0 : start:%lld end:%lld\n", start0, end0);
-    //printf("1 : start:%lld end:%lld\n", start1, end1);
-    //printf("2 : start:%lld end:%lld\n", start2, end2);
-
     size_t size0, size1, size2;
     if (start0 < (long long) x->start) {
         start0 = (long long) x->start;
@@ -218,10 +206,6 @@ void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize
     } else {
         size2 = (end2 - start2) + 1;
     }
-    //printf("Lower:%zu Upper:%zu fullsize:%zu xLen:%zu\n", lowerSize, upperSize, fullSize, len);
-    //printf("Slice:%zu : start:%lu end:%lu\n", size2, x->start, x->start + size2);
-    //printf("Slice:%zu : start:%lu end:%lu\n", size1, x->start + size2, x->start + size2 + size1);
-    //printf("Slice:%zu : start:%lu end:%lu\n", size0, x->start + size2 + size1, x->start + size2 + size1 + size0);
 
     bigInt *s0 = newBigIntStruct(x->start, x->start + size2, x->bigIntArray);
     erg[0] = s0;
@@ -265,100 +249,6 @@ bigInt *smartAdd(bigInt *x, bigInt *y) {
     }
 }
 
-//adds the the BigIntegers x and y and returns the result as a new BigInteger
-bigInt *add(bigInt *x, bigInt *y, bool negative) {
-    bigInt *res;
-    size_t xLen = x->end - x->start;
-    size_t yLen = y->end - y->start;
-    if (xLen < yLen) {
-        res = newBigInt(yLen + 1);
-        addHelper(y, x, res);
-    } else {
-        res = newBigInt(xLen + 1);
-        addHelper(x, y, res);
-    }
-    if (res->bigIntArray[res->end - 1] == 0 && res->end - res->start > 1) {
-        res->end -= 1;
-    }
-    res->negative = negative;
-    return res;
-}
-
-//shifts x by n bits, n must be smaller than 64
-bigInt *shiftLeft(bigInt *x, size_t n) {
-    bigInt *result = newBigInt(x->end - x->start + 1);
-    result->negative = x->negative;
-    size_t j = 0;
-    for (size_t i = x->start; i < x->end; ++i, ++j) {
-        //put "lower" part of shifted bits in result
-        result->bigIntArray[j] |= (x->bigIntArray[i] << n);
-        //put "higher" part of shifted bits in result
-        result->bigIntArray[j + 1] |= (x->bigIntArray[i] >> (64 - n));
-    }
-
-    if (result->bigIntArray[result->end - 1] == 0 && result->end - result->start > 1) {
-        result->end -= 1;
-    }
-    return result;
-}
-
-//shifts x by n bits, n must be smaller than 64
-bigInt *shiftRight(bigInt *x, size_t n) {
-    bigInt *result = newBigInt(x->end - x->start);
-    result->negative = x->negative;
-    size_t j = 0;
-    size_t i = x->start;
-    if (i < x->end) {
-        result->bigIntArray[j] |= (x->bigIntArray[i] >> n);
-        ++i;
-        ++j;
-    }
-
-    for (; i < x->end; ++i, ++j) {
-        //put "higher" part of shifted bits in result
-        result->bigIntArray[j] |= (x->bigIntArray[i] >> n);
-        //put "lower" part of shifted bits in result
-        result->bigIntArray[j - 1] |= (x->bigIntArray[i] << (64 - n));
-    }
-
-    if (result->bigIntArray[result->end - 1] == 0 && result->end - result->start > 1) {
-        result->end -= 1;
-    }
-    return result;
-}
-
-//shifts toShift by n QuadWords and add it to x returning a new bigInt with the result
-bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n) {
-    size_t xLen = x->end - x->start;
-    size_t toShiftLen = toShift->end - toShift->start + n;
-    bigInt *res = newBigInt(xLen > toShiftLen ? xLen + 1 : toShiftLen + 1);
-
-    //for n copy x or fill result with 0
-    size_t xCount = x->start;
-    size_t i = 0;
-    size_t nCounter = 0;
-    for (; nCounter < n && xCount < x->end; i++) { //copy x
-        res->bigIntArray[i] = x->bigIntArray[xCount];
-        xCount++;
-        nCounter++;
-    }
-    for (; nCounter < n; i++) { //fill with zero
-        res->bigIntArray[i] = 0;
-        nCounter++;
-    }
-    //the "shift" is finished, now add but with the allready used counters(xCount ,i)
-    if (xLen < toShiftLen) {
-        shiftAddHelper(toShift, x, res, toShift->start, xCount, i);
-    } else {
-        shiftAddHelper(x, toShift, res, xCount, toShift->start, i);
-    }
-
-    if (res->bigIntArray[res->end - 1] == 0 && res->end - res->start > 1) {
-        res->end -= 1;
-    }
-    return res;
-}
-
 bigInt *smartSub(bigInt *x, bigInt *y) {
     size_t xLen = x->end - x->start;
     size_t yLen = y->end - y->start;
@@ -391,79 +281,6 @@ bigInt *smartSub(bigInt *x, bigInt *y) {
             }
         }
     }
-}
-
-//subtracts the the BigIntegers y from x and returns the result as a new BigInteger
-bigInt *sub(bigInt *x, bigInt *y, bool negative) {
-    bigInt *res;
-    unsigned char carry = '\0';
-    size_t i = 0;
-    size_t xCount = x->start;
-    size_t yCount = y->start;
-    size_t xLen = x->end - x->start;
-    size_t yLen = y->end - y->start;
-    res = newBigInt(xLen);
-
-    for (; i < yLen; i++) { //sub
-        carry = _subborrow_u64(carry, x->bigIntArray[xCount], y->bigIntArray[yCount],
-                               (unsigned long long *) &res->bigIntArray[i]);
-        xCount++;
-        yCount++;
-    }
-    for (; i < xLen; i++) { //copySub
-        carry = _subborrow_u64(carry, x->bigIntArray[xCount], 0, (unsigned long long *) &res->bigIntArray[i]);
-        xCount++;
-    }
-
-    if (res->bigIntArray[res->end - 1] == 0 && res->end - res->start > 1) {
-        res->end -= 1;
-    }
-    res->negative = negative;
-    return res;
-}
-
-//adds the the BigIntegers bigger and smaller and stores the result in res
-//uses the passed parameters from the shiftAdd
-void shiftAddHelper(bigInt *bigger, bigInt *smaller, bigInt *res, size_t biggerCount, size_t smallerCount, size_t i) {
-    unsigned char carry = '\0';
-
-    for (; smallerCount < smaller->end; i++) { //add
-        carry = _addcarry_u64(carry, smaller->bigIntArray[smallerCount], bigger->bigIntArray[biggerCount],
-                              (unsigned long long *) &res->bigIntArray[i]);
-        smallerCount++;
-        biggerCount++;
-    }
-    for (; biggerCount < bigger->end; i++) { //copyAdd
-        carry = _addcarry_u64(carry, 0, bigger->bigIntArray[biggerCount], (unsigned long long *) &res->bigIntArray[i]);
-        biggerCount++;
-    }
-    _addcarry_u64(carry, 0, 0, (unsigned long long *) &res->bigIntArray[i]); //carry
-
-}
-
-//adds the the BigIntegers bigger and smaller and stores the result in res
-void addHelper(bigInt *bigger, bigInt *smaller, bigInt *res) {
-    unsigned char carry = '\0';
-    size_t i = 0;
-    size_t smallerCount = smaller->start;
-    size_t biggerCount = bigger->start;
-    for (; smallerCount < smaller->end; i++) { //add
-        carry = _addcarry_u64(carry, smaller->bigIntArray[smallerCount], bigger->bigIntArray[biggerCount],
-                              (unsigned long long *) &res->bigIntArray[i]);
-        smallerCount++;
-        biggerCount++;
-    }
-    for (; biggerCount < bigger->end; i++) { //copyAdd
-        carry = _addcarry_u64(carry, 0, bigger->bigIntArray[biggerCount], (unsigned long long *) &res->bigIntArray[i]);
-        biggerCount++;
-    }
-    _addcarry_u64(carry, 0, 0, (unsigned long long *) &res->bigIntArray[i]); //carry
-}
-
-void print128(__int128 x) {
-    uint64_t low = (uint64_t) x;
-    uint64_t high = (x >> 64);
-    printf("Num:%"PRIx64"%"PRIx64"\n", high, low);
 }
 
 bigInt *exactDivideBy3(bigInt *x) {

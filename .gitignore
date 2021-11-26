@@ -3,7 +3,7 @@ CMakeCache.txt
 CMakeFiles
 CMakeScripts
 Testing
-Makefile
+CMakeLists.txt
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
@@ -11,3 +11,6 @@ CTestTestfile.cmake
 _deps
 main
 .idea/
+perf.data
+perf.data.old
+cmake-build-debug

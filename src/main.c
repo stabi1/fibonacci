@@ -18,15 +18,15 @@ void printHelpMenu();
 void printFibonacci(uint64_t n, char radix, char output, bool multiThread);
 
 static struct option long_options[] = {
-        {"help",      no_argument,       NULL, 'h'},
-        {"output",    required_argument, NULL, 'o'},
-        {"multiThread",no_argument,      NULL, 'm'},
-        {"radix",     required_argument, NULL, 'r'},
-        {"debug",     no_argument,       NULL, 'd'},
-        {"benchMark", no_argument,       NULL, 'b'},
-        {"test",      no_argument,       NULL, 't'},
-        {"fibonacci", required_argument, NULL, 'f'},
-        {NULL, 0,                NULL, 0}
+        {"help",        no_argument,       NULL, 'h'},
+        {"output",      required_argument, NULL, 'o'},
+        {"multiThread", no_argument,       NULL, 'm'},
+        {"radix",       required_argument, NULL, 'r'},
+        {"debug",       no_argument,       NULL, 'd'},
+        {"benchMark",   no_argument,       NULL, 'b'},
+        {"test",        no_argument,       NULL, 't'},
+        {"fibonacci",   required_argument, NULL, 'f'},
+        {NULL, 0,                          NULL, 0}
 };
 
 enum {
@@ -135,7 +135,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
     bigInt *res;
-    if(multiThread){
+    if (multiThread) {
         printf("Multithreading enabled\n");
         res = fibExpFastDoublingMultiThread(n);
     } else {
@@ -164,7 +164,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         if (output == 'f') { //Terminal output
             FILE *outputFile = fopen("output.txt", "a+");
             outputFile = freopen("output.txt", "w", outputFile);
-		//TODO: could not open file
+            //TODO: could not open file
             fprintf(outputFile, "Result for n=%zu | length of string=%zu:\n%s", n, strSizeInBytes, resString);
             printf("Output in file\n");
         } else { //File output (output == 't')
@@ -242,8 +242,8 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
         freeBigInt(temp1);
         bigInt *d = multiplyToomCook3MultiThread(a, temp2, depth);
         freeBigInt(temp2);
-        bigInt *temp3 = multiplyToomCook3MultiThread(a, a,depth);
-        bigInt *temp4 = multiplyToomCook3MultiThread(b, b,depth);
+        bigInt *temp3 = multiplyToomCook3MultiThread(a, a, depth);
+        bigInt *temp4 = multiplyToomCook3MultiThread(b, b, depth);
         freeBigInt(a);
         freeBigInt(b);
         bigInt *e = add_Asm(temp3, temp4, false);
@@ -264,18 +264,18 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
     return a;
 }
 
-size_t getDepth(){
+size_t getDepth() {
     size_t numberOfCores = get_nprocs();
-    if(numberOfCores<3){
+    if (numberOfCores < 3) {
         return 0;
-    }else if(numberOfCores<10){
+    } else if (numberOfCores < 10) {
         return 1;
-    }else if(numberOfCores<28){
+    } else if (numberOfCores < 28) {
         return 2;
-    }else if(numberOfCores<82){
+    } else if (numberOfCores < 82) {
         return 3;
-    }else {
-        return 3;
+    } else {
+        return 4;
     }
 }
 
@@ -290,7 +290,7 @@ void printHelpMenu() {
     long int helpLen = ftell(helpFile);
     fseek(helpFile, 0L, SEEK_SET);
     // long int helpLen = 1000;
-    printf ("Size of myfile.txt: %ld bytes.\n",helpLen);
+    printf("Size of myfile.txt: %ld bytes.\n", helpLen);
     char menu[helpLen];
     while (fgets(menu, (int) helpLen, helpFile)) {
         printf("%s", menu);

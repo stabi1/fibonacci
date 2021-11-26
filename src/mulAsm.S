@@ -4,7 +4,7 @@
 .global naivMul_AsmVergleich
 
 .align 16
-naivMul_AsmArbeit: //(mit pointer ans ende, kein cmp + sehr entrollt + keinCarryLoop -> sehr sehr sehr gut)
+naivMul_AsmArbeit: //mul using naive multiplication
     //*x in rdi, *y in rsi
     push rbx
     push r12
@@ -43,127 +43,178 @@ naivMul_AsmArbeit: //(mit pointer ans ende, kein cmp + sehr entrollt + keinCarry
     // i = rcx, j = rsi
     mov rcx, r13 // i=x->end - x->start
     sub rcx, r12
-    neg rcx
+    neg rcx // r12, r13 new purpose
 .LLoop1:
     mov rsi, r15 // j=y->end - y->start
     sub rsi ,r14
     neg rsi
-    add rsi, 8
-    jge .LKurzLoopAnfang
+    add rsi, 12
+    jge .LShortLoopStart
 .LLoop2:
-    sub rsi, 8
+    sub rsi, 12
 
     mov r9, rcx // r9 = n i + j
     add r9, rsi
+    xor rbp, rbp
 
     //Mul
     //1
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8]
+    mulx rdi, rax, [r11 + rsi*8]
 
-    add rax, [rbx + r9*8]
+    adcx rax, [rbx + r9*8]
     mov [rbx + r9*8], rax
-    adcx rdx, [rbx + r9*8 + 8]
-    mov [rbx + r9*8 + 8], rdx
+    adcx rdi, [rbx + r9*8 + 8]
+    mov [rbx + r9*8 + 8], rdi
 
     //2
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 8]
+    mulx r12, r13, [r11 + rsi*8 + 8]
 
-    xor rbp, rbp
-    adox rax, [rbx + r9*8 + 8]
-    mov [rbx + r9*8 + 8], rax
-    adox rdx, [rbx + r9*8 + 16]
-    mov [rbx + r9*8 + 16], rdx
+    adox r13, [rbx + r9*8 + 8]
+    mov [rbx + r9*8 + 8], r13
+    adox r12, [rbx + r9*8 + 16]
+    mov [rbx + r9*8 + 16], r12
 
     //3
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 16]
+    mulx rdi, rax, [r11 + rsi*8 + 16]
 
     adcx rax, [rbx + r9*8 + 16]
     mov [rbx + r9*8 + 16], rax
-    adcx rdx, [rbx + r9*8 + 24]
-    mov [rbx + r9*8 + 24], rdx
+    adcx rdi, [rbx + r9*8 + 24]
+    mov [rbx + r9*8 + 24], rdi
 
     //4
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 24]
+    mulx r12, r13, [r11 + rsi*8 + 24]
 
-    adox rax, [rbx + r9*8 + 24]
-    mov [rbx + r9*8 + 24], rax
-    adox rdx, [rbx + r9*8 + 32]
-    mov [rbx + r9*8 + 32], rdx
+    adox r13, [rbx + r9*8 + 24]
+    mov [rbx + r9*8 + 24], r13
+    adox r12, [rbx + r9*8 + 32]
+    mov [rbx + r9*8 + 32], r12
 
     //5
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 32]
+    mulx rdi, rax, [r11 + rsi*8 + 32]
 
     adcx rax, [rbx + r9*8 + 32]
     mov [rbx + r9*8 + 32], rax
-    adcx rdx, [rbx + r9*8 + 40]
-    mov [rbx + r9*8 + 40], rdx
+    adcx rdi, [rbx + r9*8 + 40]
+    mov [rbx + r9*8 + 40], rdi
 
     //6
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 40]
+    mulx r12, r13, [r11 + rsi*8 + 40]
 
-    adox rax, [rbx + r9*8 + 40]
-    mov [rbx + r9*8 + 40], rax
-    adox rdx, [rbx + r9*8 + 48]
-    mov [rbx + r9*8 + 48], rdx
+    adox r13, [rbx + r9*8 + 40]
+    mov [rbx + r9*8 + 40], r13
+    adox r12, [rbx + r9*8 + 48]
+    mov [rbx + r9*8 + 48], r12
 
     //7
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 48]
+    mulx rdi, rax, [r11 + rsi*8 + 48]
 
     adcx rax, [rbx + r9*8 + 48]
     mov [rbx + r9*8 + 48], rax
-    adcx rdx, [rbx + r9*8 + 56]
-    mov [rbx + r9*8 + 56], rdx
+    adcx rdi, [rbx + r9*8 + 56]
+    mov [rbx + r9*8 + 56], rdi
 
     //8
     mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 56]
+    mulx r12, r13, [r11 + rsi*8 + 56]
 
-    adox rax, [rbx + r9*8 + 56]
-    mov [rbx + r9*8 + 56], rax
-    adox rdx, [rbx + r9*8 + 64]
-    adcx rdx, rbp
-    mov [rbx + r9*8 + 64], rdx
+    adox r13, [rbx + r9*8 + 56]
+    mov [rbx + r9*8 + 56], r13
+    adox r12, [rbx + r9*8 + 64]
+    mov [rbx + r9*8 + 64], r12
 
-    xor rax, rax
-    adox rax, [rbx + r9*8 + 72]
+    //9
+    mov rdx, [r10 + rcx*8]
+    mulx rdi, rax, [r11 + rsi*8 + 64]
+
+    adcx rax, [rbx + r9*8 + 64]
+    mov [rbx + r9*8 + 64], rax
+    adcx rdi, [rbx + r9*8 + 72]
+    mov [rbx + r9*8 + 72], rdi
+
+    //10
+    mov rdx, [r10 + rcx*8]
+    mulx r12, r13, [r11 + rsi*8 + 72]
+
+    adox r13, [rbx + r9*8 + 72]
+    mov [rbx + r9*8 + 72], r13
+    adox r12, [rbx + r9*8 + 80]
+    mov [rbx + r9*8 + 80], r12
+
+    //11
+    mov rdx, [r10 + rcx*8]
+    mulx rdi, rax, [r11 + rsi*8 + 80]
+
+    adcx rax, [rbx + r9*8 + 80]
+    mov [rbx + r9*8 + 80], rax
+    adcx rdi, [rbx + r9*8 + 88]
+    mov [rbx + r9*8 + 88], rdi
+
+    //12
+    mov rdx, [r10 + rcx*8]
+    mulx r12, r13, [r11 + rsi*8 + 88]
+
+    adox r13, [rbx + r9*8 + 88]
+    mov [rbx + r9*8 + 88], r13
+    adox r12, [rbx + r9*8 + 96]
+    adcx r12, rbp
+    mov [rbx + r9*8 + 96], r12
+
+    mov rax, 0
+    adox rax, [rbx + r9*8 + 104]
     adcx rax, rbp
-    mov [rbx + r9*8 + 72], rax
+    mov [rbx + r9*8 + 104], rax
 
-    add rsi, 16
+    jc .LCarryLoop1
+    jno .LCarryLoop1End
+.LCarryLoop1:
+    mov rax, 0
+    adox rax, [rbx + r9*8 + 112]
+    adcx rax, rbp
+    mov [rbx + r9*8 + 112], rax
+    jc .LCarryLoop1Inc
+    jno .LCarryLoop1End
+.LCarryLoop1Inc:
+    add r9, 1
+    jmp .LCarryLoop1
+
+.LCarryLoop1End:
+    add rsi, 24
     jl .LLoop2 //leave loop2
-.LKurzLoopAnfang:
-    sub rsi, 8
-    jz .LKurzFertig
-.LKurzLoop:
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8]
 
+.LShortLoopStart:
+    sub rsi, 12
+    jz .LShortFinish
+.LShortLoop:
     mov r9, rcx // r9 = n i + j
     add r9, rsi
+
+    mov rax, [r10 + rcx*8]
+    mul qword ptr [r11 + rsi*8]
 
     //add
     add [rbx + r9*8], rax
     adc [rbx + r9*8 + 8], rdx
 
-    jnc .LKurzLoopEnd
+    jnc .LShortLoopFinish
 .LCarryLoop2:
     adc qword ptr [rbx + r9*8 + 16], 0
-    jnc .LKurzLoopEnd
+    jnc .LShortLoopFinish
     add r9, 1
     jmp .LCarryLoop2
 
-.LKurzLoopEnd:
+.LShortLoopFinish:
     add rsi, 1
-    jl .LKurzLoop
+    jl .LShortLoop
 
-.LKurzFertig:
+.LShortFinish:
     add rcx, 1
     jl .LLoop1 //leave loop1
 
@@ -184,9 +235,6 @@ naivMul_AsmArbeit: //(mit pointer ans ende, kein cmp + sehr entrollt + keinCarry
     pop r12
     pop rbx
     ret
-.JmpKurzLoop:
-    sub rsi, 8
-    jmp .LKurzLoop
 
 
 
@@ -365,6 +413,7 @@ naivMul_AsmVergleich: //(mit pointer ans ende, kein cmp + sehr entrollt + keinCa
     push r13
     push r14
     push r15
+    push rbp
 
     //store pointer
     mov r12, [rdi] //r12 := x->start
@@ -396,59 +445,103 @@ naivMul_AsmVergleich: //(mit pointer ans ende, kein cmp + sehr entrollt + keinCa
     // i = rcx, j = rsi
     mov rcx, r13 // i=x->end - x->start
     sub rcx, r12
-    neg rcx
-    add rcx, 2
-    cmp rcx, 0
-    jge .LSkipMultipleLoopV
-    sub r10, 16
+    neg rcx // r12, r13 new purpose
 .LLoop1V:
     mov rsi, r15 // j=y->end - y->start
     sub rsi ,r14
     neg rsi
-    add rsi, 4
-    jge .JmpKurzLoopV
+    add rsi, 8
+    jge .LKurzLoopAnfangV
 .LLoop2V:
-    sub rsi, 4
-    //Mul
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8]
+    sub rsi, 8
 
     mov r9, rcx // r9 = n i + j
     add r9, rsi
-    sub r9, 2
+    xor rbp, rbp
 
-    //add
-    add [rbx + r9*8], rax
-    adc [rbx + r9*8 + 8], rdx
-    adc qword ptr [rbx + r9*8 + 16], 0
+    //Mul
+    //1
+    mov rdx, [r10 + rcx*8]
+    mulx rdi, rax, [r11 + rsi*8]
 
-    //second
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8 + 8]
+    adcx rax, [rbx + r9*8]
+    mov [rbx + r9*8], rax
+    adcx rdi, [rbx + r9*8 + 8]
+    mov [rbx + r9*8 + 8], rdi
 
-    add [rbx + r9*8 + 8], rax
-    adc [rbx + r9*8 + 16], rdx
-    adc qword ptr [rbx + r9*8 + 24], 0
+    //2
+    mov rdx, [r10 + rcx*8]
+    mulx r12, r13, [r11 + rsi*8 + 8]
 
-    //third
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8 + 16]
+    adox r13, [rbx + r9*8 + 8]
+    mov [rbx + r9*8 + 8], r13
+    adox r12, [rbx + r9*8 + 16]
+    mov [rbx + r9*8 + 16], r12
 
-    add [rbx + r9*8 + 16], rax
-    adc [rbx + r9*8 + 24], rdx
-    adc qword ptr [rbx + r9*8 + 32], 0
+    //3
+    mov rdx, [r10 + rcx*8]
+    mulx rdi, rax, [r11 + rsi*8 + 16]
 
-    //fourth
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8 + 24]
+    adcx rax, [rbx + r9*8 + 16]
+    mov [rbx + r9*8 + 16], rax
+    adcx rdi, [rbx + r9*8 + 24]
+    mov [rbx + r9*8 + 24], rdi
 
-    add [rbx + r9*8 + 24], rax
-    adc [rbx + r9*8 + 32], rdx
-    adc qword ptr [rbx + r9*8 + 40], 0
+    //4
+    mov rdx, [r10 + rcx*8]
+    mulx r12, r13, [r11 + rsi*8 + 24]
 
-    add rsi, 8
+    adox r13, [rbx + r9*8 + 24]
+    mov [rbx + r9*8 + 24], r13
+    adox r12, [rbx + r9*8 + 32]
+    mov [rbx + r9*8 + 32], r12
+
+    //5
+    mov rdx, [r10 + rcx*8]
+    mulx rdi, rax, [r11 + rsi*8 + 32]
+
+    adcx rax, [rbx + r9*8 + 32]
+    mov [rbx + r9*8 + 32], rax
+    adcx rdi, [rbx + r9*8 + 40]
+    mov [rbx + r9*8 + 40], rdi
+
+    //6
+    mov rdx, [r10 + rcx*8]
+    mulx r12, r13, [r11 + rsi*8 + 40]
+
+    adox r13, [rbx + r9*8 + 40]
+    mov [rbx + r9*8 + 40], r13
+    adox r12, [rbx + r9*8 + 48]
+    mov [rbx + r9*8 + 48], r12
+
+    //7
+    mov rdx, [r10 + rcx*8]
+    mulx rdi, rax, [r11 + rsi*8 + 48]
+
+    adcx rax, [rbx + r9*8 + 48]
+    mov [rbx + r9*8 + 48], rax
+    adcx rdi, [rbx + r9*8 + 56]
+    mov [rbx + r9*8 + 56], rdi
+
+    //8
+    mov rdx, [r10 + rcx*8]
+    mulx r12, r13, [r11 + rsi*8 + 56]
+
+    adox r13, [rbx + r9*8 + 56]
+    mov [rbx + r9*8 + 56], r13
+    adox r12, [rbx + r9*8 + 64]
+    adcx r12, rbp
+    mov [rbx + r9*8 + 64], r12
+
+    mov rax, 0
+    adox rax, [rbx + r9*8 + 72]
+    adcx rax, rbp
+    mov [rbx + r9*8 + 72], rax
+
+    add rsi, 16
     jl .LLoop2V //leave loop2
-    sub rsi, 4
+.LKurzLoopAnfangV:
+    sub rsi, 8
     jz .LKurzFertigV
 .LKurzLoopV:
     mov rax, [r10 + rcx*8]
@@ -456,56 +549,25 @@ naivMul_AsmVergleich: //(mit pointer ans ende, kein cmp + sehr entrollt + keinCa
 
     mov r9, rcx // r9 = n i + j
     add r9, rsi
-    sub r9, 2
 
     //add
     add [rbx + r9*8], rax
     adc [rbx + r9*8 + 8], rdx
-    adc qword ptr [rbx + r9*8 + 16], 0
 
+    jnc .LKurzLoopEndV
+.LCarryLoop2V:
+    adc qword ptr [rbx + r9*8 + 16], 0
+    jnc .LKurzLoopEndV
+    add r9, 1
+    jmp .LCarryLoop2V
+
+.LKurzLoopEndV:
     add rsi, 1
     jl .LKurzLoopV
 
 .LKurzFertigV:
     add rcx, 1
     jl .LLoop1V //leave loop1
-
-    add r10, 16
-.LSkipMultipleLoopV:
-    sub rcx, 2
-.LLoop1EinzelV:
-    mov rsi, r15 // j=y->end - y->start
-    sub rsi ,r14
-    neg rsi
-.LLoop2EinzelV:
-
-    //Mul
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8]
-
-    mov r9, rcx // r9 = n i + j
-    add r9, rsi
-
-    //add
-    add [rbx + r9*8], rax
-    adc [rbx + r9*8 + 8], rdx
-
-    //carry loop
-    jnc .LLoopEndEinzelV
-    add r9, 2 // i := r9
-    jz .LLoopEndEinzelV
-.LLoopEinzelV:
-    add qword ptr [rbx + r9*8], 1
-    jnc .LLoopEndEinzelV
-    setc al
-    add r9, 1
-    jz .LLoopEinzelV
-
-.LLoopEndEinzelV:
-    add rsi, 1
-    jnz .LLoop2EinzelV //leave loop2
-    add rcx, 1
-    jnz .LLoop1EinzelV //leave loop1
 
     //resize result
     mov r15, r8 //result = r15
@@ -517,12 +579,10 @@ naivMul_AsmVergleich: //(mit pointer ans ende, kein cmp + sehr entrollt + keinCa
 
     //leave the function
     mov rax, r15
+    pop rbp
     pop r15
     pop r14
     pop r13
     pop r12
     pop rbx
     ret
-.JmpKurzLoopV:
-    sub rsi, 4
-    jmp .LKurzLoopV

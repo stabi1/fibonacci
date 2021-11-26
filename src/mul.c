@@ -1,18 +1,14 @@
 #include "mul.h"
 #include "mulAsm.h"
 #include "BigIntAsm.h"
-#include "tests.h"
 #include <stddef.h>
 #include <immintrin.h>
-#include <stdio.h>
 #include <pthread.h>
 
 size_t naivMulFaster = 100; //Size when naivMul is faster than karatsuba // 100
 size_t karatsubaFaster = 400; //Size when karatsuba is faster than toom-cook //400
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
-
-bigInt *naivMul(bigInt *x, bigInt *y);
 
 //returns x * y with karatsuba
 bigInt *karatsuba(bigInt *x, bigInt *y) {
@@ -21,17 +17,11 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     size_t yLen = y->end - y->start;
     //if smaller than naivMulFaster, use naivMul
     if (xLen <= naivMulFaster || yLen <= naivMulFaster) {
-        bigInt* res1 = naivMul_AsmVergleich(x, y);
-        bigInt* res2 =  naivMul_AsmArbeit(x, y);
-        if(!compareBigInts(res1, res2)){
-            printBigInt(x);
-            printBigInt(y);
-            printBigInt(res1);
-            printBigInt(res2);
-            exception();
+        if(xLen>yLen){
+            return naivMul_AsmArbeit(x, y);
+        } else {
+            return naivMul_AsmArbeit(y, x);
         }
-
-        return naivMul_AsmVergleich(x, y);
     }
     //calulate m -> middle of the bigger bigInt
     size_t m;
@@ -417,26 +407,4 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
 
     result->negative = sign;
     return (void*) result;
-}
-
-bigInt *naivMul(bigInt *x, bigInt *y) {
-    size_t resSize = x->end - x->start + y->end - y->start;
-    bigInt *result = newBigInt(resSize);
-    for (size_t i = x->start; i < x->end; ++i) {
-        for (size_t j = y->start; j < y->end; ++j) {
-            unsigned __int128 mulRes = x->bigIntArray[i] * (unsigned __int128) y->bigIntArray[j]; //mul
-            size_t n = i - x->start + j - y->start;
-            //add mulRes at the right placee to the result (shift to the left by n)
-            unsigned char c = '\0';
-            c = _addcarry_u64(c, result->bigIntArray[n], (uint64_t) mulRes,
-                              (unsigned long long *) &result->bigIntArray[n]); //n
-            c = _addcarry_u64(c, result->bigIntArray[n + 1], (uint64_t) (mulRes >> 64),
-                              (unsigned long long *) &result->bigIntArray[n + 1]); // n + 1
-            for (size_t k = n + 2; c != '\0' && k < result->end; k++) { //while carry add
-                c = _addcarry_u64(c, result->bigIntArray[k], 0, (unsigned long long *) &result->bigIntArray[k]);
-            }
-        }
-    }
-    result->end = result->start + getOccupiedFields(result); //make end only as big as necessary
-    return result;
 }

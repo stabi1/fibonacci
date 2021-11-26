@@ -203,48 +203,174 @@ shiftAdd_Asm:
 //void shiftAddHelper(bigInt *bigger, bigInt *smaller, bigInt *res, size_t biggerCount, size_t smallerCount, size_t i);
 shiftAddHelper_Asm:
     //rdi = bigger, rsi = smaller, rdx = res, rcx = biggerCount, r8 = samllerCount, r9 = i
+    push r12
+    push r13
     push r14
     push r15
     push rbx
+    mov r12, [rdi + 8] //r12 := bigger->end
+    mov r13, [rsi + 8] //r13 := smaller->end
     mov r14, [rdi + 24] //r14 = bigger->bigIntArray
     mov r15, [rsi + 24] //r15 = smaller->bigIntArray
     mov r11, [rdx + 24] //r11 = res->BigIntArray
-    xor rbx, rbx
+    mov rdi, [rdi] //rdi := bigger->start
+    mov rsi, [rsi] //rsi := smaller->start
+    lea r14, [r14 + r12*8]
+    lea r15, [r15 + r13*8]
+    mov rbx, [rdx + 8]
+    lea r11, [r11 + rbx*8]
+
+    mov rbx, rcx
+    mov rcx, r12
+    sub rcx, rdi
+    neg rcx
+    add rcx, rbx
+
+    mov rbx, r8
+    mov r8, r13
+    sub r8, rsi
+    neg r8
+    add r8, rbx
+
+    mov rbx, r9
+    mov r9, [rdx + 8]
+    sub r9, [rdx]
+    neg r9
+    add r9, rbx
+
     jmp .LShiftAddHelperEntry
 
 //void addHelper(bigInt *bigger, bigInt *smaller, bigInt *res);
 addHelper_Asm:
     //rdi = bigger, rsi = smaller, rdx = res
     //rcx = biggerCount, r8 = smallerCount, r9 = i
+    push r12
+    push r13
     push r14
     push r15
     push rbx
-    mov rcx, [rdi]
-    mov r8, [rsi]
-    xor r9, r9
+    mov r12, [rdi + 8] //r12 := bigger->end
+    mov r13, [rsi + 8] //r13 := smaller->end
     mov r14, [rdi + 24] //r14 = bigger->bigIntArray
     mov r15, [rsi + 24] //r15 = smaller->bigIntArray
     mov r11, [rdx + 24] //r11 = res->BigIntArray
-    xor rbx, rbx
+    mov rdi, [rdi] //rdi := bigger->start
+    mov rsi, [rsi] //rsi := smaller->start
+    lea r14, [r14 + r12*8]
+    lea r15, [r15 + r13*8]
+    mov rbx, [rdx + 8]
+    lea r11, [r11 + rbx*8]
+
+    // biggerCount = rcx, samllerCount = r8, i = r9
+    mov rcx, r12
+    sub rcx, rdi
+    neg rcx
+
+    mov r8, r13
+    sub r8, rsi
+    neg r8
+
+    mov r9, rbx
+    sub r9, [rdx]
+    neg r9
+
 .LShiftAddHelperEntry:
-    cmp r8, [rsi + 8]
-    jz .LAddLoopAddHelperEnd
+    xor rbx, rbx
+
+    add r8, 12
+    jge .LAddLoopMultipleAddHelperEnd
 .LAddLoopAddHelper:
+    sub r8, 12
     add bl, -1
+
+    //1
     mov r10, [r14 + rcx*8]
     adc r10, [r15 + r8*8]
     mov [r11 + r9*8], r10
+
+    //2
+    mov r10, [r14 + rcx*8 + 8]
+    adc r10, [r15 + r8*8 + 8]
+    mov [r11 + r9*8 + 8], r10
+
+    //3
+    mov r10, [r14 + rcx*8 + 16]
+    adc r10, [r15 + r8*8 + 16]
+    mov [r11 + r9*8 + 16], r10
+
+    //4
+    mov r10, [r14 + rcx*8 + 24]
+    adc r10, [r15 + r8*8 + 24]
+    mov [r11 + r9*8 + 24], r10
+
+    //5
+    mov r10, [r14 + rcx*8 + 32]
+    adc r10, [r15 + r8*8 + 32]
+    mov [r11 + r9*8 + 32], r10
+
+    //6
+    mov r10, [r14 + rcx*8 + 40]
+    adc r10, [r15 + r8*8 + 40]
+    mov [r11 + r9*8 + 40], r10
+
+    //7
+    mov r10, [r14 + rcx*8 + 48]
+    adc r10, [r15 + r8*8 + 48]
+    mov [r11 + r9*8 + 48], r10
+
+    //8
+    mov r10, [r14 + rcx*8 + 56]
+    adc r10, [r15 + r8*8 + 56]
+    mov [r11 + r9*8 + 56], r10
+
+    //9
+    mov r10, [r14 + rcx*8 + 64]
+    adc r10, [r15 + r8*8 + 64]
+    mov [r11 + r9*8 + 64], r10
+
+    //10
+    mov r10, [r14 + rcx*8 + 72]
+    adc r10, [r15 + r8*8 + 72]
+    mov [r11 + r9*8 + 72], r10
+
+    //11
+    mov r10, [r14 + rcx*8 + 80]
+    adc r10, [r15 + r8*8 + 80]
+    mov [r11 + r9*8 + 80], r10
+
+    //12
+    mov r10, [r14 + rcx*8 + 88]
+    adc r10, [r15 + r8*8 + 88]
+    mov [r11 + r9*8 + 88], r10
+
+    setc bl
+    add rcx, 12
+    add r9, 12
+    add r8, 24
+    jl .LAddLoopAddHelper
+
+    //Add multiple loop ende
+.LAddLoopMultipleAddHelperEnd:
+    sub r8, 12
+    jz .LAddLoopSingeAddHelperEnd
+.LAddLoopSingleAddHelper:
+    add bl, -1
+
+    mov r10, [r14 + rcx*8]
+    adc r10, [r15 + r8*8]
+    mov [r11 + r9*8], r10
+
     setc bl
     add rcx, 1
-    add r8, 1
     add r9, 1
-    cmp r8, [rsi + 8]
-    jnz .LAddLoopAddHelper
-.LAddLoopAddHelperEnd:
-    //Add loop ende
+    add r8, 1
+    jnz .LAddLoopSingleAddHelper
+
+.LAddLoopSingeAddHelperEnd:
+    //Add single loop ende
     test bl, bl
     jz .LCopyAddHelper
-    cmp rcx, [rdi + 8]
+    cmp rcx, 0
     jz .LLastCarryAddHelper
 .LCopyAddLoop:
     mov r10, [r14 + rcx*8]
@@ -255,29 +381,62 @@ addHelper_Asm:
     add r9, 1
     test bl, bl
     jz .LCopyAddHelper
-    cmp rcx, [rdi + 8]
+    cmp rcx, 0
     jz .LLastCarryAddHelper
     jmp .LCopyAddLoop
 .LCopyAddHelper:
-    cmp rcx, [rdi + 8]
+    //ende copy add loop
+    add rcx, 12
+    jge .LCopyLoopSingleStartAddHelper
+.LCopyLoopSSEAddHelper:
+    sub rcx, 12
+
+    //1
+    lddqu xmm0, [r14 + rcx*8]
+    movdqu [r11 + r9*8], xmm0
+    //2
+    lddqu xmm1, [r14 + rcx*8 + 16]
+    movdqu [r11 + r9*8+ 16], xmm1
+    //3
+    lddqu xmm2, [r14 + rcx*8 + 32]
+    movdqu [r11 + r9*8 + 32], xmm2
+    //4
+    lddqu xmm3, [r14 + rcx*8 + 48]
+    movdqu [r11 + r9*8 + 48], xmm3
+    //5
+    lddqu xmm3, [r14 + rcx*8 + 64]
+    movdqu [r11 + r9*8 + 64], xmm3
+    //6
+    lddqu xmm3, [r14 + rcx*8 + 80]
+    movdqu [r11 + r9*8 + 80], xmm3
+
+    add r9, 12
+    add rcx, 24
+    jl .LCopyLoopSSEAddHelper
+
+.LCopyLoopSingleStartAddHelper:
+    sub rcx, 12
     jz .LEndeAddHelper
-.LCopyLoopAddHelper:
+.LCopyLoopSingleAddHelper:
     mov r10, [r14 + rcx*8]
     mov [r11 + r9*8], r10
-    add rcx, 1
     add r9, 1
-    cmp rcx, [rdi + 8]
-    jnz .LCopyLoopAddHelper
+    add rcx, 1
+    jnz .LCopyLoopSingleAddHelper
 .LEndeAddHelper:
     pop rbx
     pop r15
     pop r14
+    pop r13
+    pop r12
     ret
 .LLastCarryAddHelper:
     add [r11 + r9*8], bl
     pop rbx
     pop r15
     pop r14
+    pop r13
+    pop r12
     ret
 
 //*bigInt *sub(bigInt *x, bigInt *y, bool negative);
