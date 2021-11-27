@@ -2,7 +2,6 @@
 #define FIBONACCI_MAIN_H
 
 #include <setjmp.h>
-#include <stdint-gcc.h>
 #include "BigInt.h"
 
 bigInt* fibExpFastDoubling(uint64_t n);

@@ -7,8 +7,6 @@ void test();
 
 void benchMark();
 
-void benchMarkAdd();
-
 void bruteForceDebug();
 
 bool compareBigInts(bigInt *x, bigInt *y);

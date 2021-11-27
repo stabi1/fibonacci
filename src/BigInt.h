@@ -37,14 +37,6 @@ char *bigIntToHexString(bigInt *x);
 
 bigInt *smartSub(bigInt *x, bigInt *y);
 
-bigInt *sub(bigInt *x, bigInt *y, bool negative);
-
-bigInt *shiftLeft(bigInt *x, size_t n);
-
-bigInt *shiftRight(bigInt *x, size_t n);
-
-bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n);
-
 bigInt *getLowerFrom(bigInt *x, size_t n);
 
 bigInt *getUpperFrom(bigInt *x, size_t n);
@@ -52,8 +44,6 @@ bigInt *getUpperFrom(bigInt *x, size_t n);
 void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt* erg[]);
 
 bigInt *smartAdd(bigInt *x, bigInt *y);
-
-bigInt *add(bigInt *x, bigInt *y, bool negative);
 
 bigInt *exactDivideBy3(bigInt *x);
 

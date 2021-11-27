@@ -9,10 +9,10 @@
 char *randomHex(uint64_t n);
 
 void test() {
-    uint64_t n = 18428;
-    bigInt* res1 = fibExpFastDoubling(n);
-    bigInt* res2 = fibExpFastDoublingMultiThread(n);
-    if(!compareBigInts(res1, res2)){
+    uint64_t n = 40000;
+    bigInt *res1 = fibExpFastDoubling(n);
+    bigInt *res2 = fibExpFastDoublingMultiThread(n);
+    if (!compareBigInts(res1, res2)) {
         printf("Fault\n");
         return;
     }
@@ -141,40 +141,6 @@ void bruteForceDebug() {
             i++;
         }
     }
-}
-
-void benchMarkAdd() {
-    size_t n = 5000; //wiederholungen
-
-    bigInt *test1 = hexStringToBigInt(randomHex(10000000));
-    bigInt *test2 = hexStringToBigInt(randomHex(10000000));
-
-    //code1
-    struct timespec start;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for (size_t i = 0; i < n; i++) {
-        //bigInt *res1 = add_AsmAlt(test1, test2, false);
-        //freeBigInt(res1);
-    }
-    struct timespec end;
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-    printf("Time in code 1: %f\n", time);
-
-    //code2
-    struct timespec start2;
-    clock_gettime(CLOCK_MONOTONIC, &start2);
-    for (size_t i = 0; i < n; i++) {
-        bigInt *res2 = add_Asm(test1, test2, false);
-        freeBigInt(res2);
-    }
-    struct timespec end2;
-    clock_gettime(CLOCK_MONOTONIC, &end2);
-    double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
-    printf("Time in code 2: %f\n", time2);
-
-    freeBigInt(test1);
-    freeBigInt(test2);
 }
 
 bool compareBigInts(bigInt *x, bigInt *y) {

@@ -257,10 +257,10 @@ bigInt *smartSub(bigInt *x, bigInt *y) {
     } else if (x->negative && !y->negative) {
         return add_Asm(x, y, true);
     } else if (x->negative && !y->negative) {
-        if (xLen < yLen){
+        if (xLen < yLen) {
             return sub_Asm(y, x, false);
         } else if (yLen < xLen) {
-        return sub_Asm(x, y, true);
+            return sub_Asm(x, y, true);
         } else {
             if (x->bigIntArray[x->end - 1] < y->bigIntArray[y->end - 1]) {
                 return sub_Asm(y, x, false);

@@ -17,7 +17,7 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     size_t yLen = y->end - y->start;
     //if smaller than naivMulFaster, use naivMul
     if (xLen <= naivMulFaster || yLen <= naivMulFaster) {
-        if(xLen>yLen){
+        if (xLen > yLen) {
             return naivMul_AsmArbeit(x, y);
         } else {
             return naivMul_AsmArbeit(y, x);
@@ -208,13 +208,13 @@ bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
     args->a = a;
     args->b = b;
     args->depth = depth;
-    return (bigInt*) multiplyToomCook3MultiThreadHelper((void*) args);
+    return (bigInt *) multiplyToomCook3MultiThreadHelper((void *) args);
 }
 
 void *multiplyToomCook3MultiThreadHelper(void *input) {
-    bigInt* a = ((struct toomCookArgs*)input)->a;
-    bigInt* b = ((struct toomCookArgs*)input)->b;
-    size_t depth = ((struct toomCookArgs*)input)->depth;
+    bigInt *a = ((struct toomCookArgs *) input)->a;
+    bigInt *b = ((struct toomCookArgs *) input)->b;
+    size_t depth = ((struct toomCookArgs *) input)->depth;
     bool sign;
     if ((a->negative && b->negative) || (!a->negative && !b->negative)) {
         sign = false;
@@ -261,13 +261,13 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     pthread_t thread_idMul5;
 
     bigInt *v0;
-    if(depth>0){
+    if (depth > 0) {
         struct toomCookArgs *argsMul1 = malloc(sizeof(struct toomCookArgs));
         argsMul1->a = a0;
         argsMul1->b = b0;
-        argsMul1->depth = depth-1;
-        pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void*) argsMul1);
-    }else{
+        argsMul1->depth = depth - 1;
+        pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul1);
+    } else {
         v0 = multiplyToomCook3(a0, b0);
     }
     bigInt *da1 = smartAdd(a2, a0);
@@ -275,13 +275,13 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     bigInt *temp1 = smartSub(db1, b1);
     bigInt *temp2 = smartSub(da1, a1);
     bigInt *vm1;
-    if(depth>0){
+    if (depth > 0) {
         struct toomCookArgs *argsMul2 = malloc(sizeof(struct toomCookArgs));
         argsMul2->a = temp1;
         argsMul2->b = temp2;
-        argsMul2->depth = depth-1;
-        pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void*) argsMul2);
-    }else{
+        argsMul2->depth = depth - 1;
+        pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul2);
+    } else {
         vm1 = multiplyToomCook3(temp1, temp2);
     }
     bigInt *da2 = smartAdd(da1, a1);
@@ -291,13 +291,13 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(db1);
     freeBigInt(b1);
     bigInt *v1;
-    if(depth>0){
+    if (depth > 0) {
         struct toomCookArgs *argsMul3 = malloc(sizeof(struct toomCookArgs));
         argsMul3->a = da2;
         argsMul3->b = db2;
-        argsMul3->depth = depth-1;
-        pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void*) argsMul3);
-    }else{
+        argsMul3->depth = depth - 1;
+        pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul3);
+    } else {
         v1 = multiplyToomCook3(da2, db2);
     }
     bigInt *temp3 = smartAdd(da2, a2);
@@ -313,56 +313,56 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     bigInt *temp8 = smartSub(temp7, b0);
     freeBigInt(temp7);
     bigInt *v2;
-    if(depth>0){
+    if (depth > 0) {
         struct toomCookArgs *argsMul4 = malloc(sizeof(struct toomCookArgs));
         argsMul4->a = temp5;
         argsMul4->b = temp8;
-        argsMul4->depth = depth-1;
-        pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void*) argsMul4);
-    }else{
+        argsMul4->depth = depth - 1;
+        pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul4);
+    } else {
         v2 = multiplyToomCook3(temp5, temp8);
         freeBigInt(temp8);
         freeBigInt(temp5);
     }
 
     bigInt *vinf;
-    if(depth>0){
+    if (depth > 0) {
         struct toomCookArgs *argsMul5 = malloc(sizeof(struct toomCookArgs));
         argsMul5->a = a2;
         argsMul5->b = b2;
-        argsMul5->depth = depth-1;
-        pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void*) argsMul5);
-    }else{
+        argsMul5->depth = depth - 1;
+        pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5);
+    } else {
         vinf = multiplyToomCook3(a2, b2);
         freeBigInt(a2);
         freeBigInt(b2);
     }
 
-    if(depth > 0){
+    if (depth > 0) {
         //join Threads
         void *temp;
         pthread_join(thread_idMul1, &temp);
-        v0 = (bigInt*) temp;
+        v0 = (bigInt *) temp;
         freeBigInt(a0);
         freeBigInt(b0);
 
         pthread_join(thread_idMul2, &temp);
-        vm1 = (bigInt*) temp;
+        vm1 = (bigInt *) temp;
         freeBigInt(temp1);
         freeBigInt(temp2);
 
         pthread_join(thread_idMul3, &temp);
-        v1 = (bigInt*) temp;
+        v1 = (bigInt *) temp;
         freeBigInt(da2);
         freeBigInt(db2);
 
         pthread_join(thread_idMul4, &temp);
-        v2 = (bigInt*) temp;
+        v2 = (bigInt *) temp;
         freeBigInt(temp8);
         freeBigInt(temp5);
 
         pthread_join(thread_idMul5, &temp);
-        vinf = (bigInt*) temp;
+        vinf = (bigInt *) temp;
         freeBigInt(a2);
         freeBigInt(b2);
     }
@@ -406,5 +406,5 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(v0);
 
     result->negative = sign;
-    return (void*) result;
+    return (void *) result;
 }

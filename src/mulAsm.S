@@ -29,6 +29,7 @@ naivMul_AsmArbeit: //mul using naive multiplication
     sub rdi, r12
     add rdi, r15
     sub rdi, r14
+    add rdi, 1
     push r10
     push r11
     call newBigInt
@@ -38,6 +39,7 @@ naivMul_AsmArbeit: //mul using naive multiplication
 
     //Loops
     mov rbx, [r8 + 24] // rbx := result->BigIntArray
+    sub rbx, 8 //because of the len res = lenx + leny + 1
     mov rax, [r8 + 8]
     lea rbx, [rbx + rax*8]
     // i = rcx, j = rsi
@@ -202,10 +204,11 @@ naivMul_AsmArbeit: //mul using naive multiplication
     //add
     add [rbx + r9*8], rax
     adc [rbx + r9*8 + 8], rdx
+    adc qword ptr [rbx + r9*8 + 16], 0
 
     jnc .LShortLoopFinish
 .LCarryLoop2:
-    adc qword ptr [rbx + r9*8 + 16], 0
+    adc qword ptr [rbx + r9*8 + 24], 0
     jnc .LShortLoopFinish
     add r9, 1
     jmp .LCarryLoop2

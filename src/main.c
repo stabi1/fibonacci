@@ -17,6 +17,10 @@ void printHelpMenu();
 
 void printFibonacci(uint64_t n, char radix, char output, bool multiThread);
 
+bool handleCPUFeatures();
+
+void printMissingFeature(char *feature);
+
 static struct option long_options[] = {
         {"help",        no_argument,       NULL, 'h'},
         {"output",      required_argument, NULL, 'o'},
@@ -38,6 +42,10 @@ const char *fibonacciKeys[] = {
 };
 
 int main(int argc, char *argv[]) {
+    bool cpuFeatures = handleCPUFeatures();
+    if (!cpuFeatures) {
+        return -1;
+    }
     //Error handling
     if (setjmp(exceptionJump)) { //Exception e.g malloc returned null
         printf("An error occurred, program terminated\n");
@@ -65,8 +73,7 @@ int main(int argc, char *argv[]) {
                 test();
                 return 0;
             case 'b':
-                //benchMark();
-                benchMarkAdd();
+                benchMark();
                 return 0;
             case 'm' :
                 multiThread = true;
@@ -80,7 +87,7 @@ int main(int argc, char *argv[]) {
                 radix = optarg[0];
                 if (radix != 'd' && radix != 'h') {
                     radix = 'h';
-                    printf("Invalid output option!\nUsing hex instead...\n");
+                    printf("Invalid output option %c!\nUsing hex instead...\n", radix);
                 }
                 break;
             case 'o':
@@ -92,7 +99,7 @@ int main(int argc, char *argv[]) {
                 output = optarg[0];
                 if (output != 'f' && output != 't' && output != 'n') {
                     output = 'n';
-                    printf("Invalid output option!\nno output...\n");
+                    printf("Invalid output option %c!\nno output...\n", output);
                 }
                 break;
             case 'f':
@@ -105,7 +112,7 @@ int main(int argc, char *argv[]) {
                                 return -1;
                             }
                             if (!checkIsNumber(value)) {
-                                printf("Not a valid number!\n");
+                                printf("%s is not a valid number!\n", value);
                                 return -1;
                             }
                             n = strtol(value, NULL, 10);
@@ -162,11 +169,21 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         }
 
         if (output == 'f') { //Terminal output
-            FILE *outputFile = fopen("output.txt", "a+");
-            outputFile = freopen("output.txt", "w", outputFile);
-            //TODO: could not open file
-            fprintf(outputFile, "Result for n=%zu | length of string=%zu:\n%s", n, strSizeInBytes, resString);
-            printf("Output in file\n");
+            char *filename = "output.txt";
+            FILE *outputFile = fopen(filename, "a+");
+            if (!outputFile) {
+                printf("Error while opening/creating %s\n", filename);
+            } else {
+                outputFile = freopen("output.txt", "w", outputFile);
+                if (!outputFile) {
+                    printf("Error while opening/creating %s\n", filename);
+                } else {
+                    fprintf(outputFile, "Result for n=%zu | length of string=%zu:\n%s", n, strSizeInBytes, resString);
+                    fclose(outputFile);
+                    printf("Output in file %s\n", filename);
+                }
+            }
+
         } else { //File output (output == 't')
             printf("Result: %s\n", resString);
         }
@@ -289,11 +306,43 @@ void printHelpMenu() {
     fseek(helpFile, 0L, SEEK_END);
     long int helpLen = ftell(helpFile);
     fseek(helpFile, 0L, SEEK_SET);
-    // long int helpLen = 1000;
-    printf("Size of myfile.txt: %ld bytes.\n", helpLen);
     char menu[helpLen];
     while (fgets(menu, (int) helpLen, helpFile)) {
         printf("%s", menu);
     }
     fclose(helpFile);
+}
+
+bool handleCPUFeatures() {
+    __builtin_cpu_init();
+    if (!__builtin_cpu_supports("sse")) {
+        printMissingFeature("sse");
+        return false;
+    } else if (!__builtin_cpu_supports("sse2")) {
+        printMissingFeature("sse2");
+        return false;
+    } else if (!__builtin_cpu_supports("sse3")) {
+        printMissingFeature("sse3");
+        return false;
+    } else if (!__builtin_cpu_supports("sse4a")) {
+        printMissingFeature("sse4a");
+        return false;
+    } else if (!__builtin_cpu_supports("sse4.1")) {
+        printMissingFeature("sse4.1");
+        return false;
+    } else if (!__builtin_cpu_supports("sse4.2")) {
+        printMissingFeature("sse4.2");
+        return false;
+    } else if (!__builtin_cpu_supports("avx")) {
+        printMissingFeature("avx");
+        return false;
+    } else if (!__builtin_cpu_supports("avx2")) {
+        printMissingFeature("avx2");
+        return false;
+    }
+    return true;
+}
+
+void printMissingFeature(char *feature) {
+    printf("Missing Feature: %s; program terminated\n", feature);
 }

@@ -11,12 +11,12 @@ size_t roundUp(size_t dividend, size_t divisor);
 
 const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-char* uint64tToHexString(uint64_t* array, size_t lenInBytes, size_t start){
+char *uint64tToHexString(uint64_t *array, size_t lenInBytes, size_t start) {
     char *str = malloc(sizeof(char) * (lenInBytes * 2 + 1));
     str[lenInBytes * 2] = '\0';
     size_t j = lenInBytes * 2 - 1;
-    uint8_t *buf = (uint8_t *)array;
-    for (size_t i = start*8; i < start*8 + lenInBytes; i++) {
+    uint8_t *buf = (uint8_t *) array;
+    for (size_t i = start * 8; i < start * 8 + lenInBytes; i++) {
         str[j] = hexLookup[buf[i] & 0xF];
         str[j - 1] = hexLookup[buf[i] >> 4];
         j -= 2;
@@ -27,16 +27,16 @@ char* uint64tToHexString(uint64_t* array, size_t lenInBytes, size_t start){
     return trimmed;
 }
 
-bool checkIsNumber(char* value){
+bool checkIsNumber(char *value) {
     char *x;
-    for (x = value ; *x ; x++) {
+    for (x = value; *x; x++) {
         if (!isdigit(*x))
             return false;
     }
     return true;
 }
 
-char* uint64tToDecString(__attribute__((unused))uint64_t* array, size_t lenInBytes) {
+char *uint64tToDecString(__attribute__((unused))uint64_t *array, size_t lenInBytes) {
     char *str = malloc(sizeof(char) * (lenInBytes * 2 + 1));
     str[lenInBytes * 2] = '\0';
     //TODO
