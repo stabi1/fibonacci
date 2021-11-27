@@ -1,7 +1,6 @@
 #ifndef IMPLEMENTIERUNG_KARATSUBA_H
 
 #include <stddef.h>
-#include <stdint.h>
 #include "BigInt.h"
 
 #define IMPLEMENTIERUNG_KARATSUBA_H

@@ -1,10 +1,11 @@
+#include "main.h"
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <sys/sysinfo.h>
-#include "main.h"
+#include <stdbool.h>
 #include "BigIntAsm.h"
 #include "BigInt.h"
 #include "tests.h"
@@ -20,6 +21,8 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread);
 bool handleCPUFeatures();
 
 void printMissingFeature(char *feature);
+
+jmp_buf exceptionJump;
 
 static struct option long_options[] = {
         {"help",        no_argument,       NULL, 'h'},
@@ -67,7 +70,7 @@ int main(int argc, char *argv[]) {
                 printHelpMenu();
                 return 0;
             case 'd':
-                bruteForceDebug();
+                bruteForceDebug(multiThread);
                 return 0;
             case 't':
                 test();

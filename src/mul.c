@@ -1,9 +1,10 @@
 #include "mul.h"
-#include "mulAsm.h"
-#include "BigIntAsm.h"
 #include <stddef.h>
 #include <immintrin.h>
 #include <pthread.h>
+#include <stdbool.h>
+#include "mulAsm.h"
+#include "BigIntAsm.h"
 
 size_t naivMulFaster = 100; //Size when naivMul is faster than karatsuba // 100
 size_t karatsubaFaster = 400; //Size when karatsuba is faster than toom-cook //400
@@ -18,9 +19,9 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     //if smaller than naivMulFaster, use naivMul
     if (xLen <= naivMulFaster || yLen <= naivMulFaster) {
         if (xLen > yLen) {
-            return naivMul_AsmArbeit(x, y);
+            return naiveMul_Asm(x, y);
         } else {
-            return naivMul_AsmArbeit(y, x);
+            return naiveMul_Asm(y, x);
         }
     }
     //calulate m -> middle of the bigger bigInt

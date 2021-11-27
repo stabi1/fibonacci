@@ -1,6 +1,10 @@
 #ifndef FIBONACCI_UTIL_H
 #define FIBONACCI_UTIL_H
 
+#include <stdint-gcc.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 char *extendHexString(char *hex);
 
 char *trimZeroes(char *str);

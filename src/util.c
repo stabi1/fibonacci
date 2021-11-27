@@ -1,3 +1,4 @@
+#include "util.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,7 +6,6 @@
 #include <stdint-gcc.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include "util.h"
 
 size_t roundUp(size_t dividend, size_t divisor);
 

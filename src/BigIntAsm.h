@@ -3,8 +3,6 @@
 
 #include "BigInt.h"
 
-size_t getOccupiedFields_Asm(bigInt *x);
-
 bigInt *add_Asm(bigInt *x, bigInt *y, bool negative);
 
 bigInt *shiftAdd_Asm(bigInt *x, bigInt *toShift, size_t n);

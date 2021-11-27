@@ -10,24 +10,24 @@
 
 //size_t getOccupiedFields_Asm(bigInt *x);
 getOccupiedFields_Asm:
-	mov rax, QWORD PTR [rdi+8] //size_t num = x->end;
-  	mov rsi, QWORD PTR [rdi] //x->start
-  	mov rdx, rsi
-  	add rdx, 1 //x->start + 1
-  	cmp rax, rsi //num > x->start + 1
-  	jna .L3
-  	mov rcx, QWORD PTR [rdi+24] //move pointer of bigIntArray to rcx
-  	jmp .L2
-.L1:
-  	sub rax, 1 	//num--
-  	cmp rax, rdx //num > x->start + 1;
-  	jna .L3
-.L2:
-  	cmp QWORD PTR [rcx-8+rax*8], 0 //x->bigIntArray[num - 1] == 0
-  	je .L1
-.L3:
-  	sub rax, rsi
-  	ret
+    mov rax, QWORD PTR [rdi+8] //size_t num = x->end;
+    mov rsi, QWORD PTR [rdi] //x->start
+    mov rdx, rsi
+    add rdx, 1 //x->start + 1
+    cmp rax, rsi //num > x->start + 1
+    jna .LGetOccFieldsEnd
+    mov rcx, QWORD PTR [rdi+24] //move pointer of bigIntArray to rcx
+    jmp .LIsZero
+.LStartLoopGetOccFields:
+    sub rax, 1 	//num--
+    cmp rax, rdx //num > x->start + 1;
+    jna .LGetOccFieldsEnd
+.LIsZero:
+    cmp QWORD PTR [rcx-8+rax*8], 0 //x->bigIntArray[num - 1] == 0
+    je .LStartLoopGetOccFields
+.LGetOccFieldsEnd:
+    sub rax, rsi
+    ret
 
 //bigInt *add_Asm(bigInt *x, bigInt *y, bool negative);
 add_Asm:
@@ -122,23 +122,23 @@ shiftAdd_Asm:
     cmp rdi, rbx
     jz .LStartAddShiftAdd
     add rsi, 1
-	cmp rsi, [r14 + 8]
+    cmp rsi, [r14 + 8]
     jae .LNoSSE
-	sub rsi, 1
+    sub rsi, 1
 .LSSESchleife:
-	lddqu xmm0, [r11 + rcx*8]
-	movdqu [r10 + rcx*8], xmm0
-	add rcx, 2 //inc counters
+    lddqu xmm0, [r11 + rcx*8]
+    movdqu [r10 + rcx*8], xmm0
+    add rcx, 2 //inc counters
     add rdi, 2
     add rsi, 2
-	cmp rdi, rbx
+    cmp rdi, rbx
     jae .LSSEEnde
     cmp rsi, [r14 + 8]
     jb .LSSESchleife
 .LSSEEnde:
-	sub rcx, 2
-	sub rsi, 1
-	sub rdi, 2
+    sub rcx, 2
+    sub rsi, 1
+    sub rdi, 2
 .LNoSSE:
     sub rsi, 1
     cmp rdi, rbx

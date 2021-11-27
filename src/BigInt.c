@@ -1,11 +1,11 @@
 #include "BigInt.h"
-#include "util.h"
-#include "BigIntAsm.h"
 #include <stdbool.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "util.h"
+#include "BigIntAsm.h"
 
 extern jmp_buf exceptionJump; //Jump point when a error occurs
 
@@ -135,15 +135,6 @@ bigInt *hexStringToBigInt(char hex[]) {
     }
     free(paddedHex);
     return res;
-}
-
-//returns the number of arrayFields the BigInt is using
-size_t getOccupiedFields(bigInt *x) {
-    size_t num = x->end;
-    while (num > x->start + 1 && x->bigIntArray[num - 1] == 0) {
-        num--;
-    }
-    return num - x->start;
 }
 
 //get the lower half of the bigInt (same array, new Struct with different pointers)

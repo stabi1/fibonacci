@@ -1,10 +1,8 @@
 #ifndef IMPLEMENTATION_BETTERBIGINT_H
 
+#include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <stdint-gcc.h>
 
 #define IMPLEMENTATION_BETTERBIGINT_H
 typedef struct BigIntTag { //The datastructure that represents a large number
@@ -22,8 +20,6 @@ bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray);
 void freeBigInt(bigInt *toDelete);
 
 void exception();
-
-size_t getOccupiedFields(bigInt *x);
 
 char *bigIntToStr(bigInt *x);
 
