@@ -3,13 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "main.h"
-#include "mulAsm.h"
+#include <float.h>
+#include "../src/main.h"
+#include "../src/mulAsm.h"
+#include "../src/mul.h"
 
 char *randomHex(uint64_t n);
 
 void test() {
-    uint64_t n = 40000;
+    findBestValues();
+    /*uint64_t n = 40000;
     bigInt *res1 = fibExpFastDoubling(n);
     bigInt *res2 = fibExpFastDoublingMultiThread(n);
     if (!compareBigInts(res1, res2)) {
@@ -18,7 +21,37 @@ void test() {
     }
     printf("Correct; Length of result in 8 byte: %lu\n", res1->end - res1->start);
     freeBigInt(res1);
-    freeBigInt(res2);
+    freeBigInt(res2);*/
+}
+
+void findBestValues() {
+    size_t nFast;
+    size_t kFast;
+    double bestTime = DBL_MAX;
+    uint64_t fibN = 10000000;
+    printf("Beginning testing\n");
+    for(size_t n = 20; n<1000; n += 5) {
+        for(size_t k = n + 2; k<n + 5000; k += 30) {
+            printf("\rTesting %lu %lu", n, k);
+            naivMulFaster = n;
+            karatsubaFaster = k;
+            struct timespec start;
+            clock_gettime(CLOCK_MONOTONIC, &start);
+
+            bigInt *res = fibExpFastDoubling(fibN);
+
+            struct timespec end;
+            clock_gettime(CLOCK_MONOTONIC, &end);
+            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            if(time < bestTime) {
+                bestTime = time;
+                nFast = n;
+                kFast = k;
+                printf("\nFound new best! n: %lu, k: %lu, time: %f\n", nFast, kFast, bestTime);
+            }
+            freeBigInt(res);
+        }
+    }
 }
 
 void benchMark() {
@@ -56,9 +89,9 @@ void benchMark() {
 }
 
 void bruteForceDebug(bool multiThread) {
-    if(multiThread){
+    if (multiThread) {
         printf("Bruteforce debug for multi-thread and single-thread\n");
-    }else{
+    } else {
         printf("Bruteforce debug for single-thread\n");
     }
     //edge cases

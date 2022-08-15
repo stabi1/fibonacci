@@ -6,8 +6,8 @@
 #include "mulAsm.h"
 #include "BigIntAsm.h"
 
-size_t naivMulFaster = 100; //Size when naivMul is faster than karatsuba // 100
-size_t karatsubaFaster = 400; //Size when karatsuba is faster than toom-cook //400
+size_t naivMulFaster = 60; //Size when naivMul is faster than karatsuba // 100
+size_t karatsubaFaster = 200; //Size when karatsuba is faster than toom-cook //400
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 

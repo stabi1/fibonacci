@@ -5,6 +5,9 @@
 
 #define IMPLEMENTIERUNG_KARATSUBA_H
 
+size_t naivMulFaster;
+size_t karatsubaFaster;
+
 bigInt *karatsuba(bigInt *x, bigInt *y);
 
 bigInt *multiplyToomCook3(bigInt *a, bigInt *b);

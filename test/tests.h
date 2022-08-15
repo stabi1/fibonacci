@@ -2,9 +2,11 @@
 #define FIBONACCI_TESTS_H
 
 #include <stdbool.h>
-#include "BigInt.h"
+#include "../src/BigInt.h"
 
 void test();
+
+void findBestValues();
 
 void benchMark();
 

@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include "BigIntAsm.h"
 #include "BigInt.h"
-#include "tests.h"
+#include "../test/tests.h"
 #include "util.h"
 #include "mul.h"
 
