@@ -14,3 +14,4 @@ main
 perf.data
 perf.data.old
 cmake-build-debug
+output.txt
