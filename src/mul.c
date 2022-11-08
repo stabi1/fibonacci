@@ -209,7 +209,9 @@ bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
     args->a = a;
     args->b = b;
     args->depth = depth;
-    return (bigInt *) multiplyToomCook3MultiThreadHelper((void *) args);
+    bigInt *temp = multiplyToomCook3MultiThreadHelper((void *) args);
+    free(args);
+    return temp;
 }
 
 void *multiplyToomCook3MultiThreadHelper(void *input) {
