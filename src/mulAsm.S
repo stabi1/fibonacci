@@ -9,7 +9,6 @@ naiveMul_Asm: //mul using naive multiplication
     push r13
     push r14
     push r15
-    push rbp
 
     //store pointer
     mov r12, [rdi] //r12 := x->start
@@ -27,197 +26,130 @@ naiveMul_Asm: //mul using naive multiplication
     sub rdi, r12
     add rdi, r15
     sub rdi, r14
-    add rdi, 1
     push r10
     push r11
-    call newBigInt
+    call newBigInt_Asm
     mov r8, rax // r8 = result
     pop r11
     pop r10
 
     //Loops
     mov rbx, [r8 + 24] // rbx := result->BigIntArray
-    sub rbx, 8 //because of the len res = lenx + leny + 1
     mov rax, [r8 + 8]
     lea rbx, [rbx + rax*8]
     // i = rcx, j = rsi
     mov rcx, r13 // i=x->end - x->start
     sub rcx, r12
-    neg rcx // r12, r13 new purpose
+    neg rcx
+    add rcx, 2
+    cmp rcx, 0
+    jge .LSkipMultipleLoop
+    sub r10, 16
 .LLoop1:
     mov rsi, r15 // j=y->end - y->start
     sub rsi ,r14
     neg rsi
-    add rsi, 12
-    jge .LShortLoopStart
+    add rsi, 4
+    jge .JmpKurzLoop
 .LLoop2:
-    sub rsi, 12
-
-    mov r9, rcx // r9 = n i + j
-    add r9, rsi
-    xor rbp, rbp
-
+    sub rsi, 4
     //Mul
-    //1
-    mov rdx, [r10 + rcx*8]
-    mulx rdi, rax, [r11 + rsi*8]
-
-    adcx rax, [rbx + r9*8]
-    mov [rbx + r9*8], rax
-    adcx rdi, [rbx + r9*8 + 8]
-    mov [rbx + r9*8 + 8], rdi
-
-    //2
-    mov rdx, [r10 + rcx*8]
-    mulx r12, r13, [r11 + rsi*8 + 8]
-
-    adox r13, [rbx + r9*8 + 8]
-    mov [rbx + r9*8 + 8], r13
-    adox r12, [rbx + r9*8 + 16]
-    mov [rbx + r9*8 + 16], r12
-
-    //3
-    mov rdx, [r10 + rcx*8]
-    mulx rdi, rax, [r11 + rsi*8 + 16]
-
-    adcx rax, [rbx + r9*8 + 16]
-    mov [rbx + r9*8 + 16], rax
-    adcx rdi, [rbx + r9*8 + 24]
-    mov [rbx + r9*8 + 24], rdi
-
-    //4
-    mov rdx, [r10 + rcx*8]
-    mulx r12, r13, [r11 + rsi*8 + 24]
-
-    adox r13, [rbx + r9*8 + 24]
-    mov [rbx + r9*8 + 24], r13
-    adox r12, [rbx + r9*8 + 32]
-    mov [rbx + r9*8 + 32], r12
-
-    //5
-    mov rdx, [r10 + rcx*8]
-    mulx rdi, rax, [r11 + rsi*8 + 32]
-
-    adcx rax, [rbx + r9*8 + 32]
-    mov [rbx + r9*8 + 32], rax
-    adcx rdi, [rbx + r9*8 + 40]
-    mov [rbx + r9*8 + 40], rdi
-
-    //6
-    mov rdx, [r10 + rcx*8]
-    mulx r12, r13, [r11 + rsi*8 + 40]
-
-    adox r13, [rbx + r9*8 + 40]
-    mov [rbx + r9*8 + 40], r13
-    adox r12, [rbx + r9*8 + 48]
-    mov [rbx + r9*8 + 48], r12
-
-    //7
-    mov rdx, [r10 + rcx*8]
-    mulx rdi, rax, [r11 + rsi*8 + 48]
-
-    adcx rax, [rbx + r9*8 + 48]
-    mov [rbx + r9*8 + 48], rax
-    adcx rdi, [rbx + r9*8 + 56]
-    mov [rbx + r9*8 + 56], rdi
-
-    //8
-    mov rdx, [r10 + rcx*8]
-    mulx r12, r13, [r11 + rsi*8 + 56]
-
-    adox r13, [rbx + r9*8 + 56]
-    mov [rbx + r9*8 + 56], r13
-    adox r12, [rbx + r9*8 + 64]
-    mov [rbx + r9*8 + 64], r12
-
-    //9
-    mov rdx, [r10 + rcx*8]
-    mulx rdi, rax, [r11 + rsi*8 + 64]
-
-    adcx rax, [rbx + r9*8 + 64]
-    mov [rbx + r9*8 + 64], rax
-    adcx rdi, [rbx + r9*8 + 72]
-    mov [rbx + r9*8 + 72], rdi
-
-    //10
-    mov rdx, [r10 + rcx*8]
-    mulx r12, r13, [r11 + rsi*8 + 72]
-
-    adox r13, [rbx + r9*8 + 72]
-    mov [rbx + r9*8 + 72], r13
-    adox r12, [rbx + r9*8 + 80]
-    mov [rbx + r9*8 + 80], r12
-
-    //11
-    mov rdx, [r10 + rcx*8]
-    mulx rdi, rax, [r11 + rsi*8 + 80]
-
-    adcx rax, [rbx + r9*8 + 80]
-    mov [rbx + r9*8 + 80], rax
-    adcx rdi, [rbx + r9*8 + 88]
-    mov [rbx + r9*8 + 88], rdi
-
-    //12
-    mov rdx, [r10 + rcx*8]
-    mulx r12, r13, [r11 + rsi*8 + 88]
-
-    adox r13, [rbx + r9*8 + 88]
-    mov [rbx + r9*8 + 88], r13
-    adox r12, [rbx + r9*8 + 96]
-    adcx r12, rbp
-    mov [rbx + r9*8 + 96], r12
-
-    mov rax, 0
-    adox rax, [rbx + r9*8 + 104]
-    adcx rax, rbp
-    mov [rbx + r9*8 + 104], rax
-
-    jc .LCarryLoop1
-    jno .LCarryLoop1End
-.LCarryLoop1:
-    mov rax, 0
-    adox rax, [rbx + r9*8 + 112]
-    adcx rax, rbp
-    mov [rbx + r9*8 + 112], rax
-    jc .LCarryLoop1Inc
-    jno .LCarryLoop1End
-.LCarryLoop1Inc:
-    add r9, 1
-    jmp .LCarryLoop1
-
-.LCarryLoop1End:
-    add rsi, 24
-    jl .LLoop2 //leave loop2
-
-.LShortLoopStart:
-    sub rsi, 12
-    jz .LShortFinish
-.LShortLoop:
-    mov r9, rcx // r9 = n i + j
-    add r9, rsi
-
     mov rax, [r10 + rcx*8]
     mul qword ptr [r11 + rsi*8]
+
+    mov r9, rcx // r9 = n i + j
+    add r9, rsi
+    sub r9, 2
 
     //add
     add [rbx + r9*8], rax
     adc [rbx + r9*8 + 8], rdx
     adc qword ptr [rbx + r9*8 + 16], 0
 
-    jnc .LShortLoopFinish
-.LCarryLoop2:
+    //second
+    mov rax, [r10 + rcx*8]
+    mul qword ptr [r11 + rsi*8 + 8]
+
+    add [rbx + r9*8 + 8], rax
+    adc [rbx + r9*8 + 16], rdx
     adc qword ptr [rbx + r9*8 + 24], 0
-    jnc .LShortLoopFinish
-    add r9, 1
-    jmp .LCarryLoop2
 
-.LShortLoopFinish:
+    //third
+    mov rax, [r10 + rcx*8]
+    mul qword ptr [r11 + rsi*8 + 16]
+
+    add [rbx + r9*8 + 16], rax
+    adc [rbx + r9*8 + 24], rdx
+    adc qword ptr [rbx + r9*8 + 32], 0
+
+    //fourth
+    mov rax, [r10 + rcx*8]
+    mul qword ptr [r11 + rsi*8 + 24]
+
+    add [rbx + r9*8 + 24], rax
+    adc [rbx + r9*8 + 32], rdx
+    adc qword ptr [rbx + r9*8 + 40], 0
+
+    add rsi, 8
+    jl .LLoop2 //leave loop2
+    sub rsi, 4
+    jz .LKurzFertig
+.LKurzLoop:
+    mov rax, [r10 + rcx*8]
+    mul qword ptr [r11 + rsi*8]
+
+    mov r9, rcx // r9 = n i + j
+    add r9, rsi
+    sub r9, 2
+
+    //add
+    add [rbx + r9*8], rax
+    adc [rbx + r9*8 + 8], rdx
+    adc qword ptr [rbx + r9*8 + 16], 0
+
     add rsi, 1
-    jl .LShortLoop
+    jl .LKurzLoop
 
-.LShortFinish:
+.LKurzFertig:
     add rcx, 1
     jl .LLoop1 //leave loop1
+
+    add r10, 16
+.LSkipMultipleLoop:
+    sub rcx, 2
+.LLoop1Einzel:
+    mov rsi, r15 // j=y->end - y->start
+    sub rsi ,r14
+    neg rsi
+.LLoop2Einzel:
+
+    //Mul
+    mov rax, [r10 + rcx*8]
+    mul qword ptr [r11 + rsi*8]
+
+    mov r9, rcx // r9 = n i + j
+    add r9, rsi
+
+    //add
+    add [rbx + r9*8], rax
+    adc [rbx + r9*8 + 8], rdx
+
+    //carry loop
+    jnc .LLoopEndEinzel
+    add r9, 2 // i := r9
+    jz .LLoopEndEinzel
+.LLoopEinzel:
+    add qword ptr [rbx + r9*8], 1
+    jnc .LLoopEndEinzel
+    setc al
+    add r9, 1
+    jz .LLoopEinzel
+
+.LLoopEndEinzel:
+    add rsi, 1
+    jnz .LLoop2Einzel //leave loop2
+    add rcx, 1
+    jnz .LLoop1Einzel //leave loop1
 
     //resize result
     mov r15, r8 //result = r15
@@ -229,10 +161,14 @@ naiveMul_Asm: //mul using naive multiplication
 
     //leave the function
     mov rax, r15
-    pop rbp
     pop r15
     pop r14
     pop r13
     pop r12
     pop rbx
     ret
+.JmpKurzLoop:
+    sub rsi, 4
+    jmp .LKurzLoop
+
+
