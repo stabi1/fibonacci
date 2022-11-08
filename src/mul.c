@@ -261,9 +261,14 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     pthread_t thread_idMul4;
     pthread_t thread_idMul5;
 
+    struct toomCookArgs *argsMul1 = malloc(sizeof(struct toomCookArgs));
+    struct toomCookArgs *argsMul2 = malloc(sizeof(struct toomCookArgs));
+    struct toomCookArgs *argsMul3 = malloc(sizeof(struct toomCookArgs));
+    struct toomCookArgs *argsMul4 = malloc(sizeof(struct toomCookArgs));
+    struct toomCookArgs *argsMul5 = malloc(sizeof(struct toomCookArgs));
+
     bigInt *v0;
     if (depth > 0) {
-        struct toomCookArgs *argsMul1 = malloc(sizeof(struct toomCookArgs));
         argsMul1->a = a0;
         argsMul1->b = b0;
         argsMul1->depth = depth - 1;
@@ -277,7 +282,6 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     bigInt *temp2 = smartSub(da1, a1);
     bigInt *vm1;
     if (depth > 0) {
-        struct toomCookArgs *argsMul2 = malloc(sizeof(struct toomCookArgs));
         argsMul2->a = temp1;
         argsMul2->b = temp2;
         argsMul2->depth = depth - 1;
@@ -293,7 +297,6 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(b1);
     bigInt *v1;
     if (depth > 0) {
-        struct toomCookArgs *argsMul3 = malloc(sizeof(struct toomCookArgs));
         argsMul3->a = da2;
         argsMul3->b = db2;
         argsMul3->depth = depth - 1;
@@ -315,7 +318,6 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(temp7);
     bigInt *v2;
     if (depth > 0) {
-        struct toomCookArgs *argsMul4 = malloc(sizeof(struct toomCookArgs));
         argsMul4->a = temp5;
         argsMul4->b = temp8;
         argsMul4->depth = depth - 1;
@@ -328,7 +330,6 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
 
     bigInt *vinf;
     if (depth > 0) {
-        struct toomCookArgs *argsMul5 = malloc(sizeof(struct toomCookArgs));
         argsMul5->a = a2;
         argsMul5->b = b2;
         argsMul5->depth = depth - 1;
@@ -366,6 +367,12 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         vinf = (bigInt *) temp;
         freeBigInt(a2);
         freeBigInt(b2);
+
+        free(argsMul1);
+        free(argsMul2);
+        free(argsMul3);
+        free(argsMul4);
+        free(argsMul5);
     }
 
     bigInt *temp9 = smartSub(v2, vm1);
