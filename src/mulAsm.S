@@ -28,7 +28,7 @@ naiveMul_Asm: //mul using naive multiplication
     sub rdi, r14
     push r10
     push r11
-    call newBigInt_Asm
+    call newBigInt
     mov r8, rax // r8 = result
     pop r11
     pop r10
