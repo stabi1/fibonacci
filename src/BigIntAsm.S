@@ -446,6 +446,7 @@ sub_Asm:
     push r15
     push rbx
     push rdx
+    push rax //align stack pointer
     mov r14, rdi //r14 = x
     mov r15, rsi //r15 = y
     mov r8, [rdi + 8]
@@ -482,6 +483,7 @@ sub_Asm:
     sub QWORD PTR [rbx + 8], 1
 .LSubEnde:
     mov rax, rbx
+    pop r8
     pop rdx
     mov [rax + 32], rdx
     pop rbx
