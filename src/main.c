@@ -327,10 +327,7 @@ bool handleCPUFeatures() {
     } else if (!__builtin_cpu_supports("sse3")) {
         printMissingFeature("sse3");
         return false;
-    } else if (!__builtin_cpu_supports("sse4a")) {
-        printMissingFeature("sse4a");
-        return false;
-    } else if (!__builtin_cpu_supports("sse4.1")) {
+    }else if (!__builtin_cpu_supports("sse4.1")) {
         printMissingFeature("sse4.1");
         return false;
     } else if (!__builtin_cpu_supports("sse4.2")) {
