@@ -347,18 +347,12 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         void *temp;
         pthread_join(thread_idMul1, &temp);
         v0 = (bigInt *) temp;
-        freeBigInt(a0);
-        freeBigInt(b0);
 
         pthread_join(thread_idMul2, &temp);
         vm1 = (bigInt *) temp;
-        freeBigInt(temp1);
-        freeBigInt(temp2);
 
         pthread_join(thread_idMul3, &temp);
         v1 = (bigInt *) temp;
-        freeBigInt(da2);
-        freeBigInt(db2);
 
         pthread_join(thread_idMul4, &temp);
         v2 = (bigInt *) temp;
@@ -369,13 +363,19 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         vinf = (bigInt *) temp;
         freeBigInt(a2);
         freeBigInt(b2);
-
-        free(argsMul1);
-        free(argsMul2);
-        free(argsMul3);
-        free(argsMul4);
-        free(argsMul5);
     }
+    freeBigInt(temp1);
+    freeBigInt(temp2);
+    freeBigInt(a0);
+    freeBigInt(b0);
+    freeBigInt(da2);
+    freeBigInt(db2);
+
+    free(argsMul1);
+    free(argsMul2);
+    free(argsMul3);
+    free(argsMul4);
+    free(argsMul5);
 
     bigInt *temp9 = smartSub(v2, vm1);
     freeBigInt(v2);
