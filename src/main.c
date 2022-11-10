@@ -293,6 +293,7 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
 
 size_t getDepth() {
     size_t numberOfCores = get_nprocs();
+    printf("Number of Cores: %lu\n", numberOfCores);
     if (numberOfCores < 3) {
         return 0;
     } else if (numberOfCores < 10) {

@@ -36,6 +36,7 @@ add_Asm:
     push r15
     push rbx
     push rdx
+    sub rsp, 8 //align stack pointer
     mov r14, rdi //r14 = x
     mov r15, rsi //r15 = y
     mov r8, [rdi + 8]
@@ -74,6 +75,7 @@ add_Asm:
     sub QWORD PTR [rbx + 8], 1
 .LAddEnde:
     mov rax, rbx
+    add rsp, 8 //align stack pointer
     pop rdx
     mov [rax + 32], rdx
     pop rbx
@@ -446,6 +448,7 @@ sub_Asm:
     push r15
     push rbx
     push rdx
+    sub rsp, 8 //align stack pointer
     mov r14, rdi //r14 = x
     mov r15, rsi //r15 = y
     mov r8, [rdi + 8]
@@ -482,6 +485,7 @@ sub_Asm:
     sub QWORD PTR [rbx + 8], 1
 .LSubEnde:
     mov rax, rbx
+    add rsp, 8 //align stack pointer
     pop rdx
     mov [rax + 32], rdx
     pop rbx
