@@ -47,12 +47,17 @@ const char *fibonacciKeys[] = {
 int main(int argc, char *argv[]) {
     bool cpuFeatures = handleCPUFeatures();
     if (!cpuFeatures) {
-        return -1;
+        return EXIT_FAILURE;
     }
     //Error handling
-    if (setjmp(exceptionJump)) { //Exception e.g malloc returned null
+    if (setjmp(exceptionJump)) { //Exception e.g. malloc returned null
         printf("An error occurred, program terminated\n");
-        return 1;
+        return EXIT_FAILURE;
+    }
+
+    if(argc == 1) {
+        printHelpMenu();
+        return EXIT_FAILURE;
     }
 
     char radix = 'h';
@@ -68,16 +73,16 @@ int main(int argc, char *argv[]) {
         switch (option) {
             case 'h':
                 printHelpMenu();
-                return 0;
+                return EXIT_SUCCESS;
             case 'd':
                 bruteForceDebug(multiThread);
-                return 0;
+                return EXIT_SUCCESS;
             case 't':
                 test();
-                return 0;
+                return EXIT_SUCCESS;
             case 'b':
                 benchMark();
-                return 0;
+                return EXIT_SUCCESS;
             case 'm' :
                 multiThread = true;
                 break;
@@ -85,7 +90,7 @@ int main(int argc, char *argv[]) {
                 if (optarg == NULL || (optarg[0] != 'h' && optarg[0] != 'd')) {
                     printf("no radix option provided!\n");
                     printHelpMenu();
-                    return -1;
+                    return EXIT_FAILURE;
                 }
                 radix = optarg[0];
                 if (radix != 'd' && radix != 'h') {
@@ -97,7 +102,7 @@ int main(int argc, char *argv[]) {
                 if (optarg == NULL || (optarg[0] != 'f' && optarg[0] != 't' && optarg[0] != 'n')) {
                     printf("no output option provided!\n");
                     printHelpMenu();
-                    return -1;
+                    return EXIT_FAILURE;
                 }
                 output = optarg[0];
                 if (output != 'f' && output != 't' && output != 'n') {
@@ -112,18 +117,18 @@ int main(int argc, char *argv[]) {
                             if (value == NULL) {
                                 printf("No explicit number provided!\n");
                                 printHelpMenu();
-                                return -1;
+                                return EXIT_FAILURE;
                             }
                             if (!checkIsNumber(value)) {
                                 printf("%s is not a valid number!\n", value);
-                                return -1;
+                                return EXIT_FAILURE;
                             }
                             n = strtol(value, NULL, 10);
                             break;
                         default:
                             printf("Invalid input formatting for fibonacci!\n");
                             printHelpMenu();
-                            return -1;
+                            return EXIT_FAILURE;
                     }
                 }
                 printFibonacci(n, radix, output, multiThread);
@@ -133,7 +138,7 @@ int main(int argc, char *argv[]) {
                 break;
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
@@ -149,7 +154,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         printf("Multithreading enabled\n");
         res = fibExpFastDoublingMultiThread(n);
     } else {
-        printf("Singe Thread\n");
+        printf("Single Thread\n");
         res = fibExpFastDoubling(n);
     }
     struct timespec end;
@@ -163,12 +168,14 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         clock_gettime(CLOCK_MONOTONIC, &start2);
         size_t strSizeInBytes;
         char *resString;
-        if (radix == 'h') {
-            resString = bigIntToHexString(res);
-            strSizeInBytes = sizeInBytes * 2;
-        } else {
+        if (radix == 'd') {
+            printf("Starting conversion to dec\n");
             resString = bigIntToDecString(res);
             strSizeInBytes = strlen(resString);
+        } else {
+            printf("Starting conversion to hex\n");
+            resString = bigIntToHexString(res);
+            strSizeInBytes = sizeInBytes * 2;
         }
 
         if (output == 'f') { //Terminal output
