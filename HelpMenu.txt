@@ -13,6 +13,7 @@ miscellaneous:  -h -> help file
                 -d -> debug
                 -t -> test
                 -b -> benchMark
+                -v -> verbose
 
 the OS must be Linux!
 
@@ -28,4 +29,3 @@ cpu features needed:
     abm
     bmi2
     adx
-

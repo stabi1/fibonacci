@@ -23,6 +23,7 @@ bool handleCPUFeatures();
 void printMissingFeature(char *feature);
 
 jmp_buf exceptionJump;
+bool verbose = false;
 
 static struct option long_options[] = {
         {"help",        no_argument,       NULL, 'h'},
@@ -33,6 +34,7 @@ static struct option long_options[] = {
         {"benchMark",   no_argument,       NULL, 'b'},
         {"test",        no_argument,       NULL, 't'},
         {"fibonacci",   required_argument, NULL, 'f'},
+        {"verbose",     no_argument,       NULL, 'v'},
         {NULL, 0,                          NULL, 0}
 };
 
@@ -68,7 +70,7 @@ int main(int argc, char *argv[]) {
     bool multiThread = false;
     char *subOpts, *value;
     value = NULL;
-    while ((option = getopt_long(argc, argv, "hbtmdr:o:f:", long_options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "hbtmvdr:o:f:", long_options, NULL)) != -1) {
         subOpts = optarg;
         switch (option) {
             case 'h':
@@ -85,6 +87,9 @@ int main(int argc, char *argv[]) {
                 return EXIT_SUCCESS;
             case 'm' :
                 multiThread = true;
+                break;
+            case 'v' :
+                verbose = true;
                 break;
             case 'r' :
                 if (optarg == NULL || (optarg[0] != 'h' && optarg[0] != 'd')) {
@@ -135,7 +140,7 @@ int main(int argc, char *argv[]) {
                 break;
             default:
                 printHelpMenu();
-                break;
+                return EXIT_FAILURE;
         }
     }
     return EXIT_SUCCESS;
@@ -169,11 +174,11 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         size_t strSizeInBytes;
         char *resString;
         if (radix == 'd') {
-            printf("Starting conversion to dec\n");
+            if(verbose) printf("Starting conversion to dec\n");
             resString = bigIntToDecString(res);
             strSizeInBytes = strlen(resString);
         } else {
-            printf("Starting conversion to hex\n");
+            if(verbose) printf("Starting conversion to hex\n");
             resString = bigIntToHexString(res);
             strSizeInBytes = sizeInBytes * 2;
         }
@@ -216,7 +221,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         printf("No output\n");
         double sizeInKB = ((double) sizeInBytes) / 1000;
         double sizeInMB = ((double) sizeInBytes) / 1000000;
-        printf("Time to calculate: %fs\nResultNUmber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
+        printf("Time to calculate: %fs\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
                sizeInMB);
     }
     freeBigInt(res);
@@ -228,7 +233,24 @@ bigInt *fibExpFastDoubling(uint64_t n) {
     b->bigIntArray[0] = 1;
     unsigned int shift = 64 - custom_lzcnt(n) - 1;
     uint64_t nBinary = ((n >> shift) << shift);
+
+    //for verbose
+    unsigned long iterations = 64 - custom_lzcnt(nBinary);
+    int counter = 1;
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    printf("\n");
+
     for (; nBinary != 0; nBinary >>= 1) {
+        if(verbose) {
+            clock_gettime(CLOCK_MONOTONIC, &end);
+            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            size_t sizeInBytes = (a->end - a->start) * 8;
+            double sizeInMB = ((double) sizeInBytes) / 1000000;
+            printf("Iteration ongoing %d/%lu; Current size: %fsMB; Time needed for previous iteration: %fs\n", counter, iterations, sizeInMB, time);
+            counter++;
+            clock_gettime(CLOCK_MONOTONIC, &start);
+        }
         bigInt *temp1 = shiftLeft_Asm(b, 1);
         bigInt *temp2 = sub_Asm(temp1, a, false);
         freeBigInt(temp1);
@@ -253,6 +275,11 @@ bigInt *fibExpFastDoubling(uint64_t n) {
         }
     }
     freeBigInt(b);
+    if(verbose) {
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        printf("Time needed for last Iteration: %fs\n\n", time);
+    }
     return a;
 }
 
@@ -263,7 +290,24 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
     b->bigIntArray[0] = 1;
     unsigned int shift = 64 - custom_lzcnt(n) - 1;
     uint64_t nBinary = ((n >> shift) << shift);
+
+    //for verbose
+    unsigned long iterations = 64 - custom_lzcnt(nBinary);
+    int counter = 1;
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    printf("\n");
+
     for (; nBinary != 0; nBinary >>= 1) {
+        if(verbose) {
+            clock_gettime(CLOCK_MONOTONIC, &end);
+            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            size_t sizeInBytes = (a->end - a->start) * 8;
+            double sizeInMB = ((double) sizeInBytes) / 1000000;
+            printf("Iteration ongoing %d/%lu; Current size: %fMB; Time needed for previous iteration: %fs\n", counter, iterations, sizeInMB, time);
+            counter++;
+            clock_gettime(CLOCK_MONOTONIC, &start);
+        }
         bigInt *temp1 = shiftLeft_Asm(b, 1);
         bigInt *temp2 = sub_Asm(temp1, a, false);
         freeBigInt(temp1);
@@ -288,19 +332,30 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
         }
     }
     freeBigInt(b);
+    if(verbose) {
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        printf("Time needed for last Iteration: %fs\n\n", time);
+    }
     return a;
 }
 
 size_t getDepth() {
     size_t numberOfCores = get_nprocs();
-    printf("Number of Cores: %lu\n", numberOfCores);
+    if(verbose) {
+        printf("Number of cores: %lu\n", numberOfCores);
+    }
     if (numberOfCores < 3) {
+        if(verbose) printf("Number of threads created: %d\n", 3);
         return 0;
     } else if (numberOfCores < 10) {
+        if(verbose) printf("Number of threads created: %d\n", 9);
         return 1;
     } else if (numberOfCores < 28) {
+        if(verbose) printf("Number of threads created: %d\n", 27);
         return 2;
     } else if (numberOfCores < 82) {
+        if(verbose) printf("Number of threads created: %d\n", 81);
         return 3;
     } else {
         return 4;
