@@ -15,7 +15,7 @@ bigInt *getLowerFrom(bigInt *x, size_t n);
 
 bigInt *getUpperFrom(bigInt *x, size_t n);
 
-void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt* erg[]);
+void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]);
 
 bigInt *exactDivideBy3(bigInt *x);
 

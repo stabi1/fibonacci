@@ -68,7 +68,7 @@ bigInt *shiftRight(bigInt *x, size_t n) {
 char *bigIntToHexString(bigInt *x) {
     size_t lenInBytes = (x->end - x->start) * 8;
     if (x->negative) lenInBytes += 1;
-    char * resChar =  uint64tToHexString(x->bigIntArray, lenInBytes, x->start);
+    char *resChar = uint64tToHexString(x->bigIntArray, lenInBytes, x->start);
     if (x->negative) resChar[0] = '-';
     return resChar;
 }
@@ -76,7 +76,7 @@ char *bigIntToHexString(bigInt *x) {
 //fills the char array with the dec presentation of the bigInt
 char *bigIntToDecString(bigInt *x) {
     size_t lenInBytes = (x->end - x->start) * 8 + 1; //TODO
-    char * resChar = uint64tToDecString(x->bigIntArray, lenInBytes);
+    char *resChar = uint64tToDecString(x->bigIntArray, lenInBytes);
     if (x->negative) resChar[0] = '-';
     return resChar;
 }

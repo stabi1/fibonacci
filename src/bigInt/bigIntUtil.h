@@ -9,9 +9,9 @@ char *extendHexString(char *hex);
 
 char *trimZeroes(char *str);
 
-char* uint64tToHexString(uint64_t* array, size_t lenInBytes, size_t start);
+char *uint64tToHexString(uint64_t *array, size_t lenInBytes, size_t start);
 
-char* uint64tToDecString(uint64_t* array, size_t lenInBytes);
+char *uint64tToDecString(uint64_t *array, size_t lenInBytes);
 
 size_t hexToNibble(char hex);
 

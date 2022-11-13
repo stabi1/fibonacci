@@ -29,8 +29,8 @@ void findBestValues() {
     double bestTime = DBL_MAX;
     uint64_t fibN = 10000000;
     printf("Beginning testing\n");
-    for(size_t n = 20; n<1000; n += 5) {
-        for(size_t k = n + 2; k<n + 5000; k += 30) {
+    for (size_t n = 20; n < 1000; n += 5) {
+        for (size_t k = n + 2; k < n + 5000; k += 30) {
             printf("\rTesting %lu %lu", n, k);
             //naiveMulFaster = n;
             //karatsubaFaster = k;
@@ -42,7 +42,7 @@ void findBestValues() {
             struct timespec end;
             clock_gettime(CLOCK_MONOTONIC, &end);
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-            if(time < bestTime) {
+            if (time < bestTime) {
                 bestTime = time;
                 nFast = n;
                 kFast = k;

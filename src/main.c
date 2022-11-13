@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    if(argc == 1) {
+    if (argc == 1) {
         printHelpMenu();
         return EXIT_FAILURE;
     }
@@ -168,11 +168,11 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         size_t strSizeInBytes;
         char *resString;
         if (radix == 'd') {
-            if(verbose) printf("Starting conversion to dec\n");
+            if (verbose) printf("Starting conversion to dec\n");
             resString = bigIntToDecString(res);
             strSizeInBytes = strlen(resString);
         } else {
-            if(verbose) printf("Starting conversion to hex\n");
+            if (verbose) printf("Starting conversion to hex\n");
             resString = bigIntToHexString(res);
             strSizeInBytes = sizeInBytes * 2;
         }
@@ -283,7 +283,7 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
         }
     }
     freeBigInt(b);
-    if(verbose) {
+    if (verbose) {
         clock_gettime(CLOCK_MONOTONIC, &end);
         double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
         printf("Time needed for last Iteration: %fs\n\n", time);
@@ -293,20 +293,20 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
 
 size_t getDepth() {
     size_t numberOfCores = get_nprocs();
-    if(verbose) {
+    if (verbose) {
         printf("Number of cores: %lu\n", numberOfCores);
     }
     if (numberOfCores < 3) {
-        if(verbose) printf("Number of threads created: %d\n", 3);
+        if (verbose) printf("Number of threads created: %d\n", 3);
         return 0;
     } else if (numberOfCores < 10) {
-        if(verbose) printf("Number of threads created: %d\n", 9);
+        if (verbose) printf("Number of threads created: %d\n", 9);
         return 1;
     } else if (numberOfCores < 28) {
-        if(verbose) printf("Number of threads created: %d\n", 27);
+        if (verbose) printf("Number of threads created: %d\n", 27);
         return 2;
     } else if (numberOfCores < 82) {
-        if(verbose) printf("Number of threads created: %d\n", 81);
+        if (verbose) printf("Number of threads created: %d\n", 81);
         return 3;
     } else {
         return 4;
@@ -341,7 +341,7 @@ bool handleCPUFeatures() {
     } else if (!__builtin_cpu_supports("sse3")) {
         printMissingFeature("sse3");
         return false;
-    }else if (!__builtin_cpu_supports("sse4.1")) {
+    } else if (!__builtin_cpu_supports("sse4.1")) {
         printMissingFeature("sse4.1");
         return false;
     } else if (!__builtin_cpu_supports("sse4.2")) {
