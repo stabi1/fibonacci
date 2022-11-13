@@ -1,4 +1,3 @@
-#include "main.h"
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
@@ -6,11 +5,9 @@
 #include <string.h>
 #include <sys/sysinfo.h>
 #include <stdbool.h>
-#include "BigIntAsm.h"
-#include "BigInt.h"
+#include "main.h"
 #include "../test/tests.h"
 #include "util.h"
-#include "mul.h"
 
 size_t getDepth();
 

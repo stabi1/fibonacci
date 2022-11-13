@@ -1,15 +1,15 @@
-#include "BigInt.h"
 #include <stdbool.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "util.h"
-#include "BigIntAsm.h"
+#include "bigIntMethods.h"
+#include "bigIntUtil.h"
+#include "bigIntAsm.h"
 
-extern jmp_buf exceptionJump; //Jump point when a error occurs
+extern jmp_buf exceptionJump; //Jump-point when an error occurs
 
-//allocates memory for a new BigInt of the given size
+//allocates memory for a new bigInt of the given size
 bigInt *newBigInt(size_t len) {
     bigInt *res = malloc(sizeof(bigInt));
     if (res == NULL) {

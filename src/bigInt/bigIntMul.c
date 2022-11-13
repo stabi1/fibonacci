@@ -1,12 +1,12 @@
-#include "mul.h"
 #include <stddef.h>
 #include <immintrin.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include "bigIntMul.h"
 #include "mulAsm.h"
-#include "BigIntAsm.h"
+#include "bigIntAsm.h"
 
-size_t naivMulFaster = 60; //Size when naivMul is faster than karatsuba // 100
+size_t naiveMulFaster = 60; //Size when naiveMul is faster than karatsuba // 100
 size_t karatsubaFaster = 200; //Size when karatsuba is faster than toom-cook //400
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
@@ -16,15 +16,15 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     //termination condition
     size_t xLen = x->end - x->start;
     size_t yLen = y->end - y->start;
-    //if smaller than naivMulFaster, use naivMul
-    if (xLen <= naivMulFaster || yLen <= naivMulFaster) {
+    //if smaller than naiveMulFaster, use naiveMul
+    if (xLen <= naiveMulFaster || yLen <= naiveMulFaster) {
         if (xLen > yLen) {
             return naiveMul_Asm(x, y);
         } else {
             return naiveMul_Asm(y, x);
         }
     }
-    //calulate m -> middle of the bigger bigInt
+    //calculate m -> middle of the bigger bigInt
     size_t m;
     if (xLen > yLen) {
         m = xLen / 2;
@@ -70,24 +70,24 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     } else {
         sign = true;
     }
-    size_t alen = a->end - a->start;
-    size_t blen = b->end - b->start;
+    size_t aLen = a->end - a->start;
+    size_t bLen = b->end - b->start;
     //if smaller than karatsubaFaster, use karatsuba
-    if (alen <= karatsubaFaster || blen <= karatsubaFaster) {
+    if (aLen <= karatsubaFaster || bLen <= karatsubaFaster) {
         bigInt *res = karatsuba(a, b);
         res->negative = sign;
         return res;
     }
     size_t largest;
-    if (alen < blen) {
-        largest = blen;
+    if (aLen < bLen) {
+        largest = bLen;
     } else {
-        largest = alen;
+        largest = aLen;
     }
 
-    // k is the size (in qwords) of the lower-order slices.
+    // k is the size (in qword) of the lower-order slices.
     size_t k = (largest + 2) / 3;
-    // r is the size (in qwords) of the highest-order slice.
+    // r is the size (in qword) of the highest-order slice.
     size_t r = largest - 2 * k;
 
     // Obtain slices of the numbers. a2 and b2 are the most significant
@@ -136,7 +136,7 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *v2 = multiplyToomCook3(temp5, temp8);
     freeBigInt(temp8);
     freeBigInt(temp5);
-    bigInt *vinf = multiplyToomCook3(a2, b2);
+    bigInt *vInf = multiplyToomCook3(a2, b2);
     freeBigInt(a2);
     freeBigInt(b2);
 
@@ -156,18 +156,18 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     freeBigInt(temp11);
     bigInt *temp12 = smartSub(t1, tm1);
     freeBigInt(t1);
-    bigInt *t1_2 = smartSub(temp12, vinf);
+    bigInt *t1_2 = smartSub(temp12, vInf);
     freeBigInt(temp12);
-    bigInt *temp13 = shiftLeft_Asm(vinf, 1);
+    bigInt *temp13 = shiftLeft_Asm(vInf, 1);
     bigInt *t2_3 = smartSub(t2_2, temp13);
     freeBigInt(t2_2);
     freeBigInt(temp13);
     bigInt *tm2 = smartSub(tm1, t2_3);
     freeBigInt(tm1);
 
-    bigInt *temp14 = shiftAdd_Asm(t2_3, vinf, k);
+    bigInt *temp14 = shiftAdd_Asm(t2_3, vInf, k);
     freeBigInt(t2_3);
-    freeBigInt(vinf);
+    freeBigInt(vInf);
     bigInt *temp15 = shiftAdd_Asm(t1_2, temp14, k);
     freeBigInt(temp14);
     freeBigInt(t1_2);
@@ -195,10 +195,10 @@ bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
     } else {
         sign = true;
     }
-    size_t alen = a->end - a->start;
-    size_t blen = b->end - b->start;
+    size_t aLen = a->end - a->start;
+    size_t bLen = b->end - b->start;
     //if smaller than karatsubaFaster, use karatsuba
-    if (alen <= karatsubaFaster || blen <= karatsubaFaster) {
+    if (aLen <= karatsubaFaster || bLen <= karatsubaFaster) {
         bigInt *res = karatsuba(a, b);
         res->negative = sign;
         return res;
@@ -224,24 +224,24 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     } else {
         sign = true;
     }
-    size_t alen = a->end - a->start;
-    size_t blen = b->end - b->start;
+    size_t aLen = a->end - a->start;
+    size_t bLen = b->end - b->start;
     //if smaller than karatsubaFaster, use karatsuba
-    if (alen <= karatsubaFaster || blen <= karatsubaFaster) {
+    if (aLen <= karatsubaFaster || bLen <= karatsubaFaster) {
         bigInt *res = karatsuba(a, b);
         res->negative = sign;
         return res;
     }
     size_t largest;
-    if (alen < blen) {
-        largest = blen;
+    if (aLen < bLen) {
+        largest = bLen;
     } else {
-        largest = alen;
+        largest = aLen;
     }
 
-    // k is the size (in qwords) of the lower-order slices.
+    // k is the size (in qword) of the lower-order slices.
     size_t k = (largest + 2) / 3;
-    // r is the size (in qwords) of the highest-order slice.
+    // r is the size (in qword) of the highest-order slice.
     size_t r = largest - 2 * k;
 
     // Obtain slices of the numbers. a2 and b2 are the most significant
@@ -330,14 +330,14 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         freeBigInt(temp5);
     }
 
-    bigInt *vinf;
+    bigInt *vInf;
     if (depth > 0) {
         argsMul5->a = a2;
         argsMul5->b = b2;
         argsMul5->depth = depth - 1;
         pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5);
     } else {
-        vinf = multiplyToomCook3(a2, b2);
+        vInf = multiplyToomCook3(a2, b2);
         freeBigInt(a2);
         freeBigInt(b2);
     }
@@ -360,7 +360,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         freeBigInt(temp5);
 
         pthread_join(thread_idMul5, &temp);
-        vinf = (bigInt *) temp;
+        vInf = (bigInt *) temp;
         freeBigInt(a2);
         freeBigInt(b2);
     }
@@ -393,18 +393,18 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(temp11);
     bigInt *temp12 = smartSub(t1, tm1);
     freeBigInt(t1);
-    bigInt *t1_2 = smartSub(temp12, vinf);
+    bigInt *t1_2 = smartSub(temp12, vInf);
     freeBigInt(temp12);
-    bigInt *temp13 = shiftLeft_Asm(vinf, 1);
+    bigInt *temp13 = shiftLeft_Asm(vInf, 1);
     bigInt *t2_3 = smartSub(t2_2, temp13);
     freeBigInt(t2_2);
     freeBigInt(temp13);
     bigInt *tm2 = smartSub(tm1, t2_3);
     freeBigInt(tm1);
 
-    bigInt *temp14 = shiftAdd_Asm(t2_3, vinf, k);
+    bigInt *temp14 = shiftAdd_Asm(t2_3, vInf, k);
     freeBigInt(t2_3);
-    freeBigInt(vinf);
+    freeBigInt(vInf);
     bigInt *temp15 = shiftAdd_Asm(t1_2, temp14, k);
     freeBigInt(temp14);
     freeBigInt(t1_2);

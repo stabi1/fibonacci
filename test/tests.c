@@ -5,8 +5,7 @@
 #include <stdbool.h>
 #include <float.h>
 #include "../src/main.h"
-#include "../src/mulAsm.h"
-//#include "../src/mul.h"
+#include "../src/bigInt/mulAsm.h"
 
 char *randomHex(uint64_t n);
 
@@ -33,7 +32,7 @@ void findBestValues() {
     for(size_t n = 20; n<1000; n += 5) {
         for(size_t k = n + 2; k<n + 5000; k += 30) {
             printf("\rTesting %lu %lu", n, k);
-            //naivMulFaster = n;
+            //naiveMulFaster = n;
             //karatsubaFaster = k;
             struct timespec start;
             clock_gettime(CLOCK_MONOTONIC, &start);

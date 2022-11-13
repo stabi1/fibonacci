@@ -1,10 +1,11 @@
-#ifndef IMPLEMENTATION_BETTERBIGINT_H
+#ifndef FIBONACCI_BIGINTMETHODS_H
 
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 
-#define IMPLEMENTATION_BETTERBIGINT_H
+#define FIBONACCI_BIGINTMETHODS_H
+
 typedef struct BigIntTag { //The datastructure that represents a large number
     size_t start; // in qWords(64bit)
     size_t end;
@@ -43,4 +44,4 @@ bigInt *smartAdd(bigInt *x, bigInt *y);
 
 bigInt *exactDivideBy3(bigInt *x);
 
-#endif //IMPLEMENTATION_BETTERBIGINT_H
+#endif //FIBONACCI_BIGINTMETHODS_H
