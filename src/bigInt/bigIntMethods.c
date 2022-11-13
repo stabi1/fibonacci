@@ -54,37 +54,35 @@ void freeBigInt(bigInt *toDelete) {
     free(toDelete);
 }
 
-//converts a bigInt to a hex-string
-char *bigIntToStr(bigInt *x) {
-    return bigIntToHexString(x);
-    //TODO decimal output
+//shifts bigInt to the left. n must be smaller than 64
+bigInt *shiftLeft(bigInt *x, size_t n) {
+    return shiftLeft_Asm(x, n);
 }
 
-//prints the given bigInt
-void printBigInt(bigInt *x) {
-    char *str = bigIntToStr(x);
-    if (x->negative) {
-        printf("-0x%s\n", str);
-    } else {
-        printf("0x%s\n", str);
-    }
-    free(str);
+//shifts bigInt to the right. n must be smaller than 64
+bigInt *shiftRight(bigInt *x, size_t n) {
+    return shiftRight_Asm(x, n);
 }
 
 //fills the char array with the hex presentation of the bigInt
 char *bigIntToHexString(bigInt *x) {
     size_t lenInBytes = (x->end - x->start) * 8;
-    return uint64tToHexString(x->bigIntArray, lenInBytes, x->start);
+    if (x->negative) lenInBytes += 1;
+    char * resChar =  uint64tToHexString(x->bigIntArray, lenInBytes, x->start);
+    if (x->negative) resChar[0] = '-';
+    return resChar;
 }
 
 //fills the char array with the dec presentation of the bigInt
 char *bigIntToDecString(bigInt *x) {
-    size_t lenInBytes = (x->end - x->start) * 8;
-    return uint64tToDecString(x->bigIntArray, lenInBytes);
+    size_t lenInBytes = (x->end - x->start) * 8 + 1; //TODO
+    char * resChar = uint64tToDecString(x->bigIntArray, lenInBytes);
+    if (x->negative) resChar[0] = '-';
+    return resChar;
 }
 
 //returns the bigInt of the HexString, hex is being freed
-bigInt *hexStringToBigInt(char hex[]) {
+bigInt *hexStringToBigInt(char hex[]) { //TODO support sign
     char *paddedHex = extendHexString(hex);
     size_t length = strlen(paddedHex);
     bigInt *res = newBigInt(length / 16);

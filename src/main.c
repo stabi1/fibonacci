@@ -151,14 +151,11 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
 
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    bigInt *res;
-    if (multiThread) {
-        printf("Multithreading enabled\n");
-        res = fibExpFastDoublingMultiThread(n);
-    } else {
-        printf("Single Thread\n");
-        res = fibExpFastDoubling(n);
-    }
+
+    if (multiThread) printf("Multithreading enabled\n");
+    else printf("Single Thread\n");
+    bigInt *res = fibExpFastDoubling(n, multiThread);
+
     struct timespec end;
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
@@ -180,7 +177,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
             strSizeInBytes = sizeInBytes * 2;
         }
 
-        if (output == 'f') { //Terminal output
+        if (output == 'f') { // File output
             char *filename = "output.txt";
             FILE *outputFile = fopen(filename, "a+");
             if (!outputFile) {
@@ -196,7 +193,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
                 }
             }
 
-        } else { //File output (output == 't')
+        } else { //Terminal output (output == 't')
             printf("Result: %s\n", resString);
         }
         struct timespec end2;
@@ -224,63 +221,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
     freeBigInt(res);
 }
 
-bigInt *fibExpFastDoubling(uint64_t n) {
-    bigInt *a = newBigInt(1);
-    bigInt *b = newBigInt(1);
-    b->bigIntArray[0] = 1;
-    unsigned int shift = 64 - custom_lzcnt(n) - 1;
-    uint64_t nBinary = ((n >> shift) << shift);
-
-    //for verbose
-    unsigned long iterations = 64 - custom_lzcnt(nBinary);
-    int counter = 1;
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    printf("\n");
-
-    for (; nBinary != 0; nBinary >>= 1) {
-        if(verbose) {
-            clock_gettime(CLOCK_MONOTONIC, &end);
-            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-            size_t sizeInBytes = (a->end - a->start) * 8;
-            double sizeInMB = ((double) sizeInBytes) / 1000000;
-            printf("Iteration ongoing %d/%lu; Current size: %fsMB; Time needed for previous iteration: %fs\n", counter, iterations, sizeInMB, time);
-            counter++;
-            clock_gettime(CLOCK_MONOTONIC, &start);
-        }
-        bigInt *temp1 = shiftLeft_Asm(b, 1);
-        bigInt *temp2 = sub_Asm(temp1, a, false);
-        freeBigInt(temp1);
-        bigInt *d = multiplyToomCook3(a, temp2);
-        freeBigInt(temp2);
-        bigInt *temp3 = multiplyToomCook3(a, a);
-        bigInt *temp4 = multiplyToomCook3(b, b);
-        freeBigInt(a);
-        freeBigInt(b);
-        bigInt *e = add_Asm(temp3, temp4, false);
-        freeBigInt(temp3);
-        freeBigInt(temp4);
-        a = d;
-        b = e;
-
-        // Advance by one conditionally
-        if ((n & nBinary) != 0) {
-            bigInt *c = add_Asm(a, b, false);
-            freeBigInt(a);
-            a = b;
-            b = c;
-        }
-    }
-    freeBigInt(b);
-    if(verbose) {
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-        printf("Time needed for last Iteration: %fs\n\n", time);
-    }
-    return a;
-}
-
-bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
+bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
     size_t depth = getDepth();
     bigInt *a = newBigInt(1);
     bigInt *b = newBigInt(1);
@@ -293,28 +234,41 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
     int counter = 1;
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    printf("\n");
+    if (verbose) printf("\n");
 
     for (; nBinary != 0; nBinary >>= 1) {
-        if(verbose) {
+        if (verbose) {
             clock_gettime(CLOCK_MONOTONIC, &end);
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
             size_t sizeInBytes = (a->end - a->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
-            printf("Iteration ongoing %d/%lu; Current size: %fMB; Time needed for previous iteration: %fs\n", counter, iterations, sizeInMB, time);
+            printf("Iteration ongoing %d/%lu; Current size: %fsMB; Time needed for previous iteration: %fs\n", counter,
+                   iterations, sizeInMB, time);
             counter++;
             clock_gettime(CLOCK_MONOTONIC, &start);
         }
-        bigInt *temp1 = shiftLeft_Asm(b, 1);
-        bigInt *temp2 = sub_Asm(temp1, a, false);
+        bigInt *temp1 = shiftLeft(b, 1);
+        bigInt *temp2 = smartSub(temp1, a);
         freeBigInt(temp1);
-        bigInt *d = multiplyToomCook3MultiThread(a, temp2, depth);
-        freeBigInt(temp2);
-        bigInt *temp3 = multiplyToomCook3MultiThread(a, a, depth);
-        bigInt *temp4 = multiplyToomCook3MultiThread(b, b, depth);
+
+        bigInt *d;
+        bigInt *temp3;
+        bigInt *temp4;
+        if (multiThread) {
+            d = multiplyToomCook3MultiThread(a, temp2, depth);
+            freeBigInt(temp2);
+            temp3 = multiplyToomCook3MultiThread(a, a, depth);
+            temp4 = multiplyToomCook3MultiThread(b, b, depth);
+        } else {
+            d = multiplyToomCook3(a, temp2);
+            freeBigInt(temp2);
+            temp3 = multiplyToomCook3(a, a);
+            temp4 = multiplyToomCook3(b, b);
+        }
+
         freeBigInt(a);
         freeBigInt(b);
-        bigInt *e = add_Asm(temp3, temp4, false);
+        bigInt *e = smartAdd(temp3, temp4);
         freeBigInt(temp3);
         freeBigInt(temp4);
         a = d;
@@ -322,7 +276,7 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
 
         // Advance by one conditionally
         if ((n & nBinary) != 0) {
-            bigInt *c = add_Asm(a, b, false);
+            bigInt *c = smartAdd(a, b);
             freeBigInt(a);
             a = b;
             b = c;
