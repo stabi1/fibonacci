@@ -2,7 +2,7 @@
 .global naiveMul_Asm
 
 .align 16
-naiveMul2_Asm: //mul using naive multiplication
+naiveMul_Asm: //mul using naive multiplication
     //*x in rdi, *y in rsi
     push rbx
     push r12
