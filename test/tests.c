@@ -13,7 +13,7 @@ void test() {
     findBestValues();
     /*uint64_t n = 40000;
     bigInt *res1 = fibExpFastDoubling(n);
-    bigInt *res2 = fibExpFastDoublingMultiThread(n);
+    bigInt *res2 = fibExpFastDoubling(n, true);
     if (!compareBigInts(res1, res2)) {
         printf("Fault\n");
         return;
