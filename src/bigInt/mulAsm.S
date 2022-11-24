@@ -49,6 +49,7 @@ naiveMul_Asm: //mul using naive multiplication
     mov rsi, r15 // j=y->end - y->start
     sub rsi ,r14
     neg rsi
+    mov rdx, [r10 + rcx*8]
     add rsi, 12
     jge .LShortLoopStart
 .LLoop2:
@@ -58,7 +59,6 @@ naiveMul_Asm: //mul using naive multiplication
     xor rbp, rbp
 
     //Mul
-    mov rdx, [r10 + rcx*8]
     //1
     mulx rdi, rax, [r11 + rsi*8]
 
@@ -157,15 +157,12 @@ naiveMul_Asm: //mul using naive multiplication
     sub rsi, 12
     jz .LShortFinish
 .LShortLoop:
-    mov r9, rcx // r9 = n i + j
-    add r9, rsi
+    lea r9, [rcx + rsi] // r9 = n = i + j
 
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8]
+    mulx r12, rax, [r11 + rsi*8]
 
-    //add
     add [rbx + r9*8], rax
-    adc [rbx + r9*8 + 8], rdx
+    adc [rbx + r9*8 + 8], r12
     adc qword ptr [rbx + r9*8 + 16], 0
 
     add rsi, 1
