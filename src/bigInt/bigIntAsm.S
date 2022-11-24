@@ -8,27 +8,6 @@
 .global shiftLeft_Asm
 .global shiftRight_Asm
 
-//size_t getOccupiedFields_Asm(bigInt *x);
-getOccupiedFields_Asm:
-    mov rax, QWORD PTR [rdi+8] //size_t num = x->end;
-    mov rsi, QWORD PTR [rdi] //x->start
-    mov rdx, rsi
-    add rdx, 1 //x->start + 1
-    cmp rax, rsi //num > x->start + 1
-    jna .LGetOccFieldsEnd
-    mov rcx, QWORD PTR [rdi+24] //move pointer of bigIntArray to rcx
-    jmp .LIsZero
-.LStartLoopGetOccFields:
-    sub rax, 1 	//num--
-    cmp rax, rdx //num > x->start + 1;
-    jna .LGetOccFieldsEnd
-.LIsZero:
-    cmp QWORD PTR [rcx-8+rax*8], 0 //x->bigIntArray[num - 1] == 0
-    je .LStartLoopGetOccFields
-.LGetOccFieldsEnd:
-    sub rax, rsi
-    ret
-
 //bigInt *add_Asm(bigInt *x, bigInt *y, bool negative);
 add_Asm:
     //rdi = x, rsi = y, rdx = negative
@@ -36,7 +15,7 @@ add_Asm:
     push r15
     push rbx
     push rdx
-    push rax //align stack pointer
+    sub rsp, 8 //align stack pointer
     mov r14, rdi //r14 = x
     mov r15, rsi //r15 = y
     mov r8, [rdi + 8]
@@ -75,7 +54,7 @@ add_Asm:
     sub QWORD PTR [rbx + 8], 1
 .LAddEnde:
     mov rax, rbx
-    pop r8
+    add rsp, 8 //align stack pointer
     pop rdx
     mov [rax + 32], rdx
     pop rbx
@@ -448,7 +427,7 @@ sub_Asm:
     push r15
     push rbx
     push rdx
-    push rax //align stack pointer
+    sub rsp, 8 //align stack pointer
     mov r14, rdi //r14 = x
     mov r15, rsi //r15 = y
     mov r8, [rdi + 8]
@@ -485,7 +464,7 @@ sub_Asm:
     sub QWORD PTR [rbx + 8], 1
 .LSubEnde:
     mov rax, rbx
-    pop r8
+    add rsp, 8 //align stack pointer
     pop rdx
     mov [rax + 32], rdx
     pop rbx

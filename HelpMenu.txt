@@ -1,11 +1,11 @@
-Commands are executed in the order in which they are provided!
+Flags are processed in the order in which they are provided!
 Usage:
 fibonacci:  -o -> output f|t|n (f=file, t=terminal, n=none)
             -r -> radix d|h (d=decimal, h=hexadecimal)
             -m -> enables multithreading
             -f -> fibonacci n=number
 
-            e.g.: ./main -o f -r h -f n=10000000
+            e.g.: ./fib -o f -r h -f n=10000000
 
             the filename is output.txt | if it exists, it will be overwritten
 
@@ -13,6 +13,7 @@ miscellaneous:  -h -> help file
                 -d -> debug
                 -t -> test
                 -b -> benchMark
+                -v -> verbose
 
 the OS must be Linux!
 
@@ -28,4 +29,3 @@ cpu features needed:
     abm
     bmi2
     adx
-

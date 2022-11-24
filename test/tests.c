@@ -5,8 +5,7 @@
 #include <stdbool.h>
 #include <float.h>
 #include "../src/main.h"
-#include "../src/mulAsm.h"
-//#include "../src/mul.h"
+#include "../src/bigInt/mulAsm.h"
 
 char *randomHex(uint64_t n);
 
@@ -14,7 +13,7 @@ void test() {
     findBestValues();
     /*uint64_t n = 40000;
     bigInt *res1 = fibExpFastDoubling(n);
-    bigInt *res2 = fibExpFastDoublingMultiThread(n);
+    bigInt *res2 = fibExpFastDoubling(n, true);
     if (!compareBigInts(res1, res2)) {
         printf("Fault\n");
         return;
@@ -30,20 +29,20 @@ void findBestValues() {
     double bestTime = DBL_MAX;
     uint64_t fibN = 10000000;
     printf("Beginning testing\n");
-    for(size_t n = 20; n<1000; n += 5) {
-        for(size_t k = n + 2; k<n + 5000; k += 30) {
+    for (size_t n = 20; n < 1000; n += 5) {
+        for (size_t k = n + 2; k < n + 5000; k += 30) {
             printf("\rTesting %lu %lu", n, k);
-            //naivMulFaster = n;
+            //naiveMulFaster = n;
             //karatsubaFaster = k;
             struct timespec start;
             clock_gettime(CLOCK_MONOTONIC, &start);
 
-            bigInt *res = fibExpFastDoubling(fibN);
+            bigInt *res = fibExpFastDoubling(fibN, false);
 
             struct timespec end;
             clock_gettime(CLOCK_MONOTONIC, &end);
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-            if(time < bestTime) {
+            if (time < bestTime) {
                 bestTime = time;
                 nFast = n;
                 kFast = k;
@@ -97,10 +96,10 @@ void bruteForceDebug(bool multiThread) {
     //edge cases
     bigInt *res = newBigInt(1);
     res->bigIntArray[0] = 0;
-    bigInt *res2 = fibExpFastDoubling(0);
+    bigInt *res2 = fibExpFastDoubling(0, false);
     bigInt *res3 = NULL;
     if (multiThread) {
-        res3 = fibExpFastDoublingMultiThread(0);
+        res3 = fibExpFastDoubling(0, true);
     }
     if (!compareBigInts(res, res2)) {
         printf("Failed at 0 for single-thread\n");
@@ -124,14 +123,14 @@ void bruteForceDebug(bool multiThread) {
         freeBigInt(res3);
     }
     res->bigIntArray[0] = 1;
-    res2 = fibExpFastDoubling(1);
+    res2 = fibExpFastDoubling(1, false);
     if (multiThread) {
-        res3 = fibExpFastDoublingMultiThread(1);
+        res3 = fibExpFastDoubling(1, true);
     }
     if (!compareBigInts(res, res2)) {
         printf("Failed at 1 for single-thread\n");
-        printBigInt(res);
-        printBigInt(res2);
+        printf("%s\n", bigIntToDecString(res));
+        printf("%s\n", bigIntToDecString(res2));
         freeBigInt(res);
         freeBigInt(res2);
         if (multiThread) {
@@ -166,12 +165,12 @@ void bruteForceDebug(bool multiThread) {
             freeBigInt(fibMinus2);
             fibMinus2 = fibMinus1;
             fibMinus1 = fib;
-            res2 = fibExpFastDoubling(i + 1);
+            res2 = fibExpFastDoubling(i + 1, false);
             if (!compareBigInts(fibMinus1, res2)) {
                 printf("Failed at %lu for single-thread\n", i + 1);
 
-                printBigInt(fibMinus1);
-                printBigInt(res2);
+                printf("%s\n", bigIntToDecString(fibMinus1));
+                printf("%s\n", bigIntToDecString(res2));
 
                 freeBigInt(fibMinus2);
                 freeBigInt(fibMinus1);
@@ -182,7 +181,7 @@ void bruteForceDebug(bool multiThread) {
                 return;
             }
             if (multiThread) {
-                res3 = fibExpFastDoublingMultiThread(i + 1);
+                res3 = fibExpFastDoubling(i + 1, true);
                 if (!compareBigInts(fibMinus1, res3)) {
                     printf("Failed at %lu for multi-thread\n", i + 1);
                     freeBigInt(fibMinus2);

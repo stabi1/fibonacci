@@ -2,11 +2,9 @@
 #define FIBONACCI_MAIN_H
 
 #include <setjmp.h>
-#include "BigInt.h"
+#include "bigInt/bigInt.h"
 
-bigInt* fibExpFastDoubling(uint64_t n);
-
-bigInt *fibExpFastDoublingMultiThread(uint64_t n);
+bigInt *fibExpFastDoubling(uint64_t n, bool multiThread);
 
 extern jmp_buf exceptionJump;
 

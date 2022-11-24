@@ -1,4 +1,3 @@
-#include "main.h"
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
@@ -6,11 +5,9 @@
 #include <string.h>
 #include <sys/sysinfo.h>
 #include <stdbool.h>
-#include "BigIntAsm.h"
-#include "BigInt.h"
+#include "main.h"
 #include "../test/tests.h"
 #include "util.h"
-#include "mul.h"
 
 size_t getDepth();
 
@@ -23,6 +20,7 @@ bool handleCPUFeatures();
 void printMissingFeature(char *feature);
 
 jmp_buf exceptionJump;
+bool verbose = false;
 
 static struct option long_options[] = {
         {"help",        no_argument,       NULL, 'h'},
@@ -33,6 +31,7 @@ static struct option long_options[] = {
         {"benchMark",   no_argument,       NULL, 'b'},
         {"test",        no_argument,       NULL, 't'},
         {"fibonacci",   required_argument, NULL, 'f'},
+        {"verbose",     no_argument,       NULL, 'v'},
         {NULL, 0,                          NULL, 0}
 };
 
@@ -47,12 +46,17 @@ const char *fibonacciKeys[] = {
 int main(int argc, char *argv[]) {
     bool cpuFeatures = handleCPUFeatures();
     if (!cpuFeatures) {
-        return -1;
+        return EXIT_FAILURE;
     }
     //Error handling
-    if (setjmp(exceptionJump)) { //Exception e.g malloc returned null
+    if (setjmp(exceptionJump)) { //Exception e.g. malloc returned null
         printf("An error occurred, program terminated\n");
-        return 1;
+        return EXIT_FAILURE;
+    }
+
+    if (argc == 1) {
+        printHelpMenu();
+        return EXIT_FAILURE;
     }
 
     char radix = 'h';
@@ -63,29 +67,32 @@ int main(int argc, char *argv[]) {
     bool multiThread = false;
     char *subOpts, *value;
     value = NULL;
-    while ((option = getopt_long(argc, argv, "hbtmdr:o:f:", long_options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "hbtmvdr:o:f:", long_options, NULL)) != -1) {
         subOpts = optarg;
         switch (option) {
             case 'h':
                 printHelpMenu();
-                return 0;
+                return EXIT_SUCCESS;
             case 'd':
                 bruteForceDebug(multiThread);
-                return 0;
+                return EXIT_SUCCESS;
             case 't':
                 test();
-                return 0;
+                return EXIT_SUCCESS;
             case 'b':
                 benchMark();
-                return 0;
+                return EXIT_SUCCESS;
             case 'm' :
                 multiThread = true;
+                break;
+            case 'v' :
+                verbose = true;
                 break;
             case 'r' :
                 if (optarg == NULL || (optarg[0] != 'h' && optarg[0] != 'd')) {
                     printf("no radix option provided!\n");
                     printHelpMenu();
-                    return -1;
+                    return EXIT_FAILURE;
                 }
                 radix = optarg[0];
                 if (radix != 'd' && radix != 'h') {
@@ -97,7 +104,7 @@ int main(int argc, char *argv[]) {
                 if (optarg == NULL || (optarg[0] != 'f' && optarg[0] != 't' && optarg[0] != 'n')) {
                     printf("no output option provided!\n");
                     printHelpMenu();
-                    return -1;
+                    return EXIT_FAILURE;
                 }
                 output = optarg[0];
                 if (output != 'f' && output != 't' && output != 'n') {
@@ -112,28 +119,28 @@ int main(int argc, char *argv[]) {
                             if (value == NULL) {
                                 printf("No explicit number provided!\n");
                                 printHelpMenu();
-                                return -1;
+                                return EXIT_FAILURE;
                             }
                             if (!checkIsNumber(value)) {
                                 printf("%s is not a valid number!\n", value);
-                                return -1;
+                                return EXIT_FAILURE;
                             }
                             n = strtol(value, NULL, 10);
                             break;
                         default:
                             printf("Invalid input formatting for fibonacci!\n");
                             printHelpMenu();
-                            return -1;
+                            return EXIT_FAILURE;
                     }
                 }
                 printFibonacci(n, radix, output, multiThread);
                 break;
             default:
                 printHelpMenu();
-                break;
+                return EXIT_FAILURE;
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
@@ -144,14 +151,11 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
 
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    bigInt *res;
-    if (multiThread) {
-        printf("Multithreading enabled\n");
-        res = fibExpFastDoublingMultiThread(n);
-    } else {
-        printf("Singe Thread\n");
-        res = fibExpFastDoubling(n);
-    }
+
+    if (multiThread) printf("Multithreading enabled\n");
+    else printf("Single Thread\n");
+    bigInt *res = fibExpFastDoubling(n, multiThread);
+
     struct timespec end;
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
@@ -163,15 +167,17 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         clock_gettime(CLOCK_MONOTONIC, &start2);
         size_t strSizeInBytes;
         char *resString;
-        if (radix == 'h') {
-            resString = bigIntToHexString(res);
-            strSizeInBytes = sizeInBytes * 2;
-        } else {
+        if (radix == 'd') {
+            if (verbose) printf("Starting conversion to dec\n");
             resString = bigIntToDecString(res);
             strSizeInBytes = strlen(resString);
+        } else {
+            if (verbose) printf("Starting conversion to hex\n");
+            resString = bigIntToHexString(res);
+            strSizeInBytes = sizeInBytes * 2;
         }
 
-        if (output == 'f') { //Terminal output
+        if (output == 'f') { // File output
             char *filename = "output.txt";
             FILE *outputFile = fopen(filename, "a+");
             if (!outputFile) {
@@ -187,7 +193,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
                 }
             }
 
-        } else { //File output (output == 't')
+        } else { //Terminal output (output == 't')
             printf("Result: %s\n", resString);
         }
         struct timespec end2;
@@ -209,64 +215,60 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         printf("No output\n");
         double sizeInKB = ((double) sizeInBytes) / 1000;
         double sizeInMB = ((double) sizeInBytes) / 1000000;
-        printf("Time to calculate: %fs\nResultNUmber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
+        printf("Time to calculate: %fs\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
                sizeInMB);
     }
     freeBigInt(res);
 }
 
-bigInt *fibExpFastDoubling(uint64_t n) {
-    bigInt *a = newBigInt(1);
-    bigInt *b = newBigInt(1);
-    b->bigIntArray[0] = 1;
-    unsigned int shift = 64 - custom_lzcnt(n) - 1;
-    uint64_t nBinary = ((n >> shift) << shift);
-    for (; nBinary != 0; nBinary >>= 1) {
-        bigInt *temp1 = shiftLeft_Asm(b, 1);
-        bigInt *temp2 = sub_Asm(temp1, a, false);
-        freeBigInt(temp1);
-        bigInt *d = multiplyToomCook3(a, temp2);
-        freeBigInt(temp2);
-        bigInt *temp3 = multiplyToomCook3(a, a);
-        bigInt *temp4 = multiplyToomCook3(b, b);
-        freeBigInt(a);
-        freeBigInt(b);
-        bigInt *e = add_Asm(temp3, temp4, false);
-        freeBigInt(temp3);
-        freeBigInt(temp4);
-        a = d;
-        b = e;
-
-        // Advance by one conditionally
-        if ((n & nBinary) != 0) {
-            bigInt *c = add_Asm(a, b, false);
-            freeBigInt(a);
-            a = b;
-            b = c;
-        }
-    }
-    freeBigInt(b);
-    return a;
-}
-
-bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
+bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
     size_t depth = getDepth();
     bigInt *a = newBigInt(1);
     bigInt *b = newBigInt(1);
     b->bigIntArray[0] = 1;
     unsigned int shift = 64 - custom_lzcnt(n) - 1;
     uint64_t nBinary = ((n >> shift) << shift);
+
+    //for verbose
+    unsigned long iterations = 64 - custom_lzcnt(nBinary);
+    int counter = 1;
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (verbose) printf("\n");
+
     for (; nBinary != 0; nBinary >>= 1) {
-        bigInt *temp1 = shiftLeft_Asm(b, 1);
-        bigInt *temp2 = sub_Asm(temp1, a, false);
+        if (verbose) {
+            clock_gettime(CLOCK_MONOTONIC, &end);
+            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            size_t sizeInBytes = (a->end - a->start) * 8;
+            double sizeInMB = ((double) sizeInBytes) / 1000000;
+            printf("Iteration ongoing %d/%lu; Current size: %fsMB; Time needed for previous iteration: %fs\n", counter,
+                   iterations, sizeInMB, time);
+            counter++;
+            clock_gettime(CLOCK_MONOTONIC, &start);
+        }
+        bigInt *temp1 = shiftLeft(b, 1);
+        bigInt *temp2 = smartSub(temp1, a);
         freeBigInt(temp1);
-        bigInt *d = multiplyToomCook3MultiThread(a, temp2, depth);
-        freeBigInt(temp2);
-        bigInt *temp3 = multiplyToomCook3MultiThread(a, a, depth);
-        bigInt *temp4 = multiplyToomCook3MultiThread(b, b, depth);
+
+        bigInt *d;
+        bigInt *temp3;
+        bigInt *temp4;
+        if (multiThread) {
+            d = multiplyToomCook3MultiThread(a, temp2, depth);
+            freeBigInt(temp2);
+            temp3 = multiplyToomCook3MultiThread(a, a, depth);
+            temp4 = multiplyToomCook3MultiThread(b, b, depth);
+        } else {
+            d = multiplyToomCook3(a, temp2);
+            freeBigInt(temp2);
+            temp3 = multiplyToomCook3(a, a);
+            temp4 = multiplyToomCook3(b, b);
+        }
+
         freeBigInt(a);
         freeBigInt(b);
-        bigInt *e = add_Asm(temp3, temp4, false);
+        bigInt *e = smartAdd(temp3, temp4);
         freeBigInt(temp3);
         freeBigInt(temp4);
         a = d;
@@ -274,26 +276,37 @@ bigInt *fibExpFastDoublingMultiThread(uint64_t n) {
 
         // Advance by one conditionally
         if ((n & nBinary) != 0) {
-            bigInt *c = add_Asm(a, b, false);
+            bigInt *c = smartAdd(a, b);
             freeBigInt(a);
             a = b;
             b = c;
         }
     }
     freeBigInt(b);
+    if (verbose) {
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        printf("Time needed for last Iteration: %fs\n\n", time);
+    }
     return a;
 }
 
 size_t getDepth() {
     size_t numberOfCores = get_nprocs();
-    printf("Number of Cores: %lu\n", numberOfCores);
+    if (verbose) {
+        printf("Number of cores: %lu\n", numberOfCores);
+    }
     if (numberOfCores < 3) {
+        if (verbose) printf("Number of threads created: %d\n", 3);
         return 0;
     } else if (numberOfCores < 10) {
+        if (verbose) printf("Number of threads created: %d\n", 9);
         return 1;
     } else if (numberOfCores < 28) {
+        if (verbose) printf("Number of threads created: %d\n", 27);
         return 2;
     } else if (numberOfCores < 82) {
+        if (verbose) printf("Number of threads created: %d\n", 81);
         return 3;
     } else {
         return 4;
@@ -328,7 +341,7 @@ bool handleCPUFeatures() {
     } else if (!__builtin_cpu_supports("sse3")) {
         printMissingFeature("sse3");
         return false;
-    }else if (!__builtin_cpu_supports("sse4.1")) {
+    } else if (!__builtin_cpu_supports("sse4.1")) {
         printMissingFeature("sse4.1");
         return false;
     } else if (!__builtin_cpu_supports("sse4.2")) {
