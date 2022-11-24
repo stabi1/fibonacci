@@ -44,17 +44,17 @@ naiveMul_Asm: //mul using naive multiplication
     sub rcx, r12
     neg rcx // r12, r13 new purpose
 
-    //n = r9
+    //n = r13
     //carry = r12
     xor r12, r12
+    mov rdx, [r10 + rcx*8]
 .LLoop1Start:
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11+ rsi*8]
-    lea r13, [rsi+ rcx]
+    mulx r9, rax, [r11 + rsi*8]
+    lea r13, [rsi + rcx]
     add rax, r12
-    adc rdx, 0
+    adc r9, 0
     mov [rbx + r13*8], rax
-    mov r12, rdx
+    mov r12, r9
 
     add rsi, 1
     jnz .LLoop1Start
@@ -70,6 +70,7 @@ naiveMul_Asm: //mul using naive multiplication
     mov rsi, r15 // j=y->end - y->start
     sub rsi ,r14
     neg rsi
+    mov rdx, [r10 + rcx*8]
     add rsi, 4
     jge .LShortInnerLoop
 
@@ -77,38 +78,34 @@ naiveMul_Asm: //mul using naive multiplication
     sub rsi, 4
     lea r13, [rsi+ rcx]
 
-    mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8]
+    mulx r9, rax, [r11 + rsi*8]
     add rax, r12
-    adc rdx, 0
+    adc r9, 0
     add rax, [rbx + r13*8]
     mov [rbx + r13*8], rax
-    mov r12, rdx
+    mov r12, r9
 
-    mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8 + 8]
+    mulx r9, rax, [r11 + rsi*8 + 8]
     adc rax, r12
-    adc rdx, 0
+    adc r9, 0
     add rax, [rbx + r13*8+8]
     mov [rbx + r13*8+8], rax
-    mov r12, rdx
+    mov r12, r9
 
-    mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8+16]
+    mulx r9, rax, [r11 + rsi*8+16]
     adc rax, r12
-    adc rdx, 0
+    adc r9, 0
     add rax, [rbx + r13*8+16]
     mov [rbx + r13*8+16], rax
-    mov r12, rdx
+    mov r12, r9
 
-    mov rdx, [r10 + rcx*8]
-    mulx rdx, rax, [r11 + rsi*8+24]
+    mulx r9, rax, [r11 + rsi*8+24]
     adc rax, r12
-    adc rdx, 0
+    adc r9, 0
     add rax, [rbx + r13*8+24]
-    adc rdx, 0
+    adc r9, 0
     mov [rbx + r13*8+24], rax
-    mov r12, rdx
+    mov r12, r9
 
     add rsi, 8
     jl .LInnerLoopStart
@@ -116,15 +113,14 @@ naiveMul_Asm: //mul using naive multiplication
 .LShortInnerLoop:
     sub rsi, 4
 .LInnerLoopShortStart:
-    mov rax, [r10 + rcx*8]
-    mul qword ptr [r11 + rsi*8]
+    mulx r9, rax, [r11 + rsi*8]
     lea r13, [rsi+ rcx]
     add rax, r12
-    adc rdx, 0
+    adc r9, 0
     add rax, [rbx + r13*8]
-    adc rdx, 0
+    adc r9, 0
     mov [rbx + r13*8], rax
-    mov r12, rdx
+    mov r12, r9
 
     add rsi, 1
     jnz .LInnerLoopShortStart
