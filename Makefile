@@ -24,4 +24,4 @@ sanitize: $(SOURCEFILES)
 
 .PHONY: clean
 clean:
-	rm -f main
+	rm -f $(OUTPUTFILENAME)
