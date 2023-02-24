@@ -1,9 +1,9 @@
 Flags are processed in the order in which they are provided!
 Usage:
-fibonacci:  -o -> output f|t|n (f=file, t=terminal, n=none)
-            -r -> radix d|h (d=decimal, h=hexadecimal)
-            -m -> enables multithreading
-            -f -> fibonacci n=number
+fibonacci:  -o -> output f|t|n (f=file, t=terminal, n=none); default value: t
+            -r -> radix d|h (d=decimal, h=hexadecimal); default value: h
+            -m -> enables multithreading; default value: false
+            -f -> fibonacci n=number; required / n needs to be a positive 64bit integer
 
             e.g.: ./fib -o f -r h -f n=10000000
 

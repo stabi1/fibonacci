@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -7,18 +6,19 @@
 #include "bigIntUtil.h"
 #include "bigIntAsm.h"
 
-extern jmp_buf exceptionJump; //Jump-point when an error occurs
-
 //allocates memory for a new bigInt of the given size
 bigInt *newBigInt(size_t len) {
     bigInt *res = malloc(sizeof(bigInt));
     if (res == NULL) {
-        exception();
+        fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
+        exit(EXIT_FAILURE);
     }
 
     res->bigIntArray = calloc(len, sizeof(uint64_t));
     if (res->bigIntArray == NULL) {
-        exception();
+        free(res);
+        fprintf(stderr, "An error occurred: Calloc returned null. Program terminated\n");
+        exit(EXIT_FAILURE);
     }
     res->start = 0;
     res->end = len;
@@ -31,7 +31,8 @@ bigInt *newBigInt(size_t len) {
 bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray) {
     bigInt *res = malloc(sizeof(bigInt));
     if (res == NULL) {
-        exception();
+        fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
+        exit(EXIT_FAILURE);
     }
     res->bigIntArray = bigIntArray;
     res->start = start;
@@ -39,11 +40,6 @@ bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray) {
     res->arrayOwner = false;
     res->negative = false;
     return res;
-}
-
-void exception() {
-    printf("Malloc Failed\n");
-    longjmp(exceptionJump, 1);
 }
 
 //Frees the memory of the BigInteger

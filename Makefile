@@ -1,4 +1,4 @@
-NEEDFLAGS=-O3 -pthread -lpthread -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2 -mavx -mavx2 -mlzcnt -mbmi2 -madx -mabm -no-pie
+NEEDFLAGS= -O3 -pthread -lpthread -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2 -mavx -mavx2 -mlzcnt -mbmi2 -madx -mabm -no-pie
 WARNINGFLAGS=-Wall -Wextra
 DEGUGFLAGS=-g
 SANITIZERFLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsanitize=leak

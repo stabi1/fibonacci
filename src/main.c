@@ -5,6 +5,9 @@
 #include <string.h>
 #include <sys/sysinfo.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <ctype.h>
+#include <limits.h>
 #include "main.h"
 #include "../test/tests.h"
 #include "util.h"
@@ -19,7 +22,6 @@ bool handleCPUFeatures();
 
 void printMissingFeature(char *feature);
 
-jmp_buf exceptionJump;
 bool verbose = false;
 
 static struct option long_options[] = {
@@ -46,99 +48,121 @@ const char *fibonacciKeys[] = {
 int main(int argc, char *argv[]) {
     bool cpuFeatures = handleCPUFeatures();
     if (!cpuFeatures) {
-        return EXIT_FAILURE;
-    }
-    //Error handling
-    if (setjmp(exceptionJump)) { //Exception e.g. malloc returned null
-        printf("An error occurred, program terminated\n");
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
     if (argc == 1) {
-        printHelpMenu();
-        return EXIT_FAILURE;
+        fprintf(stderr, "No arguments, use -h for usage\n");
+        exit(EXIT_FAILURE);
     }
 
+    // default values
     char radix = 'h';
     char output = 't';
+    bool multiThread = false;
+    verbose = false;
+
     uint64_t n = 0;
 
     int option;
-    bool multiThread = false;
+
     char *subOpts, *value;
     value = NULL;
-    while ((option = getopt_long(argc, argv, "hbtmvdr:o:f:", long_options, NULL)) != -1) {
-        subOpts = optarg;
-        switch (option) {
-            case 'h':
-                printHelpMenu();
-                return EXIT_SUCCESS;
-            case 'd':
-                bruteForceDebug(multiThread);
-                return EXIT_SUCCESS;
-            case 't':
-                test();
-                return EXIT_SUCCESS;
-            case 'b':
-                benchMark();
-                return EXIT_SUCCESS;
-            case 'm' :
-                multiThread = true;
-                break;
-            case 'v' :
-                verbose = true;
-                break;
-            case 'r' :
-                if (optarg == NULL || (optarg[0] != 'h' && optarg[0] != 'd')) {
-                    printf("no radix option provided!\n");
+    bool fibCalled = false;
+
+    while (optind < argc) {
+        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:f:", long_options, NULL)) != -1) {
+            subOpts = optarg;
+            switch (option) {
+                case 'h':
                     printHelpMenu();
-                    return EXIT_FAILURE;
-                }
-                radix = optarg[0];
-                if (radix != 'd' && radix != 'h') {
-                    radix = 'h';
-                    printf("Invalid output option %c!\nUsing hex instead...\n", radix);
-                }
-                break;
-            case 'o':
-                if (optarg == NULL || (optarg[0] != 'f' && optarg[0] != 't' && optarg[0] != 'n')) {
-                    printf("no output option provided!\n");
-                    printHelpMenu();
-                    return EXIT_FAILURE;
-                }
-                output = optarg[0];
-                if (output != 'f' && output != 't' && output != 'n') {
-                    output = 'n';
-                    printf("Invalid output option %c!\nno output...\n", output);
-                }
-                break;
-            case 'f':
-                while (*subOpts != '\0') {
-                    switch (getsubopt(&subOpts, (char **) fibonacciKeys, &value)) {
-                        case NUMBER_N:
-                            if (value == NULL) {
-                                printf("No explicit number provided!\n");
-                                printHelpMenu();
-                                return EXIT_FAILURE;
-                            }
-                            if (!checkIsNumber(value)) {
-                                printf("%s is not a valid number!\n", value);
-                                return EXIT_FAILURE;
-                            }
-                            n = strtol(value, NULL, 10);
-                            break;
-                        default:
-                            printf("Invalid input formatting for fibonacci!\n");
-                            printHelpMenu();
-                            return EXIT_FAILURE;
+                    exit(EXIT_SUCCESS);
+                case 'd':
+                    bruteForceDebug(multiThread);
+                    exit(EXIT_SUCCESS);
+                case 't':
+                    test();
+                    exit(EXIT_SUCCESS);
+                case 'b':
+                    benchMark();
+                    exit(EXIT_SUCCESS);
+                case 'm':
+                    multiThread = true;
+                    break;
+                case 'v':
+                    verbose = true;
+                    break;
+                case 'r':
+                    if (optarg == NULL) {
+                        fprintf(stderr, "no radix option provided!\n");
+                        exit(EXIT_FAILURE);
                     }
-                }
-                printFibonacci(n, radix, output, multiThread);
-                break;
-            default:
-                printHelpMenu();
-                return EXIT_FAILURE;
+                    if ((optarg[0] != 'h' && optarg[0] != 'd') || optarg[1] != '\0') {
+                        fprintf(stderr, "invalid radix option \"%s\" provided, use -h for usage\n", optarg);
+                        exit(EXIT_FAILURE);
+                    }
+                    radix = optarg[0];
+                    break;
+                case 'o':
+                    if (optarg == NULL) {
+                        fprintf(stderr, "no output option provided, use -h for usage\n");
+                        exit(EXIT_FAILURE);
+                    } else if ((optarg[0] != 'f' && optarg[0] != 't' && optarg[0] != 'n') || optarg[1] != '\0') {
+                        fprintf(stderr, "invalid output option \"%s\" provided, use -h for usage\n", optarg);
+                        exit(EXIT_FAILURE);
+                    }
+                    output = optarg[0];
+                    if (output != 'f' && output != 't' && output != 'n') {
+                        output = 'n';
+                        fprintf(stderr, "Invalid output option %c!\nno output...\n", output);
+                    }
+                    break;
+                case 'f':
+                    while (*subOpts != '\0') {
+                        switch (getsubopt(&subOpts, (char **) fibonacciKeys, &value)) {
+                            case NUMBER_N:
+                                if (value == NULL) {
+                                    fprintf(stderr, "No explicit n provided, use -h for usage\n");
+                                    exit(EXIT_FAILURE);
+                                }
+                                char *endptr;
+                                errno = 0;
+                                n = strtoull(value, &endptr, 10);
+                                if (errno == ERANGE && n == ULLONG_MAX) {
+                                    fprintf(stderr, "\"%s\" is to big for n\n", value);
+                                    exit(EXIT_FAILURE);
+                                } else if (errno == EINVAL) {
+                                    fprintf(stderr, "\"%s\" is does contain invalid characters for n\n", value);
+                                    exit(EXIT_FAILURE);
+                                } else if (value == endptr) {
+                                    fprintf(stderr, "The string for n is empty\n");
+                                    exit(EXIT_FAILURE);
+                                } else if (errno != 0 || *endptr != '\0' || !isdigit(value[0])) {
+                                    fprintf(stderr, "\"%s\" is not a valid number for n\n", value);
+                                    exit(EXIT_FAILURE);
+                                }
+                                break;
+                            default:
+                                fprintf(stderr, "Invalid input formatting for -f, use -h for usage\n");
+                                exit(EXIT_FAILURE);
+                        }
+                    }
+                    fibCalled = true;
+                    printFibonacci(n, radix, output, multiThread);
+                    break;
+                default:
+                    fprintf(stderr, "Invalid input formatting for fibonacci, use -h for usage\n");
+                    exit(EXIT_FAILURE);
+            }
+        } else {
+            fprintf(stderr, "No non option argument expected,  use -h for usage");
+            optind++;
+            exit(EXIT_FAILURE);
         }
+    }
+    if (!fibCalled) {
+        fprintf(stderr, "-f option required, nothing done. Use -h for usage\n");
+        exit(EXIT_FAILURE);
     }
     return EXIT_SUCCESS;
 }
@@ -174,22 +198,28 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         } else {
             if (verbose) printf("Starting conversion to hex\n");
             resString = bigIntToHexString(res);
-            strSizeInBytes = sizeInBytes * 2;
+            strSizeInBytes = strlen(resString);
         }
 
         if (output == 'f') { // File output
             char *filename = "output.txt";
             FILE *outputFile = fopen(filename, "a+");
             if (!outputFile) {
-                printf("Error while opening/creating %s\n", filename);
+                fprintf(stderr, "Error while opening/creating %s\n", filename);
             } else {
                 outputFile = freopen("output.txt", "w", outputFile);
                 if (!outputFile) {
-                    printf("Error while opening/creating %s\n", filename);
+                    fprintf(stderr, "Error while opening/creating %s\n", filename);
                 } else {
-                    fprintf(outputFile, "Result for n=%zu | length of string=%zu:\n%s", n, strSizeInBytes, resString);
+                    char infoStr[1000];
+                    sprintf(infoStr, "Result for n=%zu | length of string=%zu:", n, strSizeInBytes);
+                    long printRet = fprintf(outputFile, "%s\n%s", infoStr, resString);
+                    if (printRet != (long) (strSizeInBytes + strlen(infoStr) + 1)) {
+                        fprintf(stderr, "Error writing file %s. Output may be incomplete\n", filename);
+                    } else {
+                        printf("Output in file %s\n", filename);
+                    }
                     fclose(outputFile);
-                    printf("Output in file %s\n", filename);
                 }
             }
 
@@ -317,12 +347,25 @@ void printHelpMenu() {
     char *fileName = "HelpMenu.txt";
     FILE *helpFile = fopen(fileName, "r");
     if (!helpFile) {
-        printf("%s couldn't be read\n", fileName);
-        return;
+        fprintf(stderr, "%s couldn't be opened\n", fileName);
+        exit(EXIT_FAILURE);
     }
-    fseek(helpFile, 0L, SEEK_END);
+    if (fseek(helpFile, 0L, SEEK_END) == -1) {
+        fprintf(stderr, "%s: error while getting file length\n", fileName);
+        fclose(helpFile);
+        exit(EXIT_FAILURE);
+    }
     long int helpLen = ftell(helpFile);
-    fseek(helpFile, 0L, SEEK_SET);
+    if (helpLen == -1) {
+        fprintf(stderr, "%s: error while getting file length\n", fileName);
+        fclose(helpFile);
+        exit(EXIT_FAILURE);
+    }
+    if (fseek(helpFile, 0L, SEEK_SET) == -1) {
+        fprintf(stderr, "%s: error while getting file length\n", fileName);
+        fclose(helpFile);
+        exit(EXIT_FAILURE);
+    }
     char menu[helpLen];
     while (fgets(menu, (int) helpLen, helpFile)) {
         printf("%s", menu);
@@ -358,5 +401,5 @@ bool handleCPUFeatures() {
 }
 
 void printMissingFeature(char *feature) {
-    printf("Missing Feature: %s; program terminated\n", feature);
+    fprintf(stderr, "Missing Feature: %s; program terminated\n", feature);
 }
