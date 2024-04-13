@@ -33,20 +33,21 @@ bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray) {
     return res;
 }
 
-bigInt *copyBigInt(bigInt *x) {
-    size_t xLen = x->end - x->start;
-    bigInt *res = newBigInt(xLen);
-    memcpy(res->bigIntArray, x->bigIntArray, xLen * 8);
-    res->negative = x->negative;
-    return res;
-}
-
 //Frees the memory of the BigInteger
 void freeBigInt(bigInt *toDelete) {
     if (toDelete->arrayOwner) { //if the bigInt is the owner free the array
         free(toDelete->bigIntArray);
     }
     free(toDelete);
+}
+
+//deep copies BigInt
+bigInt *copyBigInt(bigInt *x) {
+    size_t xLen = x->end - x->start;
+    bigInt *res = newBigInt(xLen);
+    memcpy(res->bigIntArray, x->bigIntArray + x->start, xLen * 8);
+    res->negative = x->negative;
+    return res;
 }
 
 //Returns the bigInt with value 0
@@ -63,7 +64,7 @@ int compareBigInt(bigInt *a, bigInt *b) {
     } else if (aLen > bLen) {
         return 1;
     }
-    for (size_t i = a->end - 1, j = b->end - 1; i >= a->start; i--, j--) {
+    for (long i = (long) a->end - 1, j = (long) b->end - 1; i >= (long) a->start; i--, j--) {
         uint64_t aVal = a->bigIntArray[i];
         uint64_t bVal = b->bigIntArray[j];
         if (aVal < bVal)

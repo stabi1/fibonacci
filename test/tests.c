@@ -23,7 +23,7 @@ void test() {
     /*uint64_t n = 40000;
     bigInt *res1 = fibExpFastDoubling(n);
     bigInt *res2 = fibExpFastDoubling(n, true);
-    if (!compareBigInts(res1, res2)) {
+    if (compareBigInt(res1, res2) != 0) {
         printf("Fault\n");
         return;
     }
@@ -66,24 +66,30 @@ void testDivision() {
     //bigInt* a = hexStringToBigInt("60AFFA1E64881027A5DFE87D0CF4C95C5A26F03C11261EDC1869940DB6F4AABB14399A3F971C6DE320F446838C54E7886E76355B9BEB41AFBF0AA77EE04C62E83D14403A961E6E2A4EAD428945EF8BD15F8CD243DDE45620C2CAA0EE405315E24C105DF5FF7AA1946D64BA41C08FFDD5FB117300");
     //bigInt* b = hexStringToBigInt("11F4E298E5F5C0EAD06AA4EE91C9BE5CE51C7B55F29D367E6E91381A9C25A808D252DA6ACE604FEBC9AE1AA96CD14F801F2D99647E4AC548D16CA142E3230C50B7C312770C3D165C7C93DD4BE");
 
-    bigInt* a = hexStringToBigInt(randomHex(1500));//2000
-    bigInt* b = hexStringToBigInt(randomHex(150));//300
+    bigInt* a = hexStringToBigInt(randomHex(1500));//1500
+    bigInt* b = hexStringToBigInt(randomHex(150));//150
 
     bigInt *q1;
     bigInt *q2;
 
-    printf("%s\n", bigIntToHexString(a));
-    printf("%s\n", bigIntToHexString(b));
+    printBigIntHex(a);
+    printBigIntHex(b);
     printf("\n");
 
     bigInt *res1 = divideD4Helper(a, b, &q1);
     bigInt *res2 = divideBurnikelZiegler(a, b, &q2);
     printf("\nResults:\n");
-    printf("%s\n", bigIntToHexString(res1));
-    printf("%s\n", bigIntToHexString(res2));
+    printBigIntHex(res1);
+    printBigIntHex(res2);
     printf("\n");
-    printf("%s\n", bigIntToHexString(q1));
-    printf("%s\n", bigIntToHexString(q2));
+    printBigIntHex(q1);
+    printBigIntHex(q2);
+
+    if(compareBigInt(res1, res2) != 0) printf("RES not equal\n");
+    else printf("RES equal\n");
+    if(compareBigInt(q1, q2) != 0) printf("Reminder not equal\n");
+    else printf("Reminder equal\n");
+
     //printBigIntHex(smartAdd(multiplyToomCook3(b, res1), q1)); //check
 
     freeBigInt(a);
@@ -173,7 +179,7 @@ void bruteForceDebug(bool multiThread) {
     if (multiThread) {
         res3 = fibExpFastDoubling(0, true);
     }
-    if (!compareBigInts(res, res2)) {
+    if (compareBigInt(res, res2)  != 0) {
         printf("Failed at 0 for single-thread\n");
         freeBigInt(res);
         freeBigInt(res2);
@@ -183,7 +189,7 @@ void bruteForceDebug(bool multiThread) {
         return;
     }
 
-    if (multiThread && !compareBigInts(res, res3)) {
+    if (multiThread && compareBigInt(res, res3) != 0) {
         printf("Failed at 0 for multi-thread\n");
         freeBigInt(res);
         freeBigInt(res2);
@@ -199,7 +205,7 @@ void bruteForceDebug(bool multiThread) {
     if (multiThread) {
         res3 = fibExpFastDoubling(1, true);
     }
-    if (!compareBigInts(res, res2)) {
+    if (compareBigInt(res, res2) != 0) {
         printf("Failed at 1 for single-thread\n");
         printf("%s\n", bigIntToDecString(res));
         printf("%s\n", bigIntToDecString(res2));
@@ -210,7 +216,7 @@ void bruteForceDebug(bool multiThread) {
         }
         return;
     }
-    if (multiThread && !compareBigInts(res, res3)) {
+    if (multiThread && compareBigInt(res, res3) != 0) {
         printf("Failed at 1 for multi-thread\n");
         freeBigInt(res);
         freeBigInt(res2);
@@ -243,7 +249,7 @@ void bruteForceDebug(bool multiThread) {
                 printf("%s\n", resString);
                 free(resString);
             }
-            if (!compareBigInts(fibMinus1, res2)) {
+            if (compareBigInt(fibMinus1, res2) != 0) {
                 printf("Failed at %lu for single-thread\n", i + 1);
 
                 printf("%s\n", bigIntToDecString(fibMinus1));
@@ -259,7 +265,7 @@ void bruteForceDebug(bool multiThread) {
             }
             if (multiThread) {
                 res3 = fibExpFastDoubling(i + 1, true);
-                if (!compareBigInts(fibMinus1, res3)) {
+                if (compareBigInt(fibMinus1, res3) != 0) {
                     printf("Failed at %lu for multi-thread\n", i + 1);
                     freeBigInt(fibMinus2);
                     freeBigInt(fibMinus1);
@@ -275,18 +281,6 @@ void bruteForceDebug(bool multiThread) {
             i++;
         }
     }
-}
-
-bool compareBigInts(bigInt *x, bigInt *y) {
-    if (x->start != y->start && x->end != y->end && x->negative != y->negative) {
-        return false;
-    }
-    for (size_t i = x->start; i < x->end; i++) {
-        if (x->bigIntArray[i] != y->bigIntArray[i]) {
-            return false;
-        }
-    }
-    return true;
 }
 
 char *randomHex(uint64_t n) {
