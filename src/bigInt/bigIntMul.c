@@ -5,9 +5,11 @@
 #include "bigIntMul.h"
 #include "mulAsm.h"
 #include "bigIntAsm.h"
+#include "bigIntUtil.h"
+#include "bigIntDiv.h"
 
-size_t naiveMulFaster = 60; //Size when naiveMul is faster than karatsuba // 100
-size_t karatsubaFaster = 200; //Size when karatsuba is faster than toom-cook //400
+size_t NAIVLEMULFASTER = 60; //Size when naiveMul is faster than karatsuba // 100
+size_t KARATSUBAFASTER = 200; //Size when karatsuba is faster than toom-cook //400
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
@@ -17,7 +19,7 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     size_t xLen = x->end - x->start;
     size_t yLen = y->end - y->start;
     //if smaller than naiveMulFaster, use naiveMul
-    if (xLen <= naiveMulFaster || yLen <= naiveMulFaster) {
+    if (xLen <= NAIVLEMULFASTER || yLen <= NAIVLEMULFASTER) {
         if (xLen > yLen) {
             return naiveMul_Asm(x, y);
         } else {
@@ -73,7 +75,7 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     size_t aLen = a->end - a->start;
     size_t bLen = b->end - b->start;
     //if smaller than karatsubaFaster, use karatsuba
-    if (aLen <= karatsubaFaster || bLen <= karatsubaFaster) {
+    if (aLen <= KARATSUBAFASTER || bLen <= KARATSUBAFASTER) {
         bigInt *res = karatsuba(a, b);
         res->negative = sign;
         return res;
@@ -198,7 +200,7 @@ bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
     size_t aLen = a->end - a->start;
     size_t bLen = b->end - b->start;
     //if smaller than karatsubaFaster, use karatsuba
-    if (aLen <= karatsubaFaster || bLen <= karatsubaFaster) {
+    if (aLen <= KARATSUBAFASTER || bLen <= KARATSUBAFASTER) {
         bigInt *res = karatsuba(a, b);
         res->negative = sign;
         return res;
@@ -206,6 +208,7 @@ bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
 
 
     struct toomCookArgs *args = malloc(sizeof(struct toomCookArgs));
+    mallocCheck(args);
     args->a = a;
     args->b = b;
     args->depth = depth;
@@ -227,7 +230,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     size_t aLen = a->end - a->start;
     size_t bLen = b->end - b->start;
     //if smaller than karatsubaFaster, use karatsuba
-    if (aLen <= karatsubaFaster || bLen <= karatsubaFaster) {
+    if (aLen <= KARATSUBAFASTER || bLen <= KARATSUBAFASTER) {
         bigInt *res = karatsuba(a, b);
         res->negative = sign;
         return res;
@@ -264,10 +267,15 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     pthread_t thread_idMul5;
 
     struct toomCookArgs *argsMul1 = malloc(sizeof(struct toomCookArgs));
+    mallocCheck(argsMul1);
     struct toomCookArgs *argsMul2 = malloc(sizeof(struct toomCookArgs));
+    mallocCheck(argsMul2);
     struct toomCookArgs *argsMul3 = malloc(sizeof(struct toomCookArgs));
+    mallocCheck(argsMul3);
     struct toomCookArgs *argsMul4 = malloc(sizeof(struct toomCookArgs));
+    mallocCheck(argsMul4);
     struct toomCookArgs *argsMul5 = malloc(sizeof(struct toomCookArgs));
+    mallocCheck(argsMul5);
 
     bigInt *v0;
     if (depth > 0) {

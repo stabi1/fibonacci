@@ -6,11 +6,20 @@
 #include <float.h>
 #include "../src/main.h"
 #include "../src/bigInt/mulAsm.h"
+#include "../src/bigInt/bigIntUtil.h"
+#include "../src/bigInt/bigIntDiv.h"
 
 char *randomHex(uint64_t n);
 
+void testDivision();
+
+void testTmp();
+
 void test() {
-    findBestValues();
+    testDivision();
+    //testTmp();
+
+    //findBestValues();
     /*uint64_t n = 40000;
     bigInt *res1 = fibExpFastDoubling(n);
     bigInt *res2 = fibExpFastDoubling(n, true);
@@ -21,6 +30,68 @@ void test() {
     printf("Correct; Length of result in 8 byte: %lu\n", res1->end - res1->start);
     freeBigInt(res1);
     freeBigInt(res2);*/
+}
+
+void testTmp() {
+    bigInt *a = hexStringToBigInt(randomHex(80));
+    //bigInt* b = hexStringToBigInt(randomHex(100));
+    //bigInt* a = hexStringToBigInt("0C8BC2AE3BAAAB9165CC458E199CB89F51B135F7091A5ABB0874DF3E8CB4543A5EB93B0441E9CA4C2B0FB3D30875CBF29ABD5B1ACF38984B3CC458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E199CB89F51B135F7091C458E19");
+    //bigInt* a = hexStringToBigInt("0C8BC2AE3BAAAB9165CC458E199CB89F51B135F7091A5ABB0874DF3E8CB4543A5EB93B0441E9CA4C2B0FB3D30875CBF29ABD5B1ACF38984B3");d
+    //bigInt* b = hexStringToBigInt("076931FAC9DAB2B36C248B87D6AE33F9A62D7183A5D5789E4B2D6B441E2411DC709E111C7E1E7ACB6F8CAC0BB2FC476931FAC9DAB2B36C248B87D6AE33F9A62D7183A5D5789E4B2D6B441E2411DC709E111C7E1E7ACB6F8CAC0BB2FC476931FAC9DAB2B36C248B87D6AE33F9A62D7183A5D5789E4B2D6B441E2411DC709E111C7E1E7ACB6F8CAC0BB2FC4");
+    //bigInt* b = hexStringToBigInt("76931FAC9DAB2B36C248B87D6AE33F9A62D7183A5D5789E4B2D6B441E2411DC709E111C7E1E7ACB6F8CAC0BB2FC4");
+    size_t n = 2 * 64;
+
+    //a->start = 7*2;
+    //b->start = 6*2;
+
+    printf("%s\n", bigIntToHexString(a));
+    //printf("%s\n", bigIntToHexString(b));
+    //printf("aLen: %ld, bLen: %ld, n: %ld\n", a->end-a->start, b->end-b->start, n);
+
+
+
+    bigInt *res1 = shiftLeft(a, n);
+    printf("%s\n", bigIntToHexString(res1));
+}
+
+//segfault for default
+//bigInt* a = hexStringToBigInt(randomHex(2000));//1600
+//bigInt* b = hexStringToBigInt(randomHex(430));//800
+
+void testDivision() {
+    //bigInt* a = hexStringToBigInt(randomHex(480));//1600
+    //bigInt *a = hexStringToBigInt("0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    //bigInt *a = hexStringToBigInt("0EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+   // bigInt *b = hexStringToBigInt(randomHex(320));//800
+    //bigInt* a = hexStringToBigInt("60AFFA1E64881027A5DFE87D0CF4C95C5A26F03C11261EDC1869940DB6F4AABB14399A3F971C6DE320F446838C54E7886E76355B9BEB41AFBF0AA77EE04C62E83D14403A961E6E2A4EAD428945EF8BD15F8CD243DDE45620C2CAA0EE405315E24C105DF5FF7AA1946D64BA41C08FFDD5FB117300");
+    //bigInt* b = hexStringToBigInt("11F4E298E5F5C0EAD06AA4EE91C9BE5CE51C7B55F29D367E6E91381A9C25A808D252DA6ACE604FEBC9AE1AA96CD14F801F2D99647E4AC548D16CA142E3230C50B7C312770C3D165C7C93DD4BE");
+
+    bigInt* a = hexStringToBigInt(randomHex(1500));//2000
+    bigInt* b = hexStringToBigInt(randomHex(150));//300
+
+    bigInt *q1;
+    bigInt *q2;
+
+    printf("%s\n", bigIntToHexString(a));
+    printf("%s\n", bigIntToHexString(b));
+    printf("\n");
+
+    bigInt *res1 = divideD4Helper(a, b, &q1);
+    bigInt *res2 = divideBurnikelZiegler(a, b, &q2);
+    printf("\nResults:\n");
+    printf("%s\n", bigIntToHexString(res1));
+    printf("%s\n", bigIntToHexString(res2));
+    printf("\n");
+    printf("%s\n", bigIntToHexString(q1));
+    printf("%s\n", bigIntToHexString(q2));
+    //printBigIntHex(smartAdd(multiplyToomCook3(b, res1), q1)); //check
+
+    freeBigInt(a);
+    freeBigInt(b);
+    freeBigInt(q1);
+    freeBigInt(q2);
+    freeBigInt(res1);
+    freeBigInt(res2);
 }
 
 void findBestValues() {
@@ -88,6 +159,7 @@ void benchMark() {
 }
 
 void bruteForceDebug(bool multiThread) {
+    bool print = false;
     if (multiThread) {
         printf("Bruteforce debug for multi-thread and single-thread\n");
     } else {
@@ -160,12 +232,17 @@ void bruteForceDebug(bool multiThread) {
 
         size_t i = 1;
         while (i < 0xffffffffffffffff) {
-            printf("\rTesting %luth fibonacci number", i);
+            printf("\rTesting %luth fibonacci number", i + 1);
             fib = smartAdd(fibMinus1, fibMinus2);
             freeBigInt(fibMinus2);
             fibMinus2 = fibMinus1;
             fibMinus1 = fib;
             res2 = fibExpFastDoubling(i + 1, false);
+            if (print) {
+                char *resString = bigIntToDecString(res2);
+                printf("%s\n", resString);
+                free(resString);
+            }
             if (!compareBigInts(fibMinus1, res2)) {
                 printf("Failed at %lu for single-thread\n", i + 1);
 

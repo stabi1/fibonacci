@@ -65,6 +65,8 @@ add_Asm:
 //bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n); uses SSE
 shiftAdd_Asm:
     //rdi = x, rsi = toShift, rdx = n
+    push r12 //free
+    push r13
     push r14
     push r15
     push rbx
@@ -76,6 +78,7 @@ shiftAdd_Asm:
     mov r9, [rsi + 8]
     sub r9, [rsi]
     add r9, rdx // r9 = toShiftLen
+    mov r13, [rdi] //x->start
 
     //createRes
     push r8
@@ -107,7 +110,7 @@ shiftAdd_Asm:
     jae .LNoSSE
     sub rsi, 1
 .LSSESchleife:
-    lddqu xmm0, [r11 + rcx*8]
+    lddqu xmm0, [r11 + rsi*8]
     movdqu [r10 + rcx*8], xmm0
     add rcx, 2 //inc counters
     add rdi, 2
@@ -146,11 +149,12 @@ shiftAdd_Asm:
     //LoopEnde
 .LStartAddShiftAdd:
     mov rbx, rax //res sichern
+    sub rsi, r13 // xCount - x->start
     cmp r8, r9
     jae .LxSizeBiggerShiftAdd2
     mov r8, rsi
     mov r9, rcx
-    mov rcx, [r15]
+    xor rcx, rcx
     mov rdx, rax
     mov rsi, r14
     mov rdi, r15
@@ -158,7 +162,7 @@ shiftAdd_Asm:
     jmp .LResizeShiftAdd
 .LxSizeBiggerShiftAdd2:
     mov r9, rcx //parameter verschieben
-    mov r8, [r15]
+    xor r8, r8
     mov rcx, rsi
     mov rdx, rax
     mov rsi, r15
@@ -179,6 +183,8 @@ shiftAdd_Asm:
     pop rbx
     pop r15
     pop r14
+    pop r13
+    pop r12
     ret
 
 //void shiftAddHelper(bigInt *bigger, bigInt *smaller, bigInt *res, size_t biggerCount, size_t smallerCount, size_t i);

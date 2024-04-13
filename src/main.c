@@ -10,7 +10,6 @@
 #include <limits.h>
 #include "main.h"
 #include "../test/tests.h"
-#include "util.h"
 
 size_t getDepth();
 
@@ -23,6 +22,13 @@ bool handleCPUFeatures();
 void printMissingFeature(char *feature);
 
 bool verbose = false;
+
+char *filename = "output.txt";
+
+//TODO add sign support to DIV,
+//TODO chech sign support -> improve SmartAdd/SmartSub
+//TODO check support for variable starting point of bigIntArray
+//TODO mul wrapper
 
 static struct option long_options[] = {
         {"help",        no_argument,       NULL, 'h'},
@@ -202,7 +208,6 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         }
 
         if (output == 'f') { // File output
-            char *filename = "output.txt";
             FILE *outputFile = fopen(filename, "a+");
             if (!outputFile) {
                 fprintf(stderr, "Error while opening/creating %s\n", filename);
@@ -252,7 +257,8 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
 }
 
 bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
-    size_t depth = getDepth();
+    size_t depth = 0;
+    if (multiThread) depth = getDepth();
     bigInt *a = newBigInt(1);
     bigInt *b = newBigInt(1);
     b->bigIntArray[0] = 1;

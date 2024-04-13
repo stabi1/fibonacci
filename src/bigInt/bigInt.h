@@ -19,6 +19,16 @@ bigInt *newBigInt(size_t len);
 
 void freeBigInt(bigInt *toDelete);
 
+bigInt *copyBigInt(bigInt *x);
+
+//compare
+int compareBigInt(bigInt *a, bigInt *b);
+
+//print
+void printBigIntHex(bigInt *x);
+
+void printBigIntDec(bigInt *x);
+
 // calc methods
 bigInt *smartSub(bigInt *x, bigInt *y);
 
@@ -32,12 +42,19 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b);
 
 bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth);
 
+bigInt *divide(bigInt *dividend, bigInt *divisor);
+
+bigInt *divideMod(bigInt *dividend, bigInt *divisor, bigInt **reminder);
+
 // String methods
 bigInt *hexStringToBigInt(char hex[]);
 
 char *bigIntToDecString(bigInt *x);
 
 char *bigIntToHexString(bigInt *x);
+
+//misc
+size_t custom_lzcnt(uint64_t n);
 
 
 #endif //IMPLEMENTATION_BETTERBIGINT_H

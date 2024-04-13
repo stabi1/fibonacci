@@ -1,5 +1,6 @@
 .intel_syntax noprefix
 .global naiveMul_Asm
+.global getOccupiedFields_Asm
 
 .align 16
 naiveMul_Asm: //mul using naive multiplication

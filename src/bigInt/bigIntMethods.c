@@ -5,21 +5,15 @@
 #include "bigIntMethods.h"
 #include "bigIntUtil.h"
 #include "bigIntAsm.h"
+#include "mulAsm.h"
 
 //allocates memory for a new bigInt of the given size
 bigInt *newBigInt(size_t len) {
     bigInt *res = malloc(sizeof(bigInt));
-    if (res == NULL) {
-        fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
-        exit(EXIT_FAILURE);
-    }
+    mallocCheck(res);
 
     res->bigIntArray = calloc(len, sizeof(uint64_t));
-    if (res->bigIntArray == NULL) {
-        free(res);
-        fprintf(stderr, "An error occurred: Calloc returned null. Program terminated\n");
-        exit(EXIT_FAILURE);
-    }
+    mallocCheck(res->bigIntArray);
     res->start = 0;
     res->end = len;
     res->arrayOwner = true;
@@ -30,15 +24,20 @@ bigInt *newBigInt(size_t len) {
 //creates a new bigInt Struct with the array of another bigInt->not the owner of the array
 bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray) {
     bigInt *res = malloc(sizeof(bigInt));
-    if (res == NULL) {
-        fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
-        exit(EXIT_FAILURE);
-    }
+    mallocCheck(res);
     res->bigIntArray = bigIntArray;
     res->start = start;
     res->end = end;
     res->arrayOwner = false;
     res->negative = false;
+    return res;
+}
+
+bigInt *copyBigInt(bigInt *x) {
+    size_t xLen = x->end - x->start;
+    bigInt *res = newBigInt(xLen);
+    memcpy(res->bigIntArray, x->bigIntArray, xLen * 8);
+    res->negative = x->negative;
     return res;
 }
 
@@ -50,14 +49,111 @@ void freeBigInt(bigInt *toDelete) {
     free(toDelete);
 }
 
-//shifts bigInt to the left. n must be smaller than 64
-bigInt *shiftLeft(bigInt *x, size_t n) {
-    return shiftLeft_Asm(x, n);
+//Returns the bigInt with value 0
+bigInt *getZeroBigInt() {
+    return newBigInt(1);
 }
 
-//shifts bigInt to the right. n must be smaller than 64
+// Returns -1, 0 or 1 as a is numerically less than, equal to, or greater than b
+int compareBigInt(bigInt *a, bigInt *b) {
+    size_t aLen = a->end - a->start;
+    size_t bLen = b->end - b->start;
+    if (aLen < bLen) {
+        return -1;
+    } else if (aLen > bLen) {
+        return 1;
+    }
+    for (size_t i = a->end - 1, j = b->end - 1; i >= a->start; i--, j--) {
+        uint64_t aVal = a->bigIntArray[i];
+        uint64_t bVal = b->bigIntArray[j];
+        if (aVal < bVal)
+            return -1;
+        if (aVal > bVal)
+            return 1;
+    }
+    return 0;
+}
+
+//compares like compareBigInt, but b is shifted n*64 to the left
+int compareShiftedBigInt(bigInt *a, bigInt *b, size_t n) {
+    long aLen = (long) (a->end - a->start) - (long) n;
+    long bLen = (long) (b->end - b->start);
+    if (aLen < bLen) {
+        return -1;
+    } else if (aLen > bLen) {
+        return 1;
+    }
+    for (size_t i = a->end - 1, j = b->end - 1; i >= a->start; i--, j--) {
+        uint64_t aVal = a->bigIntArray[i];
+        uint64_t bVal = b->bigIntArray[j];
+        if (aVal < bVal)
+            return -1;
+        if (aVal > bVal)
+            return 1;
+    }
+    return 0;
+}
+
+//Removes all leading zero blocks
+void bigIntRemoveLeadingZeroBlocks(bigInt *x) {
+    x->end = x->start + getOccupiedFields_Asm(x);
+}
+
+//prints bigInt in Hex
+void printBigIntHex(bigInt *x) {
+    char *tmp = bigIntToHexString(x);
+    printf("%s\n", tmp);
+    free(tmp);
+}
+
+//prints bigInt in Dec
+void printBigIntDec(bigInt *x) {
+    char *tmp = bigIntToDecString(x);
+    printf("%s\n", tmp);
+    free(tmp);
+}
+
+//shifts bigInt to the left
+bigInt *shiftLeft(bigInt *x, size_t n) {
+    if (n == 0) {
+        return copyBigInt(x);
+    }
+    size_t toShift64 = n / 64;
+    if (toShift64 == 0) {
+        return shiftLeft_Asm(x, n);
+    }
+    size_t xLen = x->end - x->start;
+    bigInt *resTmp = newBigInt(xLen + toShift64);
+    memcpy(resTmp->bigIntArray + toShift64, x->bigIntArray, xLen * 8);
+    if (n % 64 == 0) {
+        return resTmp;
+    }
+    bigInt *res = shiftLeft_Asm(resTmp, n % 64);
+    freeBigInt(resTmp);
+    return res;
+}
+
+//shifts bigInt to the right
 bigInt *shiftRight(bigInt *x, size_t n) {
-    return shiftRight_Asm(x, n);
+    if (n == 0) {
+        return copyBigInt(x);
+    }
+    size_t toShift64 = n / 64;
+    if (toShift64 == 0) {
+        return shiftRight_Asm(x, n);
+    }
+    size_t xLen = x->end - x->start;
+    if (xLen <= toShift64) {
+        return getZeroBigInt();
+    }
+    bigInt *resTmp = newBigInt(xLen - toShift64);
+    memcpy(resTmp->bigIntArray, x->bigIntArray + toShift64, (xLen - toShift64) * 8);
+    if (n % 64 == 0) {
+        return resTmp;
+    }
+    bigInt *res = shiftRight_Asm(resTmp, n % 64);
+    freeBigInt(resTmp);
+    return res;
 }
 
 //fills the char array with the hex presentation of the bigInt
@@ -71,17 +167,16 @@ char *bigIntToHexString(bigInt *x) {
 
 //fills the char array with the dec presentation of the bigInt
 char *bigIntToDecString(bigInt *x) {
-    size_t lenInBytes = (x->end - x->start) * 8 + 1; //TODO
-    char *resChar = uint64tToHexString(x->bigIntArray, lenInBytes, x->start);//TODO
-    if (x->negative) resChar[0] = '-';
-    return resChar;
+    return bigIntToDecStringHelper(x);
 }
 
 //returns the bigInt of the HexString, hex is being freed
-bigInt *hexStringToBigInt(char hex[]) { //TODO support sign
+bigInt *hexStringToBigInt(char hex[]) { //TODO support sign and fix crash when length is multiple of 16
     char *paddedHex = extendHexString(hex);
     size_t length = strlen(paddedHex);
-    bigInt *res = newBigInt(length / 16);
+    size_t resLength = length / 16;
+    if (length % 16 != 0) resLength++;
+    bigInt *res = newBigInt(resLength);
 
     size_t j = 0;
     uint64_t akt = 0;
@@ -149,7 +244,6 @@ bigInt *getUpperFrom(bigInt *x, size_t n) {
     return res;
 }
 
-
 //Returns a slice of a bigInt for Toom-Cook
 void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]) {
     size_t len = x->end - x->start;
@@ -198,6 +292,25 @@ void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize
     erg[1] = s1;
     bigInt *s2 = newBigIntStruct(x->start + size2 + size1, x->start + size2 + size1 + size0, x->bigIntArray);
     erg[2] = s2;
+}
+
+bigInt *getBlock(bigInt *x, size_t index, size_t numBlocks, size_t blockLength) {
+    size_t blockStart = index * blockLength;
+    size_t xLen = x->end - x->start;
+    if (blockStart >= xLen) {
+        return getZeroBigInt();
+    }
+
+    size_t blockEnd;
+    if (index == numBlocks - 1) {
+        blockEnd = xLen;
+    } else {
+        blockEnd = (index + 1) * blockLength;
+    }
+    if (blockEnd > xLen) {
+        return getZeroBigInt();
+    }
+    return newBigIntStruct(x->start + blockStart, x->start + blockEnd, x->bigIntArray);
 }
 
 bigInt *smartAdd(bigInt *x, bigInt *y) {
@@ -266,41 +379,4 @@ bigInt *smartSub(bigInt *x, bigInt *y) {
             }
         }
     }
-}
-
-bigInt *exactDivideBy3(bigInt *x) {
-    __int128 LONG_MASK = 0xffffffffffffffff;
-    long len = (long) x->end - (long) x->start;
-    bigInt *result = newBigInt(x->end - x->start);
-    result->negative = x->negative;
-    unsigned long borrow;
-    unsigned __int128 q, xx, w;
-    borrow = 0;
-    long j = (long) x->start;
-    for (long i = 0; i < len; i++, j++) {
-        xx = ((__int128) (x->bigIntArray[j])) & LONG_MASK;
-
-        //print128(xx);
-        //printf("Borrow: %ld\n", borrow);
-        w = xx - borrow;
-        if (borrow > xx) {
-            borrow = 1;
-        } else {
-            borrow = 0;
-        }
-        q = (unsigned __int128) (w * 0xAAAAAAAAAAAAAAAB);// & LONG_MASK;
-        //printf("Erg:%"PRIx64"\n", (uint64_t) q);
-        result->bigIntArray[i] = (uint64_t) q;
-
-        if ((unsigned long long) q >= 0x5555555555555556) {
-            borrow++;
-            if ((unsigned long long) q >= 0xAAAAAAAAAAAAAAAB) {
-                borrow++;
-            }
-        }
-    }
-    if (result->bigIntArray[result->end - 1] == 0 && result->end - result->start > 1) {
-        result->end -= 1;
-    }
-    return result;
 }

@@ -9,7 +9,7 @@
 
 bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray);
 
-void exception();
+void bigIntRemoveLeadingZeroBlocks(bigInt *x);
 
 bigInt *getLowerFrom(bigInt *x, size_t n);
 
@@ -17,6 +17,10 @@ bigInt *getUpperFrom(bigInt *x, size_t n);
 
 void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]);
 
-bigInt *exactDivideBy3(bigInt *x);
+bigInt *getBlock(bigInt *x, size_t index, size_t numBlocks, size_t blockLength);
+
+int compareShiftedBigInt(bigInt *a, bigInt *b, size_t n);
+
+bigInt *getZeroBigInt();
 
 #endif //FIBONACCI_BIGINTMETHODS_H
