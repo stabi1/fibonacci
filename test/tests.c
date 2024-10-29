@@ -15,8 +15,11 @@ void testDivision();
 
 void testTmp();
 
+void test_3n2n();
+
 void test() {
     testDivision();
+    //test_3n2n();
     //testTmp();
 
     //findBestValues();
@@ -66,24 +69,44 @@ void testDivision() {
     //bigInt* a = hexStringToBigInt("60AFFA1E64881027A5DFE87D0CF4C95C5A26F03C11261EDC1869940DB6F4AABB14399A3F971C6DE320F446838C54E7886E76355B9BEB41AFBF0AA77EE04C62E83D14403A961E6E2A4EAD428945EF8BD15F8CD243DDE45620C2CAA0EE405315E24C105DF5FF7AA1946D64BA41C08FFDD5FB117300");
     //bigInt* b = hexStringToBigInt("11F4E298E5F5C0EAD06AA4EE91C9BE5CE51C7B55F29D367E6E91381A9C25A808D252DA6ACE604FEBC9AE1AA96CD14F801F2D99647E4AC548D16CA142E3230C50B7C312770C3D165C7C93DD4BE");
 
-    bigInt* a = hexStringToBigInt(randomHex(1500));//1500
-    bigInt* b = hexStringToBigInt(randomHex(150));//150
+    bigInt* a = hexStringToBigInt(randomHex(3000000));//5500000
+    bigInt* b = hexStringToBigInt(randomHex(300000));//550000
 
     bigInt *q1;
     bigInt *q2;
 
-    printBigIntHex(a);
-    printBigIntHex(b);
+    //printBigIntHex(a);
+    //printBigIntHex(b);
     printf("\n");
+    printf("TEST: %ld %ld %ld %ld\n", a->end - a->start, b->end - b->start, custom_lzcnt(a->bigIntArray[a->end - 1]),
+           custom_lzcnt(b->bigIntArray[b->end - 1]));
 
+    printf("Begin of calculation!!!\n\n\n");
+
+
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC, &start);
     bigInt *res1 = divideD4Helper(a, b, &q1);
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    printf("Time in div: %f\n", time);
+
+
+    struct timespec start2;
+    clock_gettime(CLOCK_MONOTONIC, &start2);
     bigInt *res2 = divideBurnikelZiegler(a, b, &q2);
+    struct timespec end2;
+    clock_gettime(CLOCK_MONOTONIC, &end2);
+    double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
+    printf("Time in div: %f\n", time2);
+
     printf("\nResults:\n");
-    printBigIntHex(res1);
-    printBigIntHex(res2);
+    //printBigIntHex(res1);
+    //printBigIntHex(res2);
     printf("\n");
-    printBigIntHex(q1);
-    printBigIntHex(q2);
+    //printBigIntHex(q1);
+    //printBigIntHex(q2);
 
     if(compareBigInt(res1, res2) != 0) printf("RES not equal\n");
     else printf("RES equal\n");
@@ -91,6 +114,41 @@ void testDivision() {
     else printf("Reminder equal\n");
 
     //printBigIntHex(smartAdd(multiplyToomCook3(b, res1), q1)); //check
+
+    freeBigInt(a);
+    freeBigInt(b);
+    freeBigInt(q1);
+    freeBigInt(q2);
+    freeBigInt(res1);
+    freeBigInt(res2);
+}
+
+void test_3n2n() {
+    bigInt *a = hexStringToBigInt("F9D02BBFDE1A0FA314FB0C68B24506AC66BFC5DEA6B0A78AEE182AAB079732907B03BFA75EC9EB73BEAC6A4D5A01563E03FA58C146597FD46B8DDB82052D6067D5929B3C1F40A039542E1ABC5C61BAA52E053B4C3643F204EF259D2E98042A948AAC5E884CB3EC7DB925643FD34FDD467E2CC");
+    bigInt *b = hexStringToBigInt("56DC304E875C9D4B3FB2125AE3D0CD3130D6114989517ACA97DAA2485181EB31C07D2C6A5BCC587E048A6D2BEACD6FE206F225C708461B41FDB5AD087C5DC4FCAEEC3A3437A42E51B065D6");
+
+    printBigIntHex(a);
+    printBigIntHex(b);
+
+    printf("TEST: %ld %ld %ld %ld\n", a->end - a->start, b->end - b->start, custom_lzcnt(a->bigIntArray[a->end - 1]),
+           custom_lzcnt(b->bigIntArray[b->end - 1]));
+
+    bigInt *q1;
+    bigInt *q2;
+    bigInt *res1 = divideD4Helper(a, b, &q1);
+    bigInt *res2 = divideD4Helper(a, b, &q2);
+
+    printf("\nResults:\n");
+    printBigIntHex(res1);
+    printBigIntHex(res2);
+    printf("\nRemainders:\n");
+    printBigIntHex(q1);
+    printBigIntHex(q2);
+
+    if(compareBigInt(res1, res2) != 0) printf("RES not equal\n");
+    else printf("RES equal\n");
+    if(compareBigInt(q1, q2) != 0) printf("Reminder not equal\n");
+    else printf("Reminder equal\n");
 
     freeBigInt(a);
     freeBigInt(b);

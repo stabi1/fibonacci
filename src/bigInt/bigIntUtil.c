@@ -12,7 +12,7 @@ const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',
 
 const char decLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
-const int DECSTRINGSMALLFASTER = 20;
+const int DECSTRINGSMALLFASTER = 10;
 
 void mallocCheck(void *p) {
     if (p == NULL) {
@@ -21,11 +21,16 @@ void mallocCheck(void *p) {
     }
 }
 
-size_t custom_lzcnt(uint64_t n) { //TODO Remove from util.c if this is kept
+size_t custom_lzcnt(uint64_t n) {
     if (n == 0) {
         return 0;
     }
     return __builtin_clzll(n);
+}
+
+uint64_t bitLength(bigInt *x) {
+    size_t xLen = x->end - x->start;
+    return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
 
 char *uint64tToHexString(uint64_t *array, size_t lenInBytes, size_t start) {
@@ -206,8 +211,7 @@ bigIntToDecStringSchoenhage(bigInt *x, size_t digits, char **resString, size_t *
     }
 
     size_t b, n;
-    b = xLen * 64 - 1 + custom_lzcnt(x->bigIntArray[x->end - 1]);
-
+    b = bitLength(x);
     n = (size_t) llroundl(log((double) b * log(2.0) / log(10.0)) / log(2.0) - 1.0);
     bigInt *v = newBigInt(1);
     v->bigIntArray[v->start] = 10;

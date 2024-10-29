@@ -12,6 +12,8 @@ void mallocCheck(void *p);
 
 size_t custom_lzcnt(uint64_t n);
 
+uint64_t bitLength(bigInt *x);
+
 char *extendHexString(char *hex);
 
 char *trimZeroes(char *str);

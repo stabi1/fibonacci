@@ -48,7 +48,6 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
     uint64_t n = divisor->end - divisor->start;
     bigInt *quotient = newBigInt(m - n + 1);
 
-
     uint64_t *q = quotient->bigIntArray + quotient->start;
     const uint64_t *u = dividend->bigIntArray + dividend->start;
     const uint64_t *v = divisor->bigIntArray + divisor->start;
@@ -236,18 +235,15 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
 
     long j = (s + m - 1) / m;      // step 2a: j = ceil(s/m)
     long n = j * m;             // step 2b: block length in 64-bit units
-    long n64 = 64 * n;         // block length in bits
-    long sigma = (long) MAX((long) 0, (long) (n64 - (s * 64 - 1 + custom_lzcnt(
-            B->bigIntArray[B->end - 1]))));   // step 3: sigma = max{T | (2^T)*B < beta^n}
+    long n64 = 64L * n;         // block length in bits
+    long sigma = (long) MAX((long) 0, (long) (n64 - bitLength(B)));   // step 3: sigma = max{T | (2^T)*B < beta^n}
 
     bigInt *bShifted = shiftLeft(B, sigma);// step 4a: shift B so its length is a multiple of n
     bigInt *aShifted = shiftLeft(A, sigma);    // step 4b: shift A by the same amount
 
 
     // step 5: t is the number of blocks needed to accommodate this plus one additional bit
-    long t = (long) (
-            (((aShifted->end - aShifted->start) * 64 - 1 + custom_lzcnt(aShifted->bigIntArray[aShifted->end - 1])) +
-             n64) / n64);
+    long t = (long) ((bitLength(aShifted) + n64) / n64);
     if (t < 2) {
         t = 2;
     }
@@ -301,11 +297,9 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
 //aLen <= 2*bLen
 bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
     size_t n = B->end - B->start;
-    //printf("divide2n1n, %ld %ld %ld %ld\n", A->end - A->start, n, custom_lzcnt2(A->bigIntArray[A->end - 1]), custom_lzcnt(B->bigIntArray[B->end - 1]));
 
     // step 1: base case
     if (n % 2 != 0 || n < D4FASTER || n * 2 != A->end - A->start) { //
-        //printf("Base Case\n");
         return divideD4Helper(A, B, reminder);
     }
 
@@ -334,13 +328,8 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
 
 //2*aLen<=3*bLen
 bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
-    //printf("divide3n2n-Base Case\n");
-    return divideD4Helper(A, B, reminder);
-    //TODO Does not work yet | remove prints
 
     size_t n = (B->end - B->start) / 2;   // half the length of b in ints
-    printf("divide3n2n, %ld %ld %ld %ld\n", A->end - A->start, n, custom_lzcnt(A->bigIntArray[A->end - 1]),
-           custom_lzcnt(B->bigIntArray[B->end - 1]));
 
     // step 1: view A as [a1,a2,a3] where each ai is n ints or less; let a12=[a1,a2]
     bigInt *a12 = shiftRight(A, 64 * n);
