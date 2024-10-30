@@ -275,13 +275,13 @@ size_t getDepth(size_t nprocsSet) {
         if (verbose) printf("Number of cores set: %lu\n", numberOfCores);
     }
 
-    if (numberOfCores < 10) {
+    if (numberOfCores < 6) {
         if (verbose) printf("Number of threads created: %d\n", 5);
         return 1;
-    } else if (numberOfCores < 28) {
+    } else if (numberOfCores < 26) {
         if (verbose) printf("Number of threads created: %d\n", 25);
         return 2;
-    } else if (numberOfCores < 82) {
+    } else if (numberOfCores < 126) {
         if (verbose) printf("Number of threads created: %d\n", 125);
         return 3;
     } else {
