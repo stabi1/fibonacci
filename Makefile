@@ -3,7 +3,7 @@ WARNINGFLAGS=-Wall -Wextra
 DEGUGFLAGS=-g
 SANITIZERFLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsanitize=leak
 
-SOURCEFILES=src/main.c src/bigInt/bigIntMul.c src/bigInt/bigIntDiv.c src/bigInt/bigIntMethods.c src/bigInt/bigIntAsm.S src/bigInt/mulAsm.S test/tests.c src/bigInt/bigIntUtil.c -lm
+SOURCEFILES=src/main.c src/util.c src/bigInt/bigIntMul.c src/bigInt/bigIntDiv.c src/bigInt/bigIntMethods.c src/bigInt/bigIntAsm.S src/bigInt/mulAsm.S test/tests.c src/bigInt/bigIntUtil.c -lm
 
 OUTPUTFILENAME=fib
 

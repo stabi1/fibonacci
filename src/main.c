@@ -5,17 +5,16 @@
 #include <string.h>
 #include <sys/sysinfo.h>
 #include <stdbool.h>
-#include <errno.h>
-#include <ctype.h>
-#include <limits.h>
+
 #include "main.h"
 #include "../test/tests.h"
+#include "util.h"
 
-size_t getDepth();
+size_t getDepth(size_t nprocsSet);
 
 void printHelpMenu();
 
-void printFibonacci(uint64_t n, char radix, char output, bool multiThread);
+void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_t numberOfCoresSet);
 
 bool handleCPUFeatures();
 
@@ -23,32 +22,26 @@ void printMissingFeature(char *feature);
 
 bool verbose = false;
 
-char *filename = "output.txt";
+const char *filename = "output.txt";
 
 //TODO add sign support to DIV,
 //TODO chech sign support -> improve SmartAdd/SmartSub
 //TODO check support for variable starting point of bigIntArray
 //TODO mul wrapper
+//TODO numberOfCores set not good, maybe set depth directly
 
 static struct option long_options[] = {
-        {"help",        no_argument,       NULL, 'h'},
-        {"output",      required_argument, NULL, 'o'},
-        {"multiThread", no_argument,       NULL, 'm'},
-        {"radix",       required_argument, NULL, 'r'},
-        {"debug",       no_argument,       NULL, 'd'},
-        {"benchMark",   no_argument,       NULL, 'b'},
-        {"test",        no_argument,       NULL, 't'},
-        {"fibonacci",   required_argument, NULL, 'f'},
-        {"verbose",     no_argument,       NULL, 'v'},
-        {NULL, 0,                          NULL, 0}
-};
-
-enum {
-    NUMBER_N,
-};
-
-const char *fibonacciKeys[] = {
-        [NUMBER_N] = "n",
+        {"help",          no_argument,       NULL, 'h'},
+        {"output",        required_argument, NULL, 'o'},
+        {"multiThread",   no_argument,       NULL, 'm'},
+        {"numCores",      required_argument, NULL, 'c'},
+        {"radix",         required_argument, NULL, 'r'},
+        {"debug",         no_argument,       NULL, 'd'},
+        {"benchMark",     no_argument,       NULL, 'b'},
+        {"test",          no_argument,       NULL, 't'},
+        {"nth-fibonacci", required_argument, NULL, 'n'},
+        {"verbose",       no_argument,       NULL, 'v'},
+        {NULL, 0,                            NULL, 0}
 };
 
 int main(int argc, char *argv[]) {
@@ -66,19 +59,14 @@ int main(int argc, char *argv[]) {
     char radix = 'h';
     char output = 't';
     bool multiThread = false;
+    size_t cores = 0; //available cores
     verbose = false;
-
     uint64_t n = 0;
 
     int option;
 
-    char *subOpts, *value;
-    value = NULL;
-    bool fibCalled = false;
-
     while (optind < argc) {
-        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:f:", long_options, NULL)) != -1) {
-            subOpts = optarg;
+        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:c:n:", long_options, NULL)) != -1) {
             switch (option) {
                 case 'h':
                     printHelpMenu();
@@ -98,11 +86,10 @@ int main(int argc, char *argv[]) {
                 case 'v':
                     verbose = true;
                     break;
+                case 'c':
+                    cores = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
+                    break;
                 case 'r':
-                    if (optarg == NULL) {
-                        fprintf(stderr, "no radix option provided!\n");
-                        exit(EXIT_FAILURE);
-                    }
                     if ((optarg[0] != 'h' && optarg[0] != 'd') || optarg[1] != '\0') {
                         fprintf(stderr, "invalid radix option \"%s\" provided, use -h for usage\n", optarg);
                         exit(EXIT_FAILURE);
@@ -110,10 +97,7 @@ int main(int argc, char *argv[]) {
                     radix = optarg[0];
                     break;
                 case 'o':
-                    if (optarg == NULL) {
-                        fprintf(stderr, "no output option provided, use -h for usage\n");
-                        exit(EXIT_FAILURE);
-                    } else if ((optarg[0] != 'f' && optarg[0] != 't' && optarg[0] != 'n') || optarg[1] != '\0') {
+                    if ((optarg[0] != 'f' && optarg[0] != 't' && optarg[0] != 'n') || optarg[1] != '\0') {
                         fprintf(stderr, "invalid output option \"%s\" provided, use -h for usage\n", optarg);
                         exit(EXIT_FAILURE);
                     }
@@ -123,38 +107,8 @@ int main(int argc, char *argv[]) {
                         fprintf(stderr, "Invalid output option %c!\nno output...\n", output);
                     }
                     break;
-                case 'f':
-                    while (*subOpts != '\0') {
-                        switch (getsubopt(&subOpts, (char **) fibonacciKeys, &value)) {
-                            case NUMBER_N:
-                                if (value == NULL) {
-                                    fprintf(stderr, "No explicit n provided, use -h for usage\n");
-                                    exit(EXIT_FAILURE);
-                                }
-                                char *endptr;
-                                errno = 0;
-                                n = strtoull(value, &endptr, 10);
-                                if (errno == ERANGE && n == ULLONG_MAX) {
-                                    fprintf(stderr, "\"%s\" is to big for n\n", value);
-                                    exit(EXIT_FAILURE);
-                                } else if (errno == EINVAL) {
-                                    fprintf(stderr, "\"%s\" is does contain invalid characters for n\n", value);
-                                    exit(EXIT_FAILURE);
-                                } else if (value == endptr) {
-                                    fprintf(stderr, "The string for n is empty\n");
-                                    exit(EXIT_FAILURE);
-                                } else if (errno != 0 || *endptr != '\0' || !isdigit(value[0])) {
-                                    fprintf(stderr, "\"%s\" is not a valid number for n\n", value);
-                                    exit(EXIT_FAILURE);
-                                }
-                                break;
-                            default:
-                                fprintf(stderr, "Invalid input formatting for -f, use -h for usage\n");
-                                exit(EXIT_FAILURE);
-                        }
-                    }
-                    fibCalled = true;
-                    printFibonacci(n, radix, output, multiThread);
+                case 'n':
+                    n = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 0);
                     break;
                 default:
                     fprintf(stderr, "Invalid input formatting for fibonacci, use -h for usage\n");
@@ -166,14 +120,13 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
     }
-    if (!fibCalled) {
-        fprintf(stderr, "-f option required, nothing done. Use -h for usage\n");
-        exit(EXIT_FAILURE);
-    }
+
+    printFibonacci(n, radix, output, multiThread, cores);
+
     return EXIT_SUCCESS;
 }
 
-void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
+void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_t numberOfCoresSet) {
     size_t estimatedSizeInBytes = (size_t) (0.0868 * (double) n + 3.8275);
     double sizeInMBEst = ((double) estimatedSizeInBytes) / 1000000;
     printf("Starting calculation for n=%zu | estimated size in bytes:%zu in MB:%0.2f\n", n, estimatedSizeInBytes,
@@ -184,7 +137,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
 
     if (multiThread) printf("Multithreading enabled\n");
     else printf("Single Thread\n");
-    bigInt *res = fibExpFastDoubling(n, multiThread);
+    bigInt *res = fibExpFastDoubling(n, multiThread, numberOfCoresSet);
 
     struct timespec end;
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -208,29 +161,14 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
         }
 
         if (output == 'f') { // File output
-            FILE *outputFile = fopen(filename, "a+");
-            if (!outputFile) {
-                fprintf(stderr, "Error while opening/creating %s\n", filename);
-            } else {
-                outputFile = freopen("output.txt", "w", outputFile);
-                if (!outputFile) {
-                    fprintf(stderr, "Error while opening/creating %s\n", filename);
-                } else {
-                    char infoStr[1000];
-                    sprintf(infoStr, "Result for n=%zu | length of string=%zu:", n, strSizeInBytes);
-                    long printRet = fprintf(outputFile, "%s\n%s", infoStr, resString);
-                    if (printRet != (long) (strSizeInBytes + strlen(infoStr) + 1)) {
-                        fprintf(stderr, "Error writing file %s. Output may be incomplete\n", filename);
-                    } else {
-                        printf("Output in file %s\n", filename);
-                    }
-                    fclose(outputFile);
-                }
-            }
-
+            char infoStr[1000];
+            sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
+            write_file(filename, infoStr, false);
+            write_file(filename, resString, true);
         } else { //Terminal output (output == 't')
             printf("Result: %s\n", resString);
         }
+
         struct timespec end2;
         clock_gettime(CLOCK_MONOTONIC, &end2);
         double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
@@ -256,9 +194,9 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread) {
     freeBigInt(res);
 }
 
-bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
-    size_t depth = 0;
-    if (multiThread) depth = getDepth();
+bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet) {
+    size_t multiThreadDepth = 0;
+    if (multiThread) multiThreadDepth = getDepth(numberOfCoresSet);
     bigInt *a = newBigInt(1);
     bigInt *b = newBigInt(1);
     b->bigIntArray[0] = 1;
@@ -291,10 +229,10 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
         bigInt *temp3;
         bigInt *temp4;
         if (multiThread) {
-            d = multiplyToomCook3MultiThread(a, temp2, depth);
+            d = multiplyToomCook3MultiThread(a, temp2, multiThreadDepth);
             freeBigInt(temp2);
-            temp3 = multiplyToomCook3MultiThread(a, a, depth);
-            temp4 = multiplyToomCook3MultiThread(b, b, depth);
+            temp3 = multiplyToomCook3MultiThread(a, a, multiThreadDepth);
+            temp4 = multiplyToomCook3MultiThread(b, b, multiThreadDepth);
         } else {
             d = multiplyToomCook3(a, temp2);
             freeBigInt(temp2);
@@ -327,25 +265,28 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread) {
     return a;
 }
 
-size_t getDepth() {
-    size_t numberOfCores = get_nprocs();
-    if (verbose) {
-        printf("Number of cores: %lu\n", numberOfCores);
+size_t getDepth(size_t nprocsSet) {
+    size_t numberOfCores;
+    if (nprocsSet == 0) {
+        numberOfCores = get_nprocs();
+        if (verbose) printf("Number of cores detected: %lu\n", numberOfCores);
+    } else {
+        numberOfCores = nprocsSet;
+        if (verbose) printf("Number of cores set: %lu\n", numberOfCores);
     }
-    if (numberOfCores < 3) {
+
+    if (numberOfCores < 10) {
         if (verbose) printf("Number of threads created: %d\n", 3);
         return 0;
-    } else if (numberOfCores < 10) {
+    } else if (numberOfCores < 28) {
         if (verbose) printf("Number of threads created: %d\n", 9);
         return 1;
-    } else if (numberOfCores < 28) {
+    } else if (numberOfCores < 82) {
         if (verbose) printf("Number of threads created: %d\n", 27);
         return 2;
-    } else if (numberOfCores < 82) {
-        if (verbose) printf("Number of threads created: %d\n", 81);
-        return 3;
     } else {
-        return 4;
+        printf("Number of threads created: %d\n", 81);
+        return 3;
     }
 }
 

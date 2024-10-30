@@ -24,8 +24,8 @@ void test() {
 
     //findBestValues();
     /*uint64_t n = 40000;
-    bigInt *res1 = fibExpFastDoubling(n);
-    bigInt *res2 = fibExpFastDoubling(n, true);
+    bigInt *res1 = fibExpFastDoubling(n, 0);
+    bigInt *res2 = fibExpFastDoubling(n, true, 0);
     if (compareBigInt(res1, res2) != 0) {
         printf("Fault\n");
         return;
@@ -172,7 +172,7 @@ void findBestValues() {
             struct timespec start;
             clock_gettime(CLOCK_MONOTONIC, &start);
 
-            bigInt *res = fibExpFastDoubling(fibN, false);
+            bigInt *res = fibExpFastDoubling(fibN, false, 0);
 
             struct timespec end;
             clock_gettime(CLOCK_MONOTONIC, &end);
@@ -232,10 +232,10 @@ void bruteForceDebug(bool multiThread) {
     //edge cases
     bigInt *res = newBigInt(1);
     res->bigIntArray[0] = 0;
-    bigInt *res2 = fibExpFastDoubling(0, false);
+    bigInt *res2 = fibExpFastDoubling(0, false, 0);
     bigInt *res3 = NULL;
     if (multiThread) {
-        res3 = fibExpFastDoubling(0, true);
+        res3 = fibExpFastDoubling(0, true, 0);
     }
     if (compareBigInt(res, res2)  != 0) {
         printf("Failed at 0 for single-thread\n");
@@ -259,9 +259,9 @@ void bruteForceDebug(bool multiThread) {
         freeBigInt(res3);
     }
     res->bigIntArray[0] = 1;
-    res2 = fibExpFastDoubling(1, false);
+    res2 = fibExpFastDoubling(1, false, 0);
     if (multiThread) {
-        res3 = fibExpFastDoubling(1, true);
+        res3 = fibExpFastDoubling(1, true, 0);
     }
     if (compareBigInt(res, res2) != 0) {
         printf("Failed at 1 for single-thread\n");
@@ -301,7 +301,7 @@ void bruteForceDebug(bool multiThread) {
             freeBigInt(fibMinus2);
             fibMinus2 = fibMinus1;
             fibMinus1 = fib;
-            res2 = fibExpFastDoubling(i + 1, false);
+            res2 = fibExpFastDoubling(i + 1, false, 0);
             if (print) {
                 char *resString = bigIntToDecString(res2);
                 printf("%s\n", resString);
@@ -322,7 +322,7 @@ void bruteForceDebug(bool multiThread) {
                 return;
             }
             if (multiThread) {
-                res3 = fibExpFastDoubling(i + 1, true);
+                res3 = fibExpFastDoubling(i + 1, true, 0);
                 if (compareBigInt(fibMinus1, res3) != 0) {
                     printf("Failed at %lu for multi-thread\n", i + 1);
                     freeBigInt(fibMinus2);
