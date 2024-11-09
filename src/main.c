@@ -29,6 +29,7 @@ const char *filename = "output.txt";
 //TODO check support for variable starting point of bigIntArray
 //TODO mul wrapper
 //TODO numberOfCores set not good, maybe set depth directly
+//TODO make output filename customizable
 
 static struct option long_options[] = {
         {"help",          no_argument,       NULL, 'h'},
@@ -216,7 +217,7 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
             size_t sizeInBytes = (a->end - a->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
-            printf("Iteration ongoing %d/%lu; Current size: %fsMB; Time needed for previous iteration: %fs\n", counter,
+            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s\n", counter,
                    iterations, sizeInMB, time);
             counter++;
             clock_gettime(CLOCK_MONOTONIC, &start);
@@ -276,16 +277,16 @@ size_t getDepth(size_t nprocsSet) {
     }
 
     if (numberOfCores < 6) {
-        if (verbose) printf("Number of threads created: %d\n", 5);
+        if (verbose) printf("Number of compute threads created: %d\n", 5);
         return 1;
     } else if (numberOfCores < 26) {
-        if (verbose) printf("Number of threads created: %d\n", 25);
+        if (verbose) printf("Number of compute threads created: %d\n", 25);
         return 2;
     } else if (numberOfCores < 126) {
-        if (verbose) printf("Number of threads created: %d\n", 125);
+        if (verbose) printf("Number of compute threads created: %d\n", 125);
         return 3;
     } else {
-        printf("Number of threads created: %d\n", 625);
+        printf("Number of compute threads created: %d\n", 625);
         return 4;
     }
 }

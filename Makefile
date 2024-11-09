@@ -1,27 +1,29 @@
-NEEDFLAGS= -O3 -pthread -lpthread -march=native -z noexecstack -no-pie
+NEEDFLAGS= -O3 -pthread -lpthread -march=native -z noexecstack
 WARNINGFLAGS=-Wall -Wextra
-DEGUGFLAGS=-g
+DEBUGFLAGS=-g -no-pie
 SANITIZERFLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsanitize=leak
 
 SOURCEFILES=src/main.c src/util.c src/bigInt/bigIntMul.c src/bigInt/bigIntDiv.c src/bigInt/bigIntMethods.c src/bigInt/bigIntAsm.S src/bigInt/mulAsm.S test/tests.c src/bigInt/bigIntUtil.c -lm
 
-OUTPUTFILENAME=fib
+OUTPUT_FILENAME=fib
+OUTPUT_LIBNAME=test/bigInt.so
 
-.PHONY: all
 all: main
 
-.PHONY: main
 main: $(SOURCEFILES)
-	$(CC) $(NEEDFLAGS) $(WARNINGFLAGS) -o $(OUTPUTFILENAME) $^
+	$(CC) $(NEEDFLAGS) $(WARNINGFLAGS) -o $(OUTPUT_FILENAME) $^
 
-.PHONY: debug
 debug: $(SOURCEFILES)
-	$(CC) $(NEEDFLAGS) $(WARNINGFLAGS) $(DEGUGFLAGS) -o $(OUTPUTFILENAME) $^
+	$(CC) $(NEEDFLAGS) $(WARNINGFLAGS) $(DEBUGFLAGS) -o $(OUTPUT_FILENAME) $^
 
-.PHONY: sanitize
 sanitize: $(SOURCEFILES)
-	$(CC) $(NEEDFLAGS) $(WARNINGFLAGS) $(DEGUGFLAGS) $(SANITIZERFLAGS) -o $(OUTPUTFILENAME) $^
+	$(CC) $(NEEDFLAGS) $(WARNINGFLAGS) $(DEBUGFLAGS) $(SANITIZERFLAGS) -o $(OUTPUT_FILENAME) $^
 
-.PHONY: clean
+test: $(SOURCEFILES)
+	$(CC) -shared -o $(OUTPUT_LIBNAME) $(NEEDFLAGS) $(WARNINGFLAGS) -fPIC $^
+
 clean:
-	rm -f $(OUTPUTFILENAME)
+	rm -f $(OUTPUT_FILENAME)
+	rm -f $(OUTPUT_LIBNAME)
+
+.PHONY: all main debug sanitize test clean
