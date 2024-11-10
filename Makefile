@@ -21,6 +21,13 @@ sanitize: $(SOURCEFILES)
 
 test: $(SOURCEFILES)
 	$(CC) -shared -o $(OUTPUT_LIBNAME) $(NEEDFLAGS) $(WARNINGFLAGS) -fPIC $^
+	pytest
+
+setup:
+	sudo apt install python3-full python3-pip
+	python3 -m venv ./venv
+	pip install pytest
+
 
 clean:
 	rm -f $(OUTPUT_FILENAME)

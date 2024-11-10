@@ -47,7 +47,9 @@ bigInt *divide(bigInt *dividend, bigInt *divisor);
 bigInt *divideMod(bigInt *dividend, bigInt *divisor, bigInt **reminder);
 
 // String methods
-bigInt *hexStringToBigInt(char hex[]);
+bigInt *hexStringToBigInt(char *hex);
+
+//TODO bigInt *decStringToBigInt(char *dec)
 
 char *bigIntToDecString(bigInt *x);
 

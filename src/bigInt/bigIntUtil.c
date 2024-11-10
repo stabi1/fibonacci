@@ -5,9 +5,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-
-size_t roundUp(size_t dividend, size_t divisor);
-
 const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 const char decLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -23,7 +20,7 @@ void mallocCheck(void *p) {
 
 size_t custom_lzcnt(uint64_t n) {
     if (n == 0) {
-        return 0;
+        return 64;
     }
     return __builtin_clzll(n);
 }
@@ -33,71 +30,27 @@ uint64_t bitLength(bigInt *x) {
     return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
 
-char *uint64tToHexString(uint64_t *array, size_t lenInBytes, size_t start) {
-    char *str = malloc(sizeof(char) * (lenInBytes * 2 + 1));
+char *uint64tToHexString(uint64_t *array, size_t lenInNibbles, size_t start, bool negative) {
+    size_t strLength = sizeof(char) * (lenInNibbles + 1);
+    if (negative) strLength++;
+    char *str = malloc(strLength);
     mallocCheck(str);
-    str[lenInBytes * 2] = '\0';
-    size_t j = lenInBytes * 2 - 1;
+    str[strLength - 1] = '\0';
     uint8_t *buf = (uint8_t *) array;
-    for (size_t i = start * 8; i < start * 8 + lenInBytes; i++) {
+
+    long j = (long) lenInNibbles - 1;
+    if (negative) j++;
+    size_t i = start * 8;
+    for (; j >= 1; i++, j -= 2) {
         str[j] = hexLookup[buf[i] & 0xF];
         str[j - 1] = hexLookup[buf[i] >> 4];
-        j -= 2;
+    }
+    if (j == 0) {
+        str[j] = hexLookup[buf[i] & 0xF];
     }
 
-    char *trimmed = trimZeroes(str);
-    free(str);
-    return trimmed;
-}
-
-//trims the leading '0's from str
-char *trimZeroes(char *str) {
-    //Trim leading space
-    int counter = (int) strlen(str);
-    while (*str == '0' && counter > 1) {
-        str++;
-        counter--;
-    }
-    int i = 0;
-    char *newStr = malloc(counter + 1);
-    mallocCheck(newStr);
-    while (counter > 0) {
-        *(newStr + i) = *str;
-        counter--;
-        str++;
-        i++;
-    }
-    newStr[i] = '\0';
-    return newStr;
-}
-
-char *extendHexString(char *hex) {
-    size_t oldLen = strlen(hex);
-    if (oldLen == 0) {
-        free(hex);
-        char *zero = malloc(2);
-        mallocCheck(zero);
-        zero[0] = '0';
-        zero[1] = '\0';
-        return extendHexString(zero);
-    }
-    if (oldLen % 16 == 0) {
-        return hex;
-    }
-    size_t newLen = roundUp(oldLen, 16) * 16;
-    //determine amount of zeroes to fill up with
-    size_t paddingSize = newLen - oldLen;
-    char *paddedHex = malloc(sizeof(char) * (newLen + 1));
-    mallocCheck(paddedHex);
-    //copies input hex to end of new hex with null char
-    for (size_t i = 0; i < oldLen + 1; ++i) {
-        *(paddedHex + paddingSize + i) = hex[i];
-    }
-    for (size_t i = 0; i < paddingSize; ++i) {
-        paddedHex[i] = '0';
-    }
-    //free(hex);
-    return paddedHex;
+    if (negative) str[0] = '-';
+    return str;
 }
 
 //Helper for hexStringToBigInt
@@ -136,18 +89,9 @@ size_t hexToNibble(char hex) {
         case 'F':
             return 15;
         default:
-            printf("HexString Invalid\n");
-            return 0;
+            fprintf(stderr, "HexString Invalid\n");
+            exit(EXIT_FAILURE);
     }
-}
-
-//rounds up
-size_t roundUp(size_t dividend, size_t divisor) {
-    size_t retVal = dividend / divisor;
-    if (divisor * retVal < dividend) {
-        retVal++;
-    }
-    return retVal;
 }
 
 //returns the decimal representation of the uint64_t

@@ -159,11 +159,29 @@ bigInt *shiftRight(bigInt *x, size_t n) {
 
 //fills the char array with the hex presentation of the bigInt
 char *bigIntToHexString(bigInt *x) {
-    size_t lenInBytes = (x->end - x->start) * 8;
-    if (x->negative) lenInBytes += 1;
-    char *resChar = uint64tToHexString(x->bigIntArray, lenInBytes, x->start);
-    if (x->negative) resChar[0] = '-';
-    return resChar;
+    size_t lzcnt = custom_lzcnt(x->bigIntArray[x->end - 1]);
+    size_t xLen = x->end - x->start;
+    // error handling
+    if (lzcnt == 64 && xLen == 1) {
+        size_t resStrLen = x->negative ? 2 : 1;
+        char *resStr = malloc(resStrLen + 1);
+        mallocCheck(resStr);
+        resStr[resStrLen] = '\0';
+        if (x->negative) {
+            resStr[0] = '-';
+            resStr[1] = '0';
+        } else {
+            resStr[0] = '0';
+        }
+        return resStr;
+    } else if (lzcnt == 64 && xLen > 1) {
+        fprintf(stderr, "BigInt not printable");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t lenInNibbles = xLen * 16 - (lzcnt / 4);
+    char *resStr = uint64tToHexString(x->bigIntArray, lenInNibbles, x->start, x->negative);
+    return resStr;
 }
 
 //fills the char array with the dec presentation of the bigInt
@@ -172,58 +190,36 @@ char *bigIntToDecString(bigInt *x) {
 }
 
 //returns the bigInt of the HexString, hex is being freed
-bigInt *hexStringToBigInt(char hex[]) { //TODO support sign and fix crash when length is multiple of 16
-    char *paddedHex = extendHexString(hex);
-    size_t length = strlen(paddedHex);
-    size_t resLength = length / 16;
-    if (length % 16 != 0) resLength++;
+bigInt *hexStringToBigInt(char *hexStr) {
+    size_t hexStrLength = strlen(hexStr);
+    if (hexStrLength == 0) {
+        fprintf(stderr, "hexStr can not be of length 0");
+        exit(EXIT_FAILURE);
+    }
+    bool negative = false;
+    if (hexStr[0] == '-') {
+        negative = true;
+        hexStrLength--;
+        hexStr++;
+    }
+    size_t resLength = hexStrLength / 16;
+    if (hexStrLength % 16 != 0) resLength++;
     bigInt *res = newBigInt(resLength);
+    if (negative) res->negative = true;
 
     size_t j = 0;
-    uint64_t akt = 0;
-    size_t resBigIntCounter = res->end - 1;
-    uint8_t akt8;
-    size_t i = 0;
-    akt8 = hexToNibble(paddedHex[i]);
-    akt8 <<= 4;
-    i++;
-    akt8 += hexToNibble(paddedHex[i]);
-    akt += akt8;
-    i++;
-    for (; i < length - 1; i++) {
-        if (j == 7) {
-            res->bigIntArray[resBigIntCounter] = akt;
-            akt = 0;
-            resBigIntCounter--;
-            j = 0;
-        } else {
-            akt <<= 8;
-            j++;
-        }
-        akt8 = hexToNibble(paddedHex[i]);
+    long i = (long) (hexStrLength - 1);
+    uint8_t *resByteArray = (uint8_t *) res->bigIntArray;
+    for (; i >= 1; i -= 2, j++) {
+        uint8_t akt8 = hexToNibble(hexStr[i - 1]);
         akt8 <<= 4;
-        i++;
-        akt8 += hexToNibble(paddedHex[i]);
-        akt += akt8;
+        akt8 += hexToNibble(hexStr[i]);
+        resByteArray[j] = akt8;
     }
-    if (i < length) {
-        if (j == 7) {
-            res->bigIntArray[resBigIntCounter] = akt;
-            j = 0;
-        } else {
-            akt <<= 4;
-            j++;
-        }
-        akt8 = hexToNibble(paddedHex[i]);
-        akt += akt8;
+    if (i == 0) {
+        uint8_t akt8 = hexToNibble(hexStr[i]);
+        resByteArray[j] = akt8;
     }
-    if (j == 7) {
-        res->bigIntArray[resBigIntCounter] = akt;
-    }
-    if (res->bigIntArray[res->end - 1] == 0 && res->end - res->start > 1) {
-        res->end -= 1;
-    }
-    free(paddedHex);
     return res;
 }
 

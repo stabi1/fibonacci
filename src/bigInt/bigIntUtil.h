@@ -14,11 +14,7 @@ size_t custom_lzcnt(uint64_t n);
 
 uint64_t bitLength(bigInt *x);
 
-char *extendHexString(char *hex);
-
-char *trimZeroes(char *str);
-
-char *uint64tToHexString(uint64_t *array, size_t lenInBytes, size_t start);
+char *uint64tToHexString(uint64_t *array, size_t lenInBytes, size_t start, bool negative);
 
 char *uint64_t_toDecString(uint64_t x);
 

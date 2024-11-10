@@ -17,3 +17,5 @@ perf.data.old
 cmake-build-debug
 output.txt
 **/**.so
+venv
+**/__pycache__
