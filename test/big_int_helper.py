@@ -24,6 +24,14 @@ def random_hex_string(length: int) -> str:
     return hex_string
 
 
+def random_dec_string(length: int) -> str:
+    """Generate a random dec string of a specified length"""
+    # First character should not be '0'
+    hex_string = random.choice('123456789')
+    hex_string += ''.join(random.choice('0123456789') for _ in range(length - 1))
+    return hex_string
+
+
 def getPartialBigInt(big_int_instance: ctypes.POINTER(BigInt), new_start: int, new_end: int) -> ctypes.POINTER(BigInt):
     big_int = big_int_instance.contents
     old_end = big_int.end
@@ -61,3 +69,8 @@ big_int_lib.bigIntToDecString.restype = ctypes.c_char_p
 # bigInt *hexStringToBigInt(char *hex);
 big_int_lib.hexStringToBigInt.argtypes = [ctypes.c_char_p]
 big_int_lib.hexStringToBigInt.restype = ctypes.POINTER(BigInt)
+
+# bigInt *decStringToBigInt(char *dec);
+big_int_lib.decStringToBigInt.argtypes = [ctypes.c_char_p]
+big_int_lib.decStringToBigInt.restype = ctypes.POINTER(BigInt)
+

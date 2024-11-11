@@ -10,6 +10,12 @@ const char decLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 const int DECSTRINGSMALLFASTER = 10;
 
+size_t decCharToValue(char dec);
+
+uint64_t decString20CharsTo_uint64_t(const char *dexStr, size_t strLen);
+
+void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z);
+
 void mallocCheck(void *p) {
     if (p == NULL) {
         fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
@@ -29,7 +35,70 @@ uint64_t bitLength(bigInt *x) {
     return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
 
-char *uint64tToHexString(uint64_t *array, size_t lenInNibbles, size_t start, bool negative) {
+void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char *decStr, const size_t decStrLen) {
+    size_t digitsPerLong = 19;
+    size_t numDigits = decStrLen;
+    const char *decStringEnd = decStr + numDigits;
+
+    // Process first (potentially short) digit group
+    size_t firstGroupLen = numDigits % digitsPerLong;
+    if (firstGroupLen == 0)
+        firstGroupLen = digitsPerLong;
+    array[0] = decString20CharsTo_uint64_t(decStr, firstGroupLen);
+    decStr += firstGroupLen;
+
+    // Process remaining digit groups
+    uint64_t groupVal = 0;
+    while (decStr < decStringEnd) {
+        groupVal = decString20CharsTo_uint64_t(decStr, digitsPerLong);
+        decStr += digitsPerLong;
+        inplaceMulAddForConversion(array, arrayLen, groupVal);
+    }
+    // calling function still needs to resize!!!
+}
+
+void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z) {
+    // Perform the multiplication word by word
+    unsigned __int128 yLong = 10000000000000000000ULL;
+    unsigned __int128 zLong = z;
+
+    unsigned __int128 product = 0;
+    uint64_t carry = 0;
+    for (size_t i = 0; i <arrayLen; i++) {
+        product = yLong * (array[i]) + carry;
+        array[i] = (uint64_t) product;
+        carry = product >> 64;
+    }
+
+    // Perform the addition
+    unsigned __int128 sum = (array[0]) + zLong;
+    array[0] = (uint64_t) sum;
+    carry = sum >> 64;
+    for (size_t i = 1; i < arrayLen; i++) {
+        sum = (array[i]) + carry;
+        array[i] = (uint64_t) sum;
+        carry = sum >> 64;
+        if (carry == 0) break;
+    }
+}
+
+uint64_t decString20CharsTo_uint64_t(const char *dexStr, size_t strLen) {
+    uint64_t res = decCharToValue(dexStr[0]);
+    for (size_t i = 1; i < strLen; i++) {
+        res = res * 10 + decCharToValue(dexStr[i]);
+    }
+    return res;
+}
+
+size_t decCharToValue(char dec) {
+    if (dec < '0' || dec > '9') {
+        fprintf(stderr, "DecString Invalid, contains char %c\n", dec);
+        exit(EXIT_FAILURE);
+    }
+    return dec - '0';
+}
+
+char *uint64tArrayToHexString(uint64_t *array, size_t lenInNibbles, size_t start, bool negative) {
     size_t strLength = sizeof(char) * (lenInNibbles + 1);
     if (negative) strLength++;
     char *str = malloc(strLength);
@@ -54,42 +123,13 @@ char *uint64tToHexString(uint64_t *array, size_t lenInNibbles, size_t start, boo
 
 //Helper for hexStringToBigInt
 size_t hexToNibble(char hex) {
-    switch (hex) {
-        case '0':
-            return 0;
-        case '1':
-            return 1;
-        case '2':
-            return 2;
-        case '3':
-            return 3;
-        case '4':
-            return 4;
-        case '5':
-            return 5;
-        case '6':
-            return 6;
-        case '7':
-            return 7;
-        case '8':
-            return 8;
-        case '9':
-            return 9;
-        case 'A':
-            return 10;
-        case 'B':
-            return 11;
-        case 'C':
-            return 12;
-        case 'D':
-            return 13;
-        case 'E':
-            return 14;
-        case 'F':
-            return 15;
-        default:
-            fprintf(stderr, "HexString Invalid, contains char %c\n", hex);
-            exit(EXIT_FAILURE);
+    if (hex >= '0' && hex <= '9') {
+        return hex - '0';
+    } else if (hex >= 'A' && hex <= 'F') {
+        return hex - 'A' + 10;
+    } else {
+        fprintf(stderr, "HexString Invalid, contains char %c\n", hex);
+        exit(EXIT_FAILURE);
     }
 }
 

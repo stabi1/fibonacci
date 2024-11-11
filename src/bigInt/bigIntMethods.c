@@ -161,7 +161,7 @@ char *bigIntToHexString(bigInt *x) {
     }
 
     size_t lenInNibbles = xLen * 16 - (lzcnt / 4);
-    char *resStr = uint64tToHexString(x->bigIntArray, lenInNibbles, x->start, x->negative);
+    char *resStr = uint64tArrayToHexString(x->bigIntArray, lenInNibbles, x->start, x->negative);
     return resStr;
 }
 
@@ -173,6 +173,7 @@ char *bigIntToDecString(bigInt *x) {
 //returns the bigInt of the HexString, hex is being freed
 bigInt *hexStringToBigInt(const char *hexStr) {
     size_t hexStrLength = strlen(hexStr);
+    // error handling
     if (hexStrLength == 0) {
         fprintf(stderr, "hexStr can not be of length 0");
         exit(EXIT_FAILURE);
@@ -182,7 +183,18 @@ bigInt *hexStringToBigInt(const char *hexStr) {
         negative = true;
         hexStrLength--;
         hexStr++;
+    } else if (hexStr[0] == '+') {
+        hexStrLength--;
+        hexStr++;
     }
+    if (hexStrLength == 0) {
+        fprintf(stderr, "hexStr must contain a number");
+        exit(EXIT_FAILURE);
+    } else if (hexStrLength >= 2 && hexStr[0] == '0') {
+        fprintf(stderr, "number can not start with 0");
+        exit(EXIT_FAILURE);
+    }
+
     size_t resLength = hexStrLength / 16;
     if (hexStrLength % 16 != 0) resLength++;
     bigInt *res = newBigInt(resLength);
@@ -204,8 +216,42 @@ bigInt *hexStringToBigInt(const char *hexStr) {
     return res;
 }
 
-bigInt *decStringToBigInt(__attribute_maybe_unused__ const char *hexStr) {
-    return newBigInt(1);
+bigInt *decStringToBigInt(const char *decStr) {
+    size_t decStrLength = strlen(decStr);
+    if (decStrLength == 0) {
+        fprintf(stderr, "hexStr can not be of length 0");
+        exit(EXIT_FAILURE);
+    }
+    bool negative = false;
+    if (decStr[0] == '-') {
+        negative = true;
+        decStrLength--;
+        decStr++;
+    } else if (decStr[0] == '+') {
+        decStrLength--;
+        decStr++;
+    }
+    if (decStrLength == 0) {
+        fprintf(stderr, "hexStr must contain a number");
+        exit(EXIT_FAILURE);
+    } else if (decStrLength >= 2 && decStr[0] == '0') {
+        fprintf(stderr, "number can not start with 0");
+        exit(EXIT_FAILURE);
+    }
+
+    double num_blocks=((double) decStrLength*3.32193f)/64.0f+1;
+    size_t resLength = (size_t) num_blocks;
+    bigInt *res = newBigInt(resLength);
+    if (negative) res->negative = true;
+
+    decStringToBigIntHelper(res->bigIntArray, resLength, decStr, decStrLength);
+    //resize if necessary
+    size_t newLen = getOccupiedFields_Asm(res);
+    res->end = res->start + newLen;
+    uint64_t * tmp= realloc(res->bigIntArray, newLen * sizeof(uint64_t));
+    mallocCheck(tmp);
+    res->bigIntArray = tmp;
+    return res;
 }
 
 

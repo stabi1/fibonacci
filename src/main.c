@@ -25,11 +25,13 @@ bool verbose = false;
 const char *filename = "output.txt";
 
 //TODO add sign support to DIV,
-//TODO chech sign support -> improve SmartAdd/SmartSub
+//TODO check sign support -> improve SmartAdd/SmartSub
 //TODO check support for variable starting point of bigIntArray
 //TODO mul wrapper
 //TODO numberOfCores set not good, maybe set depth directly
 //TODO make output filename customizable
+//TODO help message in binary
+//TODO docu with comments, readme
 
 static struct option long_options[] = {
         {"help",          no_argument,       NULL, 'h'},

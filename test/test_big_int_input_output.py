@@ -1,6 +1,6 @@
 import pytest
 
-from big_int_helper import big_int_lib, random_hex_string, getPartialBigInt, trim_string
+from big_int_helper import big_int_lib, random_hex_string, random_dec_string, getPartialBigInt, trim_string
 
 
 def test_new_big_int_is_zero():
@@ -50,9 +50,35 @@ def test_hexStringToBigInt_and_bigIntToHexString(test_hex_string: str):
     assert hex_str.decode() == test_hex_string
 
 
-def test_decStringToBigInt_and_bigIntToDecString():
-    # TODO implement
-    pass
+@pytest.mark.parametrize("test_dec_string", [
+    random_dec_string(1),
+    random_dec_string(2),
+    random_dec_string(15),
+    random_dec_string(16),
+    random_dec_string(17),
+    random_dec_string(31),
+    random_dec_string(32),
+    random_dec_string(33),
+    random_dec_string(63),
+    random_dec_string(64),
+    random_dec_string(65),
+    random_dec_string(100),
+    random_dec_string(1000),
+    random_dec_string(10000),
+])
+def test_decStringToBigInt_and_bigIntToDecString(test_dec_string: str):
+    # test positive
+    big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())
+    dec_str = big_int_lib.bigIntToDecString(big_int_instance)
+    assert dec_str.decode() == test_dec_string
+
+    # negative
+    # TODO fix
+    '''test_dec_string = "-" + test_dec_string
+    big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())
+    assert big_int_instance.contents.negative == True;
+    dec_str = big_int_lib.bigIntToDecString(big_int_instance)
+    assert dec_str.decode() == test_dec_string'''
 
 
 def test_start_attribute_with_hexStringToBigInt():
