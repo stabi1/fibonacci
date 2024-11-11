@@ -1,6 +1,6 @@
 import pytest
 
-from big_int_helper import big_int_lib, random_hex_string
+from big_int_helper import big_int_lib, random_hex_string, getPartialBigInt, trim_string
 
 
 def test_new_big_int_is_zero():
@@ -48,3 +48,16 @@ def test_hexStringToBigInt_and_bigIntToHexString(test_hex_string: str):
     big_int_instance = big_int_lib.hexStringToBigInt(test_hex_string.encode())
     hex_str = big_int_lib.bigIntToHexString(big_int_instance)
     assert hex_str.decode() == test_hex_string
+
+
+def test_decStringToBigInt_and_bigIntToDecString():
+    # TODO implement
+    pass
+
+
+def test_start_attribute_with_hexStringToBigInt():
+    test_hex_string = random_hex_string(16 * 10)
+    big_int_instance = big_int_lib.hexStringToBigInt(test_hex_string.encode())
+    big_int_instance = getPartialBigInt(big_int_instance, 3, 6)
+    hex_str = big_int_lib.bigIntToHexString(big_int_instance)
+    assert hex_str.decode() == trim_string(test_hex_string, 4 * 16, 3 * 16), f"org: {test_hex_string}"

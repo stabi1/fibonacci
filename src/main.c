@@ -164,8 +164,8 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_
         if (output == 'f') { // File output
             char infoStr[1000];
             sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
-            write_file(filename, infoStr, false);
-            write_file(filename, resString, true);
+            if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
+            if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
         } else { //Terminal output (output == 't')
             printf("Result: %s\n", resString);
         }
@@ -293,32 +293,12 @@ size_t getDepth(size_t nprocsSet) {
 
 void printHelpMenu() {
     char *fileName = "HelpMenu.txt";
-    FILE *helpFile = fopen(fileName, "r");
-    if (!helpFile) {
-        fprintf(stderr, "%s couldn't be opened\n", fileName);
+    char *helpMenuText = readFile(fileName);
+    if(helpMenuText == NULL) {
+        fprintf(stderr, "Error printing help message");
         exit(EXIT_FAILURE);
     }
-    if (fseek(helpFile, 0L, SEEK_END) == -1) {
-        fprintf(stderr, "%s: error while getting file length\n", fileName);
-        fclose(helpFile);
-        exit(EXIT_FAILURE);
-    }
-    long int helpLen = ftell(helpFile);
-    if (helpLen == -1) {
-        fprintf(stderr, "%s: error while getting file length\n", fileName);
-        fclose(helpFile);
-        exit(EXIT_FAILURE);
-    }
-    if (fseek(helpFile, 0L, SEEK_SET) == -1) {
-        fprintf(stderr, "%s: error while getting file length\n", fileName);
-        fclose(helpFile);
-        exit(EXIT_FAILURE);
-    }
-    char menu[helpLen];
-    while (fgets(menu, (int) helpLen, helpFile)) {
-        printf("%s", menu);
-    }
-    fclose(helpFile);
+    printf("%s\n", helpMenuText);
 }
 
 bool handleCPUFeatures() {

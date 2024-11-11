@@ -1,24 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdint.h>
-#include <stdbool.h>
-
-void write_file(const char *path, const char *string, bool append) {
-    FILE *file;
-    char* mode = append ? "a" : "w";
-    if (!(file = fopen(path, mode))) {
-        perror("Error opening file");
-        exit(EXIT_FAILURE);
-    }
-    const size_t stringlen = strlen(string);
-    if (fwrite(string, 1, stringlen, file) != stringlen) {
-        fprintf(stderr, "Error writing to file \n");
-        exit(EXIT_FAILURE);
-    }
-    fclose(file);
-}
 
 uint64_t parseUINT64(char *str, uint64_t max, uint64_t min) {
     errno = 0;

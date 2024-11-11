@@ -9,8 +9,6 @@
 
 bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray);
 
-void bigIntRemoveLeadingZeroBlocks(bigInt *x);
-
 bigInt *getLowerFrom(bigInt *x, size_t n);
 
 bigInt *getUpperFrom(bigInt *x, size_t n);

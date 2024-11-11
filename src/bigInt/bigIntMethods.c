@@ -95,25 +95,6 @@ int compareShiftedBigInt(bigInt *a, bigInt *b, size_t n) {
     return 0;
 }
 
-//Removes all leading zero blocks
-void bigIntRemoveLeadingZeroBlocks(bigInt *x) {
-    x->end = x->start + getOccupiedFields_Asm(x);
-}
-
-//prints bigInt in Hex
-void printBigIntHex(bigInt *x) {
-    char *tmp = bigIntToHexString(x);
-    printf("%s\n", tmp);
-    free(tmp);
-}
-
-//prints bigInt in Dec
-void printBigIntDec(bigInt *x) {
-    char *tmp = bigIntToDecString(x);
-    printf("%s\n", tmp);
-    free(tmp);
-}
-
 //shifts bigInt to the left
 bigInt *shiftLeft(bigInt *x, size_t n) {
     if (n == 0) {
@@ -190,7 +171,7 @@ char *bigIntToDecString(bigInt *x) {
 }
 
 //returns the bigInt of the HexString, hex is being freed
-bigInt *hexStringToBigInt(char *hexStr) {
+bigInt *hexStringToBigInt(const char *hexStr) {
     size_t hexStrLength = strlen(hexStr);
     if (hexStrLength == 0) {
         fprintf(stderr, "hexStr can not be of length 0");
@@ -222,6 +203,11 @@ bigInt *hexStringToBigInt(char *hexStr) {
     }
     return res;
 }
+
+bigInt *decStringToBigInt(__attribute_maybe_unused__ const char *hexStr) {
+    return newBigInt(1);
+}
+
 
 //get the lower half of the bigInt (same array, new Struct with different pointers)
 bigInt *getLowerFrom(bigInt *x, size_t n) {

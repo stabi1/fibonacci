@@ -10,10 +10,6 @@
 
 void mallocCheck(void *p);
 
-size_t custom_lzcnt(uint64_t n);
-
-uint64_t bitLength(bigInt *x);
-
 char *uint64tToHexString(uint64_t *array, size_t lenInBytes, size_t start, bool negative);
 
 char *uint64_t_toDecString(uint64_t x);

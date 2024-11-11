@@ -24,13 +24,27 @@ def random_hex_string(length: int) -> str:
     return hex_string
 
 
+def getPartialBigInt(big_int_instance: ctypes.POINTER(BigInt), new_start: int, new_end: int) -> ctypes.POINTER(BigInt):
+    big_int = big_int_instance.contents
+    old_end = big_int.end
+    if old_end < new_end or new_start >= new_end:
+        raise ValueError("Invalid new_start or new_end")
+    big_int.end = new_end
+    big_int.start = new_start
+    return ctypes.pointer(big_int)
+
+
+def trim_string(s, remove_front, remove_back):
+    return s[remove_front:-remove_back]
+
+
 def handler(signum, frame):
     print("Caught signal, preventing exit")
+
 
 signal.signal(signal.SIGTERM, handler)
 
 big_int_lib = ctypes.CDLL('./test/bigInt.so')
-
 
 # bigInt *newBigInt(size_t len);
 big_int_lib.newBigInt.argtypes = [ctypes.c_size_t]

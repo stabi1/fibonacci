@@ -1,5 +1,4 @@
 #include "bigIntUtil.h"
-#include "bigIntDiv.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -89,7 +88,7 @@ size_t hexToNibble(char hex) {
         case 'F':
             return 15;
         default:
-            fprintf(stderr, "HexString Invalid\n");
+            fprintf(stderr, "HexString Invalid, contains char %c\n", hex);
             exit(EXIT_FAILURE);
     }
 }
