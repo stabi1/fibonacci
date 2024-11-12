@@ -239,7 +239,7 @@ bigInt *decStringToBigInt(const char *decStr) {
         exit(EXIT_FAILURE);
     }
 
-    double num_blocks=((double) decStrLength*3.32193f)/64.0f+1;
+    double num_blocks = ((double) decStrLength * 3.32193f) / 64.0f + 1;
     size_t resLength = (size_t) num_blocks;
     bigInt *res = newBigInt(resLength);
     if (negative) res->negative = true;
@@ -247,10 +247,13 @@ bigInt *decStringToBigInt(const char *decStr) {
     decStringToBigIntHelper(res->bigIntArray, resLength, decStr, decStrLength);
     //resize if necessary
     size_t newLen = getOccupiedFields_Asm(res);
-    res->end = res->start + newLen;
-    uint64_t * tmp= realloc(res->bigIntArray, newLen * sizeof(uint64_t));
-    mallocCheck(tmp);
-    res->bigIntArray = tmp;
+    printf("newLen: %lu; oldLen: %lu\n", newLen, res->end - res->start);
+    if (newLen != res->end - res->start) {
+        res->end = res->start + newLen;
+        uint64_t *tmp = realloc(res->bigIntArray, newLen * sizeof(uint64_t));
+        mallocCheck(tmp);
+        res->bigIntArray = tmp;
+    }
     return res;
 }
 

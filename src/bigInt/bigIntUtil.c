@@ -14,7 +14,7 @@ size_t decCharToValue(char dec);
 
 uint64_t decString20CharsTo_uint64_t(const char *dexStr, size_t strLen);
 
-void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z);
+void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z, size_t digestsDone);
 
 void mallocCheck(void *p) {
     if (p == NULL) {
@@ -37,34 +37,39 @@ uint64_t bitLength(bigInt *x) {
 
 void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char *decStr, const size_t decStrLen) {
     size_t digitsPerLong = 19;
-    size_t numDigits = decStrLen;
-    const char *decStringEnd = decStr + numDigits;
+    const char *decStringEnd = decStr + decStrLen;
+    size_t digestsDone = 0;
 
     // Process first (potentially short) digit group
-    size_t firstGroupLen = numDigits % digitsPerLong;
+    size_t firstGroupLen = decStrLen % digitsPerLong;
     if (firstGroupLen == 0)
         firstGroupLen = digitsPerLong;
     array[0] = decString20CharsTo_uint64_t(decStr, firstGroupLen);
     decStr += firstGroupLen;
+    digestsDone += firstGroupLen;
 
     // Process remaining digit groups
     uint64_t groupVal = 0;
     while (decStr < decStringEnd) {
         groupVal = decString20CharsTo_uint64_t(decStr, digitsPerLong);
         decStr += digitsPerLong;
-        inplaceMulAddForConversion(array, arrayLen, groupVal);
+        digestsDone += digitsPerLong;
+        inplaceMulAddForConversion(array, arrayLen, groupVal, digestsDone);
     }
     // calling function still needs to resize!!!
 }
 
-void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z) {
+void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z, size_t digestsDone) {
     // Perform the multiplication word by word
+    size_t num_blocks = (long) (((double) digestsDone * 3.32193f) / 64.0f + 1);
     unsigned __int128 yLong = 10000000000000000000ULL;
     unsigned __int128 zLong = z;
 
     unsigned __int128 product = 0;
     uint64_t carry = 0;
-    for (size_t i = 0; i <arrayLen; i++) {
+    size_t boundary = num_blocks + 1 > arrayLen ? arrayLen : num_blocks + 1;
+
+    for (size_t i = 0; i < boundary; i++) {
         product = yLong * (array[i]) + carry;
         array[i] = (uint64_t) product;
         carry = product >> 64;
@@ -74,7 +79,7 @@ void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t
     unsigned __int128 sum = (array[0]) + zLong;
     array[0] = (uint64_t) sum;
     carry = sum >> 64;
-    for (size_t i = 1; i < arrayLen; i++) {
+    for (size_t i = 1; i < boundary; i++) {
         sum = (array[i]) + carry;
         array[i] = (uint64_t) sum;
         carry = sum >> 64;
