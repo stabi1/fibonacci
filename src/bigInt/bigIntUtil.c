@@ -186,6 +186,10 @@ bigIntToDecStringSchoenhage(bigInt *x, size_t digits, char **resString, size_t *
                 }
                 (*resString)[(*resStringCounter)++] = '0';
             }
+        } else if (*resStringCounter == 0) { // append negative sign in the front
+            if (x->negative) {
+                (*resString)[(*resStringCounter)++] = '-';
+            }
         }
         if (*resStringCounter + strlen(s) >= *resMaxLen) {
             *resString = realloc(*resString, (size_t) ((double) *resMaxLen * 1.5));
@@ -211,15 +215,15 @@ bigIntToDecStringSchoenhage(bigInt *x, size_t digits, char **resString, size_t *
 
     bigInt *r = NULL;
     bigInt *q = divideMod(x, v, &r);
+    freeBigInt(v);
 
     int expectedDigits = 1 << n;
 
     // Now recursively build the two halves of each number.
     bigIntToDecStringSchoenhage(q, digits - expectedDigits, resString, resStringCounter, resMaxLen);
+    freeBigInt(q);
     bigIntToDecStringSchoenhage(r, expectedDigits, resString, resStringCounter, resMaxLen);
     freeBigInt(r);
-    freeBigInt(q);
-    freeBigInt(v);
 }
 
 //shamelessly adapted from Java Jdk8
@@ -246,12 +250,12 @@ char *bigIntToDecStringSmall(bigInt *x) {
     int numGroups = 0;
     bigInt *tmp = copyBigInt(x);
     bigInt *d = newBigInt(1);
-    d->bigIntArray[0] = 0x8AC7230489E80000; //10^digitsPerUInt64= 8AC7230489E80000
+    d->bigIntArray[0] = 0x8AC7230489E80000; //10^digitsPerUInt64 = 8AC7230489E80000
     while (!(tmp->end - tmp->start == 1 && tmp->bigIntArray[0] == 0)) {
         bigInt *r = NULL;
         bigInt *q = divideMod(tmp, d, &r);
-        digitGroup[numGroups++] = uint64_t_toDecString(r->bigIntArray[0]);
         freeBigInt(tmp);
+        digitGroup[numGroups++] = uint64_t_toDecString(r->bigIntArray[0]);
         freeBigInt(r);
         tmp = q;
     }
@@ -261,11 +265,9 @@ char *bigIntToDecStringSmall(bigInt *x) {
     // Put sign (if any) and first digit group into result buffer
     char *res = malloc(numGroups * digitsPerUInt64 + 2);
     size_t resCounter = 0;
-    if (x->negative) {
-        res[resCounter++] = '-';
-    }
     memcpy(res + resCounter, digitGroup[numGroups - 1], strlen(digitGroup[numGroups - 1]));
     resCounter += strlen(digitGroup[numGroups - 1]);
+    free(digitGroup[numGroups - 1]);
     // Append remaining digit groups padded with leading zeros
     for (int i = numGroups - 2; i >= 0; i--) {
         // Prepend (any) leading zeros for this digit group
@@ -276,11 +278,9 @@ char *bigIntToDecStringSmall(bigInt *x) {
         }
         memcpy(res + resCounter, digitGroup[i], strlen(digitGroup[i]));
         resCounter += strlen(digitGroup[i]);
-    }
-    res[resCounter] = '\0';
-    for (int i = 0; i < numGroups; i++) {
         free(digitGroup[i]);
     }
+    res[resCounter] = '\0';
     free(digitGroup);
     return res;
 }

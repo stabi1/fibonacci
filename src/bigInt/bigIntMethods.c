@@ -247,7 +247,6 @@ bigInt *decStringToBigInt(const char *decStr) {
     decStringToBigIntHelper(res->bigIntArray, resLength, decStr, decStrLength);
     //resize if necessary
     size_t newLen = getOccupiedFields_Asm(res);
-    printf("newLen: %lu; oldLen: %lu\n", newLen, res->end - res->start);
     if (newLen != res->end - res->start) {
         res->end = res->start + newLen;
         uint64_t *tmp = realloc(res->bigIntArray, newLen * sizeof(uint64_t));

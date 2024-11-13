@@ -73,12 +73,11 @@ def test_decStringToBigInt_and_bigIntToDecString(test_dec_string: str):
     assert dec_str.decode() == test_dec_string
 
     # negative
-    # TODO fix
-    '''test_dec_string = "-" + test_dec_string
+    test_dec_string = "-" + test_dec_string
     big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())
     assert big_int_instance.contents.negative == True;
     dec_str = big_int_lib.bigIntToDecString(big_int_instance)
-    assert dec_str.decode() == test_dec_string'''
+    assert dec_str.decode() == test_dec_string
 
 
 def test_start_attribute_with_hexStringToBigInt():

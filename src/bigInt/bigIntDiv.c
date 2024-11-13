@@ -36,11 +36,16 @@ bigInt *exactDivideBy3(bigInt *x) {
 }
 
 bigInt *divide(bigInt *dividend, bigInt *divisor) {
-    return divideHelper(dividend, divisor, NULL);
+    bigInt *res = divideHelper(dividend, divisor, NULL);
+    res->negative = dividend->negative ^ divisor->negative;
+    return res;
 }
 
 bigInt *divideMod(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
-    return divideHelper(dividend, divisor, reminder);
+    bigInt *res = divideHelper(dividend, divisor, reminder);
+    res->negative = dividend->negative ^ divisor->negative;
+    (*reminder)->negative = dividend->negative;
+    return res;
 }
 
 bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
