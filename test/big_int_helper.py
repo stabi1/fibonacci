@@ -1,7 +1,6 @@
 import ctypes
 import random
-import signal
-import sys
+from typing import List
 
 random.seed(42)
 
@@ -50,13 +49,19 @@ def handler(signum, frame):
     print("Caught signal, preventing exit")
 
 
-signal.signal(signal.SIGTERM, handler)
-
 big_int_lib = ctypes.CDLL('./test/bigInt.so')
 
 # bigInt *newBigInt(size_t len);
 big_int_lib.newBigInt.argtypes = [ctypes.c_size_t]
 big_int_lib.newBigInt.restype = ctypes.POINTER(BigInt)
+
+# bool isValidBigInt(bigInt *x);
+big_int_lib.isValidBigInt.argtypes = [ctypes.POINTER(BigInt)]
+big_int_lib.isValidBigInt.restype = ctypes.c_bool
+
+# size_t getOccupiedBlocks(bigInt *x);
+big_int_lib.getOccupiedBlocks.argtypes = [ctypes.POINTER(BigInt)]
+big_int_lib.getOccupiedBlocks.restype = ctypes.c_size_t
 
 # char *bigIntToHexString(bigInt *x);
 big_int_lib.bigIntToHexString.argtypes = [ctypes.POINTER(BigInt)]
@@ -74,3 +79,57 @@ big_int_lib.hexStringToBigInt.restype = ctypes.POINTER(BigInt)
 big_int_lib.decStringToBigInt.argtypes = [ctypes.c_char_p]
 big_int_lib.decStringToBigInt.restype = ctypes.POINTER(BigInt)
 
+# bigInt *add(bigInt *x, bigInt *y);
+big_int_lib.add.argtypes = [ctypes.POINTER(BigInt), ctypes.POINTER(BigInt)]
+big_int_lib.add.restype = ctypes.POINTER(BigInt)
+
+# bigInt *sub(bigInt *x, bigInt *y);
+big_int_lib.sub.argtypes = [ctypes.POINTER(BigInt), ctypes.POINTER(BigInt)]
+big_int_lib.sub.restype = ctypes.POINTER(BigInt)
+
+# bigInt *mul(bigInt *x, bigInt *y);
+big_int_lib.mul.argtypes = [ctypes.POINTER(BigInt), ctypes.POINTER(BigInt)]
+big_int_lib.mul.restype = ctypes.POINTER(BigInt)
+
+
+tmp_hex = random_hex_string(500 * 16)
+tmp_hex_near = tmp_hex[:-2] + "00"
+
+positive_test_numbers: List[str] = [
+    "0",
+    "1",
+    random_hex_string(1),
+    random_hex_string(2),
+    random_hex_string(15),
+    random_hex_string(16),
+    random_hex_string(17),
+    random_hex_string(31),
+    random_hex_string(32),
+    random_hex_string(33),
+    random_hex_string(63),
+    random_hex_string(64),
+    random_hex_string(65),
+    random_hex_string(100),
+    random_hex_string(60 * 16),
+    random_hex_string(60 * 16 + 1),
+    tmp_hex,
+    tmp_hex_near,
+    random_hex_string(500 * 16 + 1),
+    random_hex_string(2000 * 16),
+    random_hex_string(2000 * 16 + 1),
+    random_hex_string(720*16 - 1),
+    random_hex_string(1152*16 - 6),
+    random_hex_string(10000 * 16 - 3),
+]
+
+
+def get_negative_test_numbers() -> List[str]:
+    return ["-" + s for s in positive_test_numbers]
+
+
+def get_all_test_numbers() -> List[str]:
+    return positive_test_numbers + positive_test_numbers
+
+
+def get_all_test_number_pairs():
+    return [(a, b) for a in get_all_test_numbers() for b in get_all_test_numbers()]

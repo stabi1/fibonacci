@@ -1,5 +1,4 @@
 #include <stddef.h>
-#include <immintrin.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include "bigIntMul.h"
@@ -8,85 +7,105 @@
 #include "bigIntUtil.h"
 #include "bigIntDiv.h"
 
-size_t NAIVLEMULFASTER = 60; //Size when naiveMul is faster than karatsuba // 100
-size_t KARATSUBAFASTER = 200; //Size when karatsuba is faster than toom-cook //400
+size_t NAIVLEMULFASTER = 10; //Size when naiveMul is faster than karatsuba // 60 //TODO change back!!!
+size_t KARATSUBAFASTER = 200; //Size when karatsuba is faster than toom-cook //200
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
+
+bigInt *mulExecute(bigInt *x, bigInt *y);
+
+bigInt *mul(bigInt *x, bigInt *y) {
+    if (!isValidBigInt(x) || !isValidBigInt(y)) {
+        fprintf(stderr, "Mul: invalid bigInts supplied\n");
+        exit(4);
+    }
+
+    bigInt *res;
+    if (getLen(x) < getLen(y)) {
+        res = mulExecute(y, x);
+    } else {
+        res = mulExecute(x, y);
+    }
+    res->negative = x->negative ^ y->negative;
+    return res;
+}
+
+bigInt *mulExecute(bigInt *x, bigInt *y) {
+    //printf("karatsuba: %lu %lu\n", getLen(x), getLen(y));
+    if (isZero(x) || isZero(y)) {
+        return getZeroBigInt();
+    }
+
+    size_t yLen = getLen(y);
+    if (yLen <= NAIVLEMULFASTER) {
+        printf("naivemul: %lu %lu\n", getLen(x), getLen(y));
+        bigInt *tmp = copyBigInt(y);
+        bigInt *res = naiveMul_Asm(x, y);
+        if (!isValidBigInt(res)) {
+            if (compareBigInt(y, tmp) != 0) {
+                printBigIntHex(tmp);
+                printBigIntHex(stripLeadingZeros(y));
+            }
+
+            printBigIntHex(x);
+            printBigIntHex(y);
+            exit(0);
+        }
+        return res;
+    } else {
+        return karatsuba(x, y);
+    }
+    // TODO Restore
+    /*size_t yLen = getLen(y);
+    if (yLen <= NAIVLEMULFASTER) {
+        return naiveMul_Asm(x, y);
+    } else if (yLen <= KARATSUBAFASTER) {
+        return karatsuba(x, y);
+    } else {
+        return multiplyToomCook3(x, y);
+    }*/
+}
 
 //returns x * y with karatsuba
 bigInt *karatsuba(bigInt *x, bigInt *y) {
     //termination condition
-    size_t xLen = x->end - x->start;
-    size_t yLen = y->end - y->start;
-    //if smaller than naiveMulFaster, use naiveMul
-    if (xLen <= NAIVLEMULFASTER || yLen <= NAIVLEMULFASTER) {
-        if (xLen > yLen) {
-            return naiveMul_Asm(x, y);
-        } else {
-            return naiveMul_Asm(y, x);
-        }
-    }
+    size_t xLen = getLen(x);
     //calculate m -> middle of the bigger bigInt
-    size_t m;
-    if (xLen > yLen) {
-        m = xLen / 2;
-    } else {
-        m = yLen / 2;
-    }
+    size_t m = xLen / 2;
     //karatsuba according to the algorithm
-    bigInt *x0 = getLowerFrom(x, x->start + m);
-    bigInt *x1 = getUpperFrom(x, x->start + m);
-    bigInt *y0 = getLowerFrom(y, y->start + m);
-    bigInt *y1 = getUpperFrom(y, y->start + m);
+    bigInt *x0 = getLowerFrom(x, m);
+    bigInt *x1 = getUpperFrom(x, m);
+    bigInt *y0 = getLowerFrom(y, m);
+    bigInt *y1 = getUpperFrom(y, m);
 
-    bigInt *x0y0 = karatsuba(x0, y0);
-    bigInt *x1y1 = karatsuba(x1, y1);
+    bigInt *x0y0 = mul(x0, y0);
+    bigInt *x1y1 = mul(x1, y1);
 
-    bigInt *temp1 = smartAdd(x0, x1);
+    bigInt *temp1 = add(x0, x1);
     freeBigInt(x0);
     freeBigInt(x1);
-    bigInt *temp2 = smartAdd(y0, y1);
+    bigInt *temp2 = add(y0, y1);
     freeBigInt(y0);
     freeBigInt(y1);
-    bigInt *x0x1y01 = karatsuba(temp1, temp2);
+    bigInt *x0x1y01 = mul(temp1, temp2);
     freeBigInt(temp1);
     freeBigInt(temp2);
 
-    bigInt *temp3 = smartSub(x0x1y01, x0y0);
+    bigInt *temp3 = sub(x0x1y01, x0y0);
     freeBigInt(x0x1y01);
-    bigInt *b = smartSub(temp3, x1y1);
+    bigInt *b = sub(temp3, x1y1);
     freeBigInt(temp3);
-    bigInt *temp4 = shiftAdd_Asm(x0y0, b, m);
+    bigInt *temp4 = shiftAdd(x0y0, b, m);
     freeBigInt(b);
     freeBigInt(x0y0);
-    bigInt *res = shiftAdd_Asm(temp4, x1y1, m * 2);
+    bigInt *res = shiftAdd(temp4, x1y1, m * 2);
     freeBigInt(temp4);
     freeBigInt(x1y1);
     return res;
 }
 
 bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
-    bool sign;
-    if ((a->negative && b->negative) || (!a->negative && !b->negative)) {
-        sign = false;
-    } else {
-        sign = true;
-    }
-    size_t aLen = a->end - a->start;
-    size_t bLen = b->end - b->start;
-    //if smaller than karatsubaFaster, use karatsuba
-    if (aLen <= KARATSUBAFASTER || bLen <= KARATSUBAFASTER) {
-        bigInt *res = karatsuba(a, b);
-        res->negative = sign;
-        return res;
-    }
-    size_t largest;
-    if (aLen < bLen) {
-        largest = bLen;
-    } else {
-        largest = aLen;
-    }
-
+    size_t largest = getLen(a);
     // k is the size (in qword) of the lower-order slices.
     size_t k = (largest + 2) / 3;
     // r is the size (in qword) of the highest-order slice.
@@ -105,82 +124,80 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *b1 = slicesB[1];
     bigInt *b0 = slicesB[0];
 
-    bigInt *v0 = multiplyToomCook3(a0, b0);
-    bigInt *da1 = smartAdd(a2, a0);
-    bigInt *db1 = smartAdd(b2, b0);
-    bigInt *temp1 = smartSub(db1, b1);
-    bigInt *temp2 = smartSub(da1, a1);
-    bigInt *vm1 = multiplyToomCook3(temp1, temp2);
+    bigInt *v0 = mul(a0, b0);
+    bigInt *da1 = add(a2, a0);
+    bigInt *db1 = add(b2, b0);
+    bigInt *temp1 = sub(db1, b1);
+    bigInt *temp2 = sub(da1, a1);
+    bigInt *vm1 = mul(temp1, temp2);
     freeBigInt(temp1);
     freeBigInt(temp2);
 
-    bigInt *da2 = smartAdd(da1, a1);
+    bigInt *da2 = add(da1, a1);
     freeBigInt(da1);
     freeBigInt(a1);
-    bigInt *db2 = smartAdd(db1, b1);
+    bigInt *db2 = add(db1, b1);
     freeBigInt(db1);
     freeBigInt(b1);
-    bigInt *v1 = multiplyToomCook3(da2, db2);
-    bigInt *temp3 = smartAdd(da2, a2);
+    bigInt *v1 = mul(da2, db2);
+    bigInt *temp3 = add(da2, a2);
     freeBigInt(da2);
     bigInt *temp4 = shiftLeft_Asm(temp3, 1);
     freeBigInt(temp3);
-    bigInt *temp5 = smartSub(temp4, a0);
+    bigInt *temp5 = sub(temp4, a0);
     freeBigInt(temp4);
     freeBigInt(a0);
-    bigInt *temp6 = smartAdd(db2, b2);
+    bigInt *temp6 = add(db2, b2);
     freeBigInt(db2);
     bigInt *temp7 = shiftLeft_Asm(temp6, 1);
     freeBigInt(temp6);
-    bigInt *temp8 = smartSub(temp7, b0);
+    bigInt *temp8 = sub(temp7, b0);
     freeBigInt(temp7);
     freeBigInt(b0);
-    bigInt *v2 = multiplyToomCook3(temp5, temp8);
+    bigInt *v2 = mul(temp5, temp8);
     freeBigInt(temp8);
     freeBigInt(temp5);
-    bigInt *vInf = multiplyToomCook3(a2, b2);
+    bigInt *vInf = mul(a2, b2);
     freeBigInt(a2);
     freeBigInt(b2);
 
-    bigInt *temp9 = smartSub(v2, vm1);
+    bigInt *temp9 = sub(v2, vm1);
     freeBigInt(v2);
     bigInt *t2 = exactDivideBy3(temp9);
     freeBigInt(temp9);
-    bigInt *temp10 = smartSub(v1, vm1);
+    bigInt *temp10 = sub(v1, vm1);
     freeBigInt(vm1);
     bigInt *tm1 = shiftRight_Asm(temp10, 1);
     freeBigInt(temp10);
-    bigInt *t1 = smartSub(v1, v0);
+    bigInt *t1 = sub(v1, v0);
     freeBigInt(v1);
-    bigInt *temp11 = smartSub(t2, t1);
+    bigInt *temp11 = sub(t2, t1);
     freeBigInt(t2);
     bigInt *t2_2 = shiftRight_Asm(temp11, 1);
     freeBigInt(temp11);
-    bigInt *temp12 = smartSub(t1, tm1);
+    bigInt *temp12 = sub(t1, tm1);
     freeBigInt(t1);
-    bigInt *t1_2 = smartSub(temp12, vInf);
+    bigInt *t1_2 = sub(temp12, vInf);
     freeBigInt(temp12);
     bigInt *temp13 = shiftLeft_Asm(vInf, 1);
-    bigInt *t2_3 = smartSub(t2_2, temp13);
+    bigInt *t2_3 = sub(t2_2, temp13);
     freeBigInt(t2_2);
     freeBigInt(temp13);
-    bigInt *tm2 = smartSub(tm1, t2_3);
+    bigInt *tm2 = sub(tm1, t2_3);
     freeBigInt(tm1);
 
-    bigInt *temp14 = shiftAdd_Asm(t2_3, vInf, k);
+    bigInt *temp14 = shiftAdd(t2_3, vInf, k);
     freeBigInt(t2_3);
     freeBigInt(vInf);
-    bigInt *temp15 = shiftAdd_Asm(t1_2, temp14, k);
+    bigInt *temp15 = shiftAdd(t1_2, temp14, k);
     freeBigInt(temp14);
     freeBigInt(t1_2);
-    bigInt *temp16 = shiftAdd_Asm(tm2, temp15, k);
+    bigInt *temp16 = shiftAdd(tm2, temp15, k);
     freeBigInt(temp15);
     freeBigInt(tm2);
-    bigInt *result = shiftAdd_Asm(v0, temp16, k);
+    bigInt *result = shiftAdd(v0, temp16, k);
     freeBigInt(temp16);
     freeBigInt(v0);
-
-    result->negative = sign;
     return result;
 }
 
@@ -284,12 +301,12 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul1->depth = depth - 1;
         pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul1);
     } else {
-        v0 = multiplyToomCook3(a0, b0);
+        v0 = mul(a0, b0);
     }
-    bigInt *da1 = smartAdd(a2, a0);
-    bigInt *db1 = smartAdd(b2, b0);
-    bigInt *temp1 = smartSub(db1, b1);
-    bigInt *temp2 = smartSub(da1, a1);
+    bigInt *da1 = add(a2, a0);
+    bigInt *db1 = add(b2, b0);
+    bigInt *temp1 = sub(db1, b1);
+    bigInt *temp2 = sub(da1, a1);
     bigInt *vm1;
     if (depth > 0) {
         argsMul2->a = temp1;
@@ -297,12 +314,12 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul2->depth = depth - 1;
         pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul2);
     } else {
-        vm1 = multiplyToomCook3(temp1, temp2);
+        vm1 = mul(temp1, temp2);
     }
-    bigInt *da2 = smartAdd(da1, a1);
+    bigInt *da2 = add(da1, a1);
     freeBigInt(da1);
     freeBigInt(a1);
-    bigInt *db2 = smartAdd(db1, b1);
+    bigInt *db2 = add(db1, b1);
     freeBigInt(db1);
     freeBigInt(b1);
     bigInt *v1;
@@ -312,19 +329,19 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul3->depth = depth - 1;
         pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul3);
     } else {
-        v1 = multiplyToomCook3(da2, db2);
+        v1 = mul(da2, db2);
     }
-    bigInt *temp3 = smartAdd(da2, a2);
+    bigInt *temp3 = add(da2, a2);
 
     bigInt *temp4 = shiftLeft_Asm(temp3, 1);
     freeBigInt(temp3);
-    bigInt *temp5 = smartSub(temp4, a0);
+    bigInt *temp5 = sub(temp4, a0);
     freeBigInt(temp4);
 
-    bigInt *temp6 = smartAdd(db2, b2);
+    bigInt *temp6 = add(db2, b2);
     bigInt *temp7 = shiftLeft_Asm(temp6, 1);
     freeBigInt(temp6);
-    bigInt *temp8 = smartSub(temp7, b0);
+    bigInt *temp8 = sub(temp7, b0);
     freeBigInt(temp7);
     bigInt *v2;
     if (depth > 0) {
@@ -333,7 +350,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul4->depth = depth - 1;
         pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul4);
     } else {
-        v2 = multiplyToomCook3(temp5, temp8);
+        v2 = mul(temp5, temp8);
         freeBigInt(temp8);
         freeBigInt(temp5);
     }
@@ -345,7 +362,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul5->depth = depth - 1;
         pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5);
     } else {
-        vInf = multiplyToomCook3(a2, b2);
+        vInf = mul(a2, b2);
         freeBigInt(a2);
         freeBigInt(b2);
     }
@@ -385,41 +402,41 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     free(argsMul4);
     free(argsMul5);
 
-    bigInt *temp9 = smartSub(v2, vm1);
+    bigInt *temp9 = sub(v2, vm1);
     freeBigInt(v2);
     bigInt *t2 = exactDivideBy3(temp9);
     freeBigInt(temp9);
-    bigInt *temp10 = smartSub(v1, vm1);
+    bigInt *temp10 = sub(v1, vm1);
     freeBigInt(vm1);
     bigInt *tm1 = shiftRight_Asm(temp10, 1);
     freeBigInt(temp10);
-    bigInt *t1 = smartSub(v1, v0);
+    bigInt *t1 = sub(v1, v0);
     freeBigInt(v1);
-    bigInt *temp11 = smartSub(t2, t1);
+    bigInt *temp11 = sub(t2, t1);
     freeBigInt(t2);
     bigInt *t2_2 = shiftRight_Asm(temp11, 1);
     freeBigInt(temp11);
-    bigInt *temp12 = smartSub(t1, tm1);
+    bigInt *temp12 = sub(t1, tm1);
     freeBigInt(t1);
-    bigInt *t1_2 = smartSub(temp12, vInf);
+    bigInt *t1_2 = sub(temp12, vInf);
     freeBigInt(temp12);
     bigInt *temp13 = shiftLeft_Asm(vInf, 1);
-    bigInt *t2_3 = smartSub(t2_2, temp13);
+    bigInt *t2_3 = sub(t2_2, temp13);
     freeBigInt(t2_2);
     freeBigInt(temp13);
-    bigInt *tm2 = smartSub(tm1, t2_3);
+    bigInt *tm2 = sub(tm1, t2_3);
     freeBigInt(tm1);
 
-    bigInt *temp14 = shiftAdd_Asm(t2_3, vInf, k);
+    bigInt *temp14 = shiftAdd(t2_3, vInf, k);
     freeBigInt(t2_3);
     freeBigInt(vInf);
-    bigInt *temp15 = shiftAdd_Asm(t1_2, temp14, k);
+    bigInt *temp15 = shiftAdd(t1_2, temp14, k);
     freeBigInt(temp14);
     freeBigInt(t1_2);
-    bigInt *temp16 = shiftAdd_Asm(tm2, temp15, k);
+    bigInt *temp16 = shiftAdd(tm2, temp15, k);
     freeBigInt(temp15);
     freeBigInt(tm2);
-    bigInt *result = shiftAdd_Asm(v0, temp16, k);
+    bigInt *result = shiftAdd(v0, temp16, k);
     freeBigInt(temp16);
     freeBigInt(v0);
 

@@ -1,6 +1,6 @@
 #include "bigIntDiv.h"
 
-size_t D4FASTER = 10;
+size_t D4FASTER = 20;
 
 //To be used when the number is known to be exactly divisible by 3
 bigInt *exactDivideBy3(bigInt *x) {
@@ -36,44 +36,50 @@ bigInt *exactDivideBy3(bigInt *x) {
 }
 
 bigInt *divide(bigInt *dividend, bigInt *divisor) {
-    bigInt *res = divideHelper(dividend, divisor, NULL);
+    bigInt *res = divideHelper(dividend, divisor, NULL, false);
     res->negative = dividend->negative ^ divisor->negative;
     return res;
 }
 
 bigInt *divideMod(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
-    bigInt *res = divideHelper(dividend, divisor, reminder);
+    bigInt *res = divideHelper(dividend, divisor, reminder, false);
     res->negative = dividend->negative ^ divisor->negative;
     (*reminder)->negative = dividend->negative;
     return res;
 }
 
-bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
+bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler) {
     uint64_t m = dividend->end - dividend->start;
     uint64_t n = divisor->end - divisor->start;
-    bigInt *quotient = newBigInt(m - n + 1);
 
-    uint64_t *q = quotient->bigIntArray + quotient->start;
     const uint64_t *u = dividend->bigIntArray + dividend->start;
     const uint64_t *v = divisor->bigIntArray + divisor->start;
 
-    if (compareBigInt(dividend, divisor) < 0) {
-        q[0] = 0;
-        quotient->end = quotient->start + 1;
+    int comp = compareBigInt(dividend, divisor);
+    if (comp < 0) {
+        bigInt *quotient = getZeroBigInt();
         if (reminder != NULL) {
-            *reminder = newBigInt(n);
+            *reminder = newBigInt(m);
             memcpy((*reminder)->bigIntArray + (*reminder)->start, u, m * 8);
         }
         return quotient;
+    } else if (comp == 0) {
+        bigInt *quotient = newBigInt(1);
+        quotient->bigIntArray[0] = 1;
+        if (reminder != NULL) {
+            *reminder = getZeroBigInt();
+        }
+        return quotient;
     } else if (m <= 1) {
-        q[0] = u[0] / v[0];
-        quotient->end = quotient->start + 1;
+        bigInt *quotient = newBigInt(1);
+        quotient->bigIntArray[0] = u[0] / v[0];
         if (reminder != NULL) {
             *reminder = newBigInt(n);
             (*reminder)->bigIntArray[(*reminder)->start] = u[0] % v[0];
         }
         return quotient;
     } else if (n <= 1) {
+        bigInt *quotient = newBigInt(m - n + 1);
         if (reminder != NULL) {
             *reminder = newBigInt(n);
             divideOneWord(dividend, v[0], quotient, *reminder);
@@ -83,7 +89,8 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
         return quotient;
     }
 
-    if (n < D4FASTER) {
+    bigInt *quotient = newBigInt(m - n + 1);
+    if (n < D4FASTER || noBurnikelZiegler) {
         if (reminder == NULL) {
             divideD4(dividend, divisor, quotient, NULL);
         } else {
@@ -141,7 +148,7 @@ void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt 
     if (reminder != NULL) {
         reminder->bigIntArray[reminder->start] = rem;
     }
-    quotient->end = quotient->start + getOccupiedFields_Asm(quotient);
+    quotient->end = quotient->start + getOccupiedBlocks(quotient);
 }
 
 //returns dividend/divisor
@@ -162,7 +169,6 @@ void divideD4(bigInt *dividend, bigInt *divisor, bigInt *quotient, bigInt *remin
     __int128 t, k;
     long s, i, j;
     if (v[n - 1] == 0) {//should not happen
-        printf("%s\n%ld, %ld\n", bigIntToHexString(divisor), divisor->start, divisor->end);
         fprintf(stderr, "v[n-1] is zero!\n");
         exit(5);
     }
@@ -186,8 +192,7 @@ void divideD4(bigInt *dividend, bigInt *divisor, bigInt *quotient, bigInt *remin
         qhat = (un[j + n] * b + un[j + n - 1]) / vn[n - 1];
         rhat = (un[j + n] * b + un[j + n - 1]) % vn[n - 1];
         again:
-        if (qhat >= b ||
-            qhat * vn[n - 2] > b * rhat + un[j + n - 2]) {
+        if (qhat >= b || qhat * vn[n - 2] > b * rhat + un[j + n - 2]) {
             qhat = qhat - 1;
             rhat = rhat + vn[n - 1];
             if (rhat < b) goto again;
@@ -214,6 +219,7 @@ void divideD4(bigInt *dividend, bigInt *divisor, bigInt *quotient, bigInt *remin
             un[j + n] = un[j + n] + k;
         }
     } // End j.
+    free(vn);
     // If the caller wants the remainder, unnormalize
     // it and pass it back.
     if (reminder != NULL) {
@@ -221,11 +227,10 @@ void divideD4(bigInt *dividend, bigInt *divisor, bigInt *quotient, bigInt *remin
         for (i = 0; i < n - 1; i++)
             r[i] = (un[i] >> s) | ((unsigned __int128) un[i + 1] << (64 - s));
         r[n - 1] = un[n - 1] >> s;
-        reminder->end = reminder->start + getOccupiedFields_Asm(reminder);
+        reminder->end = reminder->start + getOccupiedBlocks(reminder);
     }
     free(un);
-    free(vn);
-    quotient->end = quotient->start + getOccupiedFields_Asm(quotient);
+    quotient->end = quotient->start + getOccupiedBlocks(quotient);
 }
 
 //return A/B
@@ -255,14 +260,12 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
 
     // step 6: conceptually split A into blocks a[t-1], ..., a[0]
     bigInt *a1 = getBlock(aShifted, t - 1, t, n);   // the most significant block of A
-
     // step 7: z[t-2] = [a[t-1], a[t-2]]
     bigInt *z = getBlock(aShifted, t - 2, t, n);    // the second to most significant block
-    bigInt *zTmp = shiftAdd_Asm(z, a1, n);   // z[t-2]
+    bigInt *zTmp = shiftAdd(z, a1, n);   // z[t-2]
     freeBigInt(a1);
     freeBigInt(z);
     z = zTmp;
-
     bigInt *qi = NULL;
     bigInt *ri = NULL;
     for (int i = (int) t - 2; i > 0; i--) {
@@ -273,11 +276,11 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
         zTmp = getBlock(aShifted, i - 1, t, n);   // a[i-1]
         freeBigInt(z);
         z = zTmp;
-        zTmp = shiftAdd_Asm(z, ri, n);
+        zTmp = shiftAdd(z, ri, n);
         freeBigInt(ri);
         freeBigInt(z);
         z = zTmp;
-        bigInt *qTmp = shiftAdd_Asm(quotient, qi, i * n);   // update q (part of step 9)
+        bigInt *qTmp = shiftAdd(quotient, qi, i * n);   // update q (part of step 9)
         freeBigInt(quotient);
         quotient = qTmp;
         freeBigInt(qi);
@@ -287,7 +290,7 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
     qi = divide2n1n(z, bShifted, &ri);
     freeBigInt(z);
     freeBigInt(bShifted);
-    bigInt *qTmp = smartAdd(quotient, qi);
+    bigInt *qTmp = add(quotient, qi);
     freeBigInt(quotient);
     quotient = qTmp;
     freeBigInt(qi);
@@ -304,13 +307,13 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
     size_t n = B->end - B->start;
 
     // step 1: base case
-    if (n % 2 != 0 || n < D4FASTER || n * 2 != A->end - A->start) { //
-        return divideD4Helper(A, B, reminder);
+    if (n % 2 != 0 || n < D4FASTER || isZero(A)) {
+        return divideHelper(A, B, reminder, true);
     }
 
     // step 2: view A as [a1,a2,a3,a4] where each ai is n/2 ints or less
     bigInt *aUpper = shiftRight(A, 64 * (n / 2)); //[a1,a2,a3]
-    bigInt *aLower = newBigIntStruct(A->start, A->start + n / 2, A->bigIntArray); //[a4]
+    bigInt *aLower = getLowerFrom(A, n / 2); //[a4]
 
     // step 3: q1=aUpper/B, r1=aUpper%B
     bigInt *r1 = NULL;
@@ -318,14 +321,14 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
     freeBigInt(aUpper);
 
     // step 4: quotient=[r1,aLower]/B, r2=[r1,aLower]%B
-    bigInt *aLower2 = shiftAdd_Asm(aLower, r1, n / 2);   // this = [r1,this]
+    bigInt *aLower2 = shiftAdd(aLower, r1, n / 2);   // this = [r1,this]
     freeBigInt(r1);
     freeBigInt(aLower);
     bigInt *quotient = divide3n2n(aLower2, B, reminder);
     freeBigInt(aLower2);
 
     // step 5: let quotient=[q1,quotient] and return r2
-    bigInt *quotientRet = shiftAdd_Asm(quotient, q1, n / 2);
+    bigInt *quotientRet = shiftAdd(quotient, q1, n / 2);
     freeBigInt(q1);
     freeBigInt(quotient);
     return quotientRet;
@@ -333,6 +336,9 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
 
 //2*aLen<=3*bLen
 bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
+    if (isZero(A)) {
+        return divideHelper(A, B, reminder, true);
+    }
 
     size_t n = (B->end - B->start) / 2;   // half the length of b in ints
 
@@ -341,7 +347,7 @@ bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
 
     // step 2: view B as [b1,b2] where each bi is n ints or less
     bigInt *b1 = shiftRight(B, 64 * n);
-    bigInt *b2 = newBigIntStruct(B->start, B->start + n, B->bigIntArray);
+    bigInt *b2 = getLowerFrom(B, n);
 
     bigInt *r;
     bigInt *d;
@@ -351,20 +357,20 @@ bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
         quotient = divide2n1n(a12, b1, &r);
 
         // step 4: d=quotient*b2
-        d = multiplyToomCook3(quotient, b2);
+        d = mul(quotient, b2);
     } else {
         // step 3b: if a1>=b1, let quotient=beta^n-1 and r=a12-b1*2^n+b1
         quotient = newBigInt(n);
         memset(quotient->bigIntArray, 0xFF, n * 8);
-        bigInt *a12_2 = smartAdd(a12, b1);
+        bigInt *a12_2 = add(a12, b1);
         bigInt *b1_2 = shiftLeft(b1, 64 * n);
-        r = smartSub(a12_2, b1_2);
+        r = sub(a12_2, b1_2);
         freeBigInt(a12_2);
         freeBigInt(b1_2);
 
         // step 4: d=quotient*b2=(b2 << 64*n) - b2
         bigInt *d_0 = shiftLeft(b2, 64 * n);
-        d = smartSub(d_0, b2);
+        d = sub(d_0, b2);
         freeBigInt(d_0);
     }
     freeBigInt(a12);
@@ -375,8 +381,8 @@ bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
     // However, don't subtract d until after the while loop so r doesn't become negative
     bigInt *r_1 = shiftLeft(r, 64 * n);
     freeBigInt(r);
-    bigInt *a_lower = newBigIntStruct(A->start, A->start + n, A->bigIntArray);
-    bigInt *r_2 = smartAdd(r_1, a_lower);
+    bigInt *a_lower = getLowerFrom(A, n);
+    bigInt *r_2 = add(r_1, a_lower);
     freeBigInt(r_1);
     freeBigInt(a_lower);
 
@@ -384,14 +390,14 @@ bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
     bigInt *one = getZeroBigInt();
     one->bigIntArray[0] = 1;
     while (compareBigInt(r_2, d) < 0) {
-        bigInt *r_2_tmp = smartAdd(r_2, B);
+        bigInt *r_2_tmp = add(r_2, B);
         freeBigInt(r_2);
         r_2 = r_2_tmp;
-        bigInt *qTmp = smartSub(quotient, one);
+        bigInt *qTmp = sub(quotient, one);
         freeBigInt(quotient);
         quotient = qTmp;
     }
-    *reminder = smartSub(r_2, d);
+    *reminder = sub(r_2, d);
     freeBigInt(r_2);
     freeBigInt(d);
     freeBigInt(one);

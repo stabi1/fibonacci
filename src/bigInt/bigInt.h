@@ -38,17 +38,17 @@ bigInt *readBigIntHexFromFile(char *path);
 bigInt *readBigIntDecFromFile(char *path);
 
 // calc methods
-bigInt *smartSub(bigInt *x, bigInt *y);
+bigInt *sub(bigInt *x, bigInt *y);
 
-bigInt *smartAdd(bigInt *x, bigInt *y);
+bigInt *add(bigInt *x, bigInt *y);
 
 bigInt *shiftLeft(bigInt *x, size_t n);
 
 bigInt *shiftRight(bigInt *x, size_t n);
 
-bigInt *multiplyToomCook3(bigInt *a, bigInt *b);
+bigInt *mul(bigInt *x, bigInt *y);
 
-bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth);
+bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth); //TODO remove
 
 bigInt *divide(bigInt *dividend, bigInt *divisor);
 
@@ -64,7 +64,9 @@ char *bigIntToDecString(bigInt *x);
 char *bigIntToHexString(bigInt *x);
 
 //misc
-uint64_t bitLength(bigInt *x);
+size_t bitLength(bigInt *x);
+
+size_t getLen(bigInt *x);
 
 //misc utility
 size_t custom_lzcnt(uint64_t n);

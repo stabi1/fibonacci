@@ -12,7 +12,7 @@
 
 bigInt *exactDivideBy3(bigInt *x);
 
-bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder);
+bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler);
 
 bigInt *divideD4Helper(bigInt *dividend, bigInt *divisor, bigInt **reminder);
 

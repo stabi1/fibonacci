@@ -182,7 +182,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_
         double sizeStrInKB = ((double) strSizeInBytes) / 1000;
         double sizeStrInMB = ((double) strSizeInBytes) / 1000000;
 
-        printf("Time to calculate: %fs | Time to output: %fs\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n"
+        printf("Time to calculate: %f s | Time to output: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n"
                "ResultString size in B:%zu KB:%.2f MB:%.2f\n",
                time, time2,
                sizeInBytes, sizeInKB, sizeInMB, strSizeInBytes, sizeStrInKB, sizeStrInMB);
@@ -191,7 +191,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_
         printf("No output\n");
         double sizeInKB = ((double) sizeInBytes) / 1000;
         double sizeInMB = ((double) sizeInBytes) / 1000000;
-        printf("Time to calculate: %fs\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
+        printf("Time to calculate: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
                sizeInMB);
     }
     freeBigInt(res);
@@ -225,7 +225,7 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
             clock_gettime(CLOCK_MONOTONIC, &start);
         }
         bigInt *temp1 = shiftLeft(b, 1);
-        bigInt *temp2 = smartSub(temp1, a);
+        bigInt *temp2 = sub(temp1, a);
         freeBigInt(temp1);
 
         bigInt *d;
@@ -237,15 +237,15 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
             temp3 = multiplyToomCook3MultiThread(a, a, multiThreadDepth);
             temp4 = multiplyToomCook3MultiThread(b, b, multiThreadDepth);
         } else {
-            d = multiplyToomCook3(a, temp2);
+            d = mul(a, temp2);
             freeBigInt(temp2);
-            temp3 = multiplyToomCook3(a, a);
-            temp4 = multiplyToomCook3(b, b);
+            temp3 = mul(a, a);
+            temp4 = mul(b, b);
         }
 
         freeBigInt(a);
         freeBigInt(b);
-        bigInt *e = smartAdd(temp3, temp4);
+        bigInt *e = add(temp3, temp4);
         freeBigInt(temp3);
         freeBigInt(temp4);
         a = d;
@@ -253,7 +253,7 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
 
         // Advance by one conditionally
         if ((n & nBinary) != 0) {
-            bigInt *c = smartAdd(a, b);
+            bigInt *c = add(a, b);
             freeBigInt(a);
             a = b;
             b = c;

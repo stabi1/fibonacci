@@ -1,7 +1,4 @@
 .intel_syntax noprefix
-.global getOccupiedFields_Asm
-.global getLowerFrom_Asm
-.global getUpperFrom_Asm
 .global add_Asm
 .global shiftAdd_Asm
 .global sub_Asm
@@ -73,7 +70,7 @@ shiftAdd_Asm:
     mov r14, rdi //r14 = x
     mov r15, rsi //r15 = toShift
     mov rbx, rdx //rbx = n
-    mov r8, [rdi + 8]
+    mov r8, [rdi + 8] // x->end
     sub r8, [rdi] // r8 = xLen
     mov r9, [rsi + 8]
     sub r9, [rsi]
@@ -459,15 +456,11 @@ sub_Asm:
     mov rbx, rax // rbx = res
     call subHelper_Asm
 .LResizeSub:
-    //resize - rbx = res
-    mov rcx, [rbx + 24] //res->bigIntArray
-    mov rdx, [rbx + 8] //res->end
-    cmp QWORD PTR [rcx + rdx*8 - 8], 0
-    jnz .LSubEnde
-    sub rdx, [rbx]
-    cmp rdx, 1
-    jbe .LSubEnde
-    sub QWORD PTR [rbx + 8], 1
+    //resize
+    mov rdi, rbx
+    call getOccupiedBlocks //erg in rax
+    add rax, [rbx]
+    mov [rbx + 8], rax
 .LSubEnde:
     mov rax, rbx
     add rsp, 8 //align stack pointer

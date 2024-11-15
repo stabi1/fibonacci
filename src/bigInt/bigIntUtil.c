@@ -30,7 +30,8 @@ size_t custom_lzcnt(uint64_t n) {
     return __builtin_clzll(n);
 }
 
-uint64_t bitLength(bigInt *x) {
+// -> max length 2000 petabytes
+size_t bitLength(bigInt *x) {
     size_t xLen = x->end - x->start;
     return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
@@ -208,7 +209,7 @@ bigIntToDecStringSchoenhage(bigInt *x, size_t digits, char **resString, size_t *
     bigInt *v = newBigInt(1);
     v->bigIntArray[v->start] = 10;
     for (size_t i = 0; i < n; i++) {
-        bigInt *vNew = multiplyToomCook3(v, v);
+        bigInt *vNew = mul(v, v);
         freeBigInt(v);
         v = vNew;
     }

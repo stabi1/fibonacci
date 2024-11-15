@@ -1,6 +1,5 @@
 .intel_syntax noprefix
 .global naiveMul_Asm
-.global getOccupiedFields_Asm
 
 /*
 .align 16
@@ -178,7 +177,7 @@ naiveMul_Asm: //mul using naive multiplication
     //resize result
     mov r15, r8 //result = r15
     mov rdi, r8
-    call getOccupiedFields_Asm
+    call getOccupiedBlocks
     mov rcx, [r15]
     add rcx, rax
     mov [r15+8], rcx
@@ -193,28 +192,6 @@ naiveMul_Asm: //mul using naive multiplication
     pop rbx
     ret
 */
-
-
-//size_t getOccupiedFields_Asm(bigInt *x);
-getOccupiedFields_Asm:
-    mov rax, QWORD PTR [rdi+8] //size_t num = x->end;
-    mov rsi, QWORD PTR [rdi] //x->start
-    mov rdx, rsi
-    add rdx, 1 //x->start + 1
-    cmp rax, rsi //num > x->start + 1
-    jna .LGetOccFieldsEnd
-    mov rcx, QWORD PTR [rdi+24] //move pointer of bigIntArray to rcx
-    jmp .LIsZero
-.LStartLoopGetOccFields:
-    sub rax, 1 	//num--
-    cmp rax, rdx //num > x->start + 1;
-    jna .LGetOccFieldsEnd
-.LIsZero:
-    cmp QWORD PTR [rcx-8+rax*8], 0 //x->bigIntArray[num - 1] == 0
-    je .LStartLoopGetOccFields
-.LGetOccFieldsEnd:
-    sub rax, rsi
-    ret
 
 
 .align 16
