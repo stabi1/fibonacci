@@ -15,5 +15,5 @@ def test_mul_sign_and_different_size_numbers(hex_string_a: str, hex_string_b: st
     python_a = int(hex_string_a, 16)
     python_b = int(hex_string_b, 16)
     python_res = python_a * python_b
-    python_hex_string = hex(python_res)
-    assert python_hex_string.replace("0x", "").upper() == hex_str.decode()
+    python_hex_string = hex(python_res).replace("0x", "").upper()
+    assert python_hex_string == hex_str.decode()

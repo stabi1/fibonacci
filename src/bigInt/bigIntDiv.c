@@ -1,6 +1,6 @@
 #include "bigIntDiv.h"
 
-size_t D4FASTER = 20;
+size_t D4FASTER = 70;
 
 //To be used when the number is known to be exactly divisible by 3
 bigInt *exactDivideBy3(bigInt *x) {

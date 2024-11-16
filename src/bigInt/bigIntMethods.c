@@ -208,6 +208,9 @@ bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n) {
     if (isZero(toShift)) { // toShift == 0
         return copyBigInt(x);
     }
+    if (n == 0) {
+        return add(x, toShift);
+    }
     return shiftAdd_Asm(x, toShift, n);
 }
 
@@ -217,16 +220,10 @@ char *bigIntToHexString(bigInt *x) {
     size_t xLen = x->end - x->start;
     // error handling
     if (lzcnt == 64 && xLen == 1) {
-        size_t resStrLen = x->negative ? 2 : 1;
-        char *resStr = malloc(resStrLen + 1);
+        char *resStr = malloc(2);
         mallocCheck(resStr);
-        resStr[resStrLen] = '\0';
-        if (x->negative) {
-            resStr[0] = '-';
-            resStr[1] = '0';
-        } else {
-            resStr[0] = '0';
-        }
+        resStr[0] = '0';
+        resStr[1] = '\0';
         return resStr;
     } else if (lzcnt == 64 && xLen > 1) {
         fprintf(stderr, "BigInt not printable, has leading zero block");
@@ -332,7 +329,7 @@ bigInt *decStringToBigInt(const char *decStr) {
 //get the lower half of the bigInt (same array, new Struct with different pointers)
 bigInt *getLowerFrom(bigInt *x, size_t n) {
     if (x->end < x->start + n) {
-        n = x->end;
+        n = getLen(x);
     }
     bigInt *res = stripLeadingZeros(newBigIntStruct(x->start, x->start + n, x->bigIntArray));
     return res;

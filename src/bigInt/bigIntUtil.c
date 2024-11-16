@@ -8,7 +8,7 @@ const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',
 
 const char decLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
-const int DECSTRINGSMALLFASTER = 10;
+const int DECSTRINGSMALLFASTER = 100;
 
 size_t decCharToValue(char dec);
 

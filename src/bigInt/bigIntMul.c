@@ -7,8 +7,8 @@
 #include "bigIntUtil.h"
 #include "bigIntDiv.h"
 
-size_t NAIVLEMULFASTER = 10; //Size when naiveMul is faster than karatsuba // 60 //TODO change back!!!
-size_t KARATSUBAFASTER = 200; //Size when karatsuba is faster than toom-cook //200
+size_t NAIVLEMULFASTER = 60; //Size when naiveMul is faster than karatsuba
+size_t KARATSUBAFASTER = 200; //Size when karatsuba is faster than toom-cook
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
@@ -38,37 +38,16 @@ bigInt *mulExecute(bigInt *x, bigInt *y) {
 
     size_t yLen = getLen(y);
     if (yLen <= NAIVLEMULFASTER) {
-        printf("naivemul: %lu %lu\n", getLen(x), getLen(y));
-        bigInt *tmp = copyBigInt(y);
-        bigInt *res = naiveMul_Asm(x, y);
-        if (!isValidBigInt(res)) {
-            if (compareBigInt(y, tmp) != 0) {
-                printBigIntHex(tmp);
-                printBigIntHex(stripLeadingZeros(y));
-            }
-
-            printBigIntHex(x);
-            printBigIntHex(y);
-            exit(0);
-        }
-        return res;
-    } else {
-        return karatsuba(x, y);
-    }
-    // TODO Restore
-    /*size_t yLen = getLen(y);
-    if (yLen <= NAIVLEMULFASTER) {
         return naiveMul_Asm(x, y);
     } else if (yLen <= KARATSUBAFASTER) {
         return karatsuba(x, y);
     } else {
         return multiplyToomCook3(x, y);
-    }*/
+    }
 }
 
 //returns x * y with karatsuba
 bigInt *karatsuba(bigInt *x, bigInt *y) {
-    //termination condition
     size_t xLen = getLen(x);
     //calculate m -> middle of the bigger bigInt
     size_t m = xLen / 2;

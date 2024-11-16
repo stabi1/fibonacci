@@ -30,9 +30,31 @@ def test_hexStringToBigInt_and_bigIntToHexString(test_hex_string: str):
     assert hex_str.decode() == test_hex_string
 
 
-@pytest.mark.parametrize("test_dec_string", get_all_test_numbers())
+@pytest.mark.parametrize("test_dec_string", [
+    "0",
+    "1",
+    random_dec_string(1),
+    random_dec_string(2),
+    random_dec_string(15),
+    random_dec_string(16),
+    random_dec_string(17),
+    random_dec_string(31),
+    random_dec_string(32),
+    random_dec_string(33),
+    random_dec_string(63),
+    random_dec_string(64),
+    random_dec_string(65),
+    random_dec_string(100),
+    random_dec_string(60 * 16),
+    random_dec_string(60 * 16 + 1),
+    random_dec_string(500 * 16 + 1),
+    random_dec_string(2000 * 16),
+    random_dec_string(2000 * 16 + 1),
+    random_dec_string(720 * 16 - 1),
+    random_dec_string(1152 * 16 - 6),
+    random_dec_string(10000 * 16 - 3)
+])
 def test_decStringToBigInt_and_bigIntToDecString(test_dec_string: str):
-    return
     big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())
     assert big_int_lib.isValidBigInt(big_int_instance)
     dec_str = big_int_lib.bigIntToDecString(big_int_instance)
@@ -48,9 +70,9 @@ def test_start_attribute_with_hexStringToBigInt():
 
 
 def test_start_attribute_with_decStringToBigInt():
-    return
-    test_hex_string = random_dec_string(19 * 10)
-    big_int_instance = big_int_lib.hexStringToBigInt(test_hex_string.encode())
+    test_dec_string = random_dec_string(19 * 10)
+    big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())
     big_int_instance = getPartialBigInt(big_int_instance, 3, 6)
+    dec_str = big_int_lib.bigIntToDecString(big_int_instance)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance)
-    assert hex_str.decode() == trim_string(test_hex_string, 4 * 19, 3 * 19), f"org: {test_hex_string}"
+    assert dec_str.decode() == str(int(hex_str.decode(), 16))
