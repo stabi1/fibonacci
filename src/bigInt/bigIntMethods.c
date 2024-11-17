@@ -414,11 +414,6 @@ bigInt *getBlock(bigInt *x, size_t index, size_t numBlocks, size_t blockLength) 
 }
 
 bigInt *add(bigInt *x, bigInt *y) {
-    if (!isValidBigInt(y) || !isValidBigInt(y)) {
-        fprintf(stderr, "add: invalid bigInts supplied\n");
-        exit(4);
-    }
-
     bigInt *addBigger = x;
     bigInt *addSmaller = y;
     if (compareBigIntArrays(x, y) == -1) {
@@ -435,11 +430,6 @@ bigInt *add(bigInt *x, bigInt *y) {
 }
 
 bigInt *sub(bigInt *x, bigInt *y) {
-    if (!isValidBigInt(x) || !isValidBigInt(y)) {
-        fprintf(stderr, "sub: invalid bigInts supplied\n");
-        exit(4);
-    }
-
     bigInt *subBigger = x;
     bigInt *subSmaller = y;
     if (compareBigIntArrays(x, y) == -1) {

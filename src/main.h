@@ -3,6 +3,6 @@
 
 #include "bigInt/bigInt.h"
 
-bigInt *fibExpFastDoubling(uint64_t n,  bool multiThread, size_t numberOfCoresSet);
+bigInt *fibExpFastDoubling(uint64_t n);
 
 #endif //FIBONACCI_MAIN_H

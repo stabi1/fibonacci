@@ -10,6 +10,6 @@ void findBestValues();
 
 void benchMark();
 
-void bruteForceDebug(bool multiThread);
+void bruteForceDebug();
 
 #endif //FIBONACCI_TESTS_H

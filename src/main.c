@@ -3,32 +3,27 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include <sys/sysinfo.h>
 #include <stdbool.h>
 
 #include "main.h"
 #include "../test/tests.h"
 #include "util.h"
-
-size_t getDepth(size_t nprocsSet);
+#include "bigInt/config.h"
 
 void printHelpMenu();
 
-void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_t numberOfCoresSet);
+void printFibonacci(uint64_t n, char radix, char output);
 
 bool handleCPUFeatures();
 
 void printMissingFeature(char *feature);
 
-bool verbose = false;
-
 const char *filename = "output.txt";
 
 //TODO add sign support to DIV,
-//TODO check sign support -> improve SmartAdd/SmartSub
+//TODO improve SmartAdd/SmartSub (remove asm helper part)
+//TODO Optimize for memory, maybe add swap capabilities
 //TODO check support for variable starting point of bigIntArray
-//TODO mul wrapper
-//TODO numberOfCores set not good, maybe set depth directly
 //TODO make output filename customizable
 //TODO help message in binary
 //TODO docu with comments, readme
@@ -44,7 +39,14 @@ static struct option long_options[] = {
         {"test",          no_argument,       NULL, 't'},
         {"nth-fibonacci", required_argument, NULL, 'n'},
         {"verbose",       no_argument,       NULL, 'v'},
+        {"maxThreads",    required_argument, NULL, 'p'},
         {NULL, 0,                            NULL, 0}
+};
+
+Config global_config = {
+        .verbose = false,
+        .parallel = false,
+        .mulDepth = 0
 };
 
 int main(int argc, char *argv[]) {
@@ -61,10 +63,12 @@ int main(int argc, char *argv[]) {
     // default values
     char radix = 'h';
     char output = 't';
-    bool multiThread = false;
     size_t cores = 0; //available cores
-    verbose = false;
+    size_t max_threads = 0;
     uint64_t n = 0;
+    bool do_debug = false;
+    bool do_test = false;
+    bool do_benchmark = false;
 
     int option;
 
@@ -75,22 +79,25 @@ int main(int argc, char *argv[]) {
                     printHelpMenu();
                     exit(EXIT_SUCCESS);
                 case 'd':
-                    bruteForceDebug(multiThread);
-                    exit(EXIT_SUCCESS);
+                    do_debug = true;
+                    break;
                 case 't':
-                    test();
-                    exit(EXIT_SUCCESS);
+                    do_test = true;
+                    break;
                 case 'b':
-                    benchMark();
-                    exit(EXIT_SUCCESS);
+                    do_benchmark = true;
+                    break;
                 case 'm':
-                    multiThread = true;
+                    global_config.parallel = true;
                     break;
                 case 'v':
-                    verbose = true;
+                    global_config.verbose = true;
                     break;
                 case 'c':
                     cores = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
+                    break;
+                case 'p':
+                    max_threads = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
                     break;
                 case 'r':
                     if ((optarg[0] != 'h' && optarg[0] != 'd') || optarg[1] != '\0') {
@@ -124,12 +131,35 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printFibonacci(n, radix, output, multiThread, cores);
+    if (global_config.parallel) {
+        printf("Multithreading enabled\n");
+        if (cores != 0 && max_threads != 0) {
+            fprintf(stderr, "Options p and n are mutually exclusive");
+            exit(EXIT_FAILURE);
+        }
+        if (cores != 0)
+            global_config.mulDepth = getMulDepthFromCores(cores);
+        else
+            global_config.mulDepth = getMulDepthFromMaxThreads(max_threads);
+    }
+
+    if (do_test) {
+        test();
+        return EXIT_SUCCESS;
+    } else if (do_debug) {
+        bruteForceDebug();
+        return EXIT_SUCCESS;
+    } else if (do_benchmark) {
+        benchMark();
+        return EXIT_SUCCESS;
+    }
+
+    printFibonacci(n, radix, output);
 
     return EXIT_SUCCESS;
 }
 
-void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_t numberOfCoresSet) {
+void printFibonacci(uint64_t n, char radix, char output) {
     size_t estimatedSizeInBytes = (size_t) (0.0868 * (double) n + 3.8275);
     double sizeInMBEst = ((double) estimatedSizeInBytes) / 1000000;
     printf("Starting calculation for n=%zu | estimated size in bytes:%zu in MB:%0.2f\n", n, estimatedSizeInBytes,
@@ -137,10 +167,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_
 
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
-
-    if (multiThread) printf("Multithreading enabled\n");
-    else printf("Single Thread\n");
-    bigInt *res = fibExpFastDoubling(n, multiThread, numberOfCoresSet);
+    bigInt *res = fibExpFastDoubling(n);
 
     struct timespec end;
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -154,11 +181,11 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_
         size_t strSizeInBytes;
         char *resString;
         if (radix == 'd') {
-            if (verbose) printf("Starting conversion to dec\n");
+            if (global_config.verbose) printf("Starting conversion to dec\n");
             resString = bigIntToDecString(res);
             strSizeInBytes = strlen(resString);
         } else {
-            if (verbose) printf("Starting conversion to hex\n");
+            if (global_config.verbose) printf("Starting conversion to hex\n");
             resString = bigIntToHexString(res);
             strSizeInBytes = strlen(resString);
         }
@@ -197,9 +224,7 @@ void printFibonacci(uint64_t n, char radix, char output, bool multiThread, size_
     freeBigInt(res);
 }
 
-bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet) {
-    size_t multiThreadDepth = 0;
-    if (multiThread) multiThreadDepth = getDepth(numberOfCoresSet);
+bigInt *fibExpFastDoubling(uint64_t n) {
     bigInt *a = newBigInt(1);
     bigInt *b = newBigInt(1);
     b->bigIntArray[0] = 1;
@@ -211,10 +236,10 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
     int counter = 1;
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    if (verbose) printf("\n");
+    if (global_config.verbose) printf("\n");
 
     for (; nBinary != 0; nBinary >>= 1) {
-        if (verbose) {
+        if (global_config.verbose) {
             clock_gettime(CLOCK_MONOTONIC, &end);
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
             size_t sizeInBytes = (a->end - a->start) * 8;
@@ -231,17 +256,11 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
         bigInt *d;
         bigInt *temp3;
         bigInt *temp4;
-        if (multiThread) {
-            d = multiplyToomCook3MultiThread(a, temp2, multiThreadDepth);
-            freeBigInt(temp2);
-            temp3 = multiplyToomCook3MultiThread(a, a, multiThreadDepth);
-            temp4 = multiplyToomCook3MultiThread(b, b, multiThreadDepth);
-        } else {
-            d = mul(a, temp2);
-            freeBigInt(temp2);
-            temp3 = mul(a, a);
-            temp4 = mul(b, b);
-        }
+
+        d = mul(a, temp2);
+        freeBigInt(temp2);
+        temp3 = mul(a, a);
+        temp4 = mul(b, b);
 
         freeBigInt(a);
         freeBigInt(b);
@@ -260,7 +279,7 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
         }
     }
     freeBigInt(b);
-    if (verbose) {
+    if (global_config.verbose) {
         clock_gettime(CLOCK_MONOTONIC, &end);
         double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
         printf("Time needed for last Iteration: %fs\n\n", time);
@@ -268,35 +287,10 @@ bigInt *fibExpFastDoubling(uint64_t n, bool multiThread, size_t numberOfCoresSet
     return a;
 }
 
-size_t getDepth(size_t nprocsSet) {
-    size_t numberOfCores;
-    if (nprocsSet == 0) {
-        numberOfCores = get_nprocs();
-        if (verbose) printf("Number of cores detected: %lu\n", numberOfCores);
-    } else {
-        numberOfCores = nprocsSet;
-        if (verbose) printf("Number of cores set: %lu\n", numberOfCores);
-    }
-
-    if (numberOfCores < 6) {
-        if (verbose) printf("Number of compute threads created: %d\n", 5);
-        return 1;
-    } else if (numberOfCores < 26) {
-        if (verbose) printf("Number of compute threads created: %d\n", 25);
-        return 2;
-    } else if (numberOfCores < 126) {
-        if (verbose) printf("Number of compute threads created: %d\n", 125);
-        return 3;
-    } else {
-        printf("Number of compute threads created: %d\n", 625);
-        return 4;
-    }
-}
-
 void printHelpMenu() {
     char *fileName = "HelpMenu.txt";
     char *helpMenuText = readFile(fileName);
-    if(helpMenuText == NULL) {
+    if (helpMenuText == NULL) {
         fprintf(stderr, "Error printing help message");
         exit(EXIT_FAILURE);
     }

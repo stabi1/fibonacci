@@ -1,25 +1,34 @@
 #include <stddef.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include "bigIntMul.h"
 #include "mulAsm.h"
 #include "bigIntAsm.h"
 #include "bigIntUtil.h"
 #include "bigIntDiv.h"
+#include "config.h"
 
-size_t NAIVLEMULFASTER = 60; //Size when naiveMul is faster than karatsuba
-size_t KARATSUBAFASTER = 200; //Size when karatsuba is faster than toom-cook
+size_t NAIVLEMUL_FASTER = 60; //Size when naiveMul is faster than karatsuba
+size_t KARATSUBA_FASTER = 200; //Size when karatsuba is faster than toom-cook
+size_t PARALLEL_FASTER = 1000; //Size when toom-cook-multithread is faster than toom-cook
+
+bigInt *mulSingleThread(bigInt *x, bigInt *y);
+
+bigInt *mulParallel(bigInt *x, bigInt *y);
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
 bigInt *mulExecute(bigInt *x, bigInt *y);
 
-bigInt *mul(bigInt *x, bigInt *y) {
-    if (!isValidBigInt(x) || !isValidBigInt(y)) {
-        fprintf(stderr, "Mul: invalid bigInts supplied\n");
-        exit(4);
-    }
+bigInt *mulParallelExecute(bigInt *x, bigInt *y);
 
+bigInt *mul(bigInt *x, bigInt *y) {
+    if (global_config.parallel)
+        return mulParallel(x, y);
+    else
+        return mulSingleThread(x, y);
+}
+
+bigInt *mulSingleThread(bigInt *x, bigInt *y) {
     bigInt *res;
     if (getLen(x) < getLen(y)) {
         res = mulExecute(y, x);
@@ -30,19 +39,46 @@ bigInt *mul(bigInt *x, bigInt *y) {
     return res;
 }
 
+bigInt *mulParallel(bigInt *x, bigInt *y) {
+    bigInt *res;
+    if (getLen(x) < getLen(y)) {
+        res = mulParallelExecute(y, x);
+    } else {
+        res = mulParallelExecute(x, y);
+    }
+    res->negative = x->negative ^ y->negative;
+    return res;
+}
+
 bigInt *mulExecute(bigInt *x, bigInt *y) {
-    //printf("karatsuba: %lu %lu\n", getLen(x), getLen(y));
     if (isZero(x) || isZero(y)) {
         return getZeroBigInt();
     }
 
     size_t yLen = getLen(y);
-    if (yLen <= NAIVLEMULFASTER) {
+    if (yLen <= NAIVLEMUL_FASTER) {
         return naiveMul_Asm(x, y);
-    } else if (yLen <= KARATSUBAFASTER) {
+    } else if (yLen <= KARATSUBA_FASTER) {
         return karatsuba(x, y);
     } else {
         return multiplyToomCook3(x, y);
+    }
+}
+
+bigInt *mulParallelExecute(bigInt *x, bigInt *y) {
+    if (isZero(x) || isZero(y)) {
+        return getZeroBigInt();
+    }
+
+    size_t yLen = getLen(y);
+    if (yLen <= NAIVLEMUL_FASTER) {
+        return naiveMul_Asm(x, y);
+    } else if (yLen <= KARATSUBA_FASTER) {
+        return karatsuba(x, y);
+    } else if (yLen <= PARALLEL_FASTER) {
+        return multiplyToomCook3(x, y);
+    } else {
+        return multiplyToomCook3MultiThread(x, y, global_config.mulDepth);
     }
 }
 
@@ -57,8 +93,8 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     bigInt *y0 = getLowerFrom(y, m);
     bigInt *y1 = getUpperFrom(y, m);
 
-    bigInt *x0y0 = mul(x0, y0);
-    bigInt *x1y1 = mul(x1, y1);
+    bigInt *x0y0 = mulSingleThread(x0, y0);
+    bigInt *x1y1 = mulSingleThread(x1, y1);
 
     bigInt *temp1 = add(x0, x1);
     freeBigInt(x0);
@@ -66,7 +102,7 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     bigInt *temp2 = add(y0, y1);
     freeBigInt(y0);
     freeBigInt(y1);
-    bigInt *x0x1y01 = mul(temp1, temp2);
+    bigInt *x0x1y01 = mulSingleThread(temp1, temp2);
     freeBigInt(temp1);
     freeBigInt(temp2);
 
@@ -103,12 +139,12 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *b1 = slicesB[1];
     bigInt *b0 = slicesB[0];
 
-    bigInt *v0 = mul(a0, b0);
+    bigInt *v0 = mulSingleThread(a0, b0);
     bigInt *da1 = add(a2, a0);
     bigInt *db1 = add(b2, b0);
     bigInt *temp1 = sub(db1, b1);
     bigInt *temp2 = sub(da1, a1);
-    bigInt *vm1 = mul(temp1, temp2);
+    bigInt *vm1 = mulSingleThread(temp1, temp2);
     freeBigInt(temp1);
     freeBigInt(temp2);
 
@@ -118,7 +154,7 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *db2 = add(db1, b1);
     freeBigInt(db1);
     freeBigInt(b1);
-    bigInt *v1 = mul(da2, db2);
+    bigInt *v1 = mulSingleThread(da2, db2);
     bigInt *temp3 = add(da2, a2);
     freeBigInt(da2);
     bigInt *temp4 = shiftLeft_Asm(temp3, 1);
@@ -133,10 +169,10 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *temp8 = sub(temp7, b0);
     freeBigInt(temp7);
     freeBigInt(b0);
-    bigInt *v2 = mul(temp5, temp8);
+    bigInt *v2 = mulSingleThread(temp5, temp8);
     freeBigInt(temp8);
     freeBigInt(temp5);
-    bigInt *vInf = mul(a2, b2);
+    bigInt *vInf = mulSingleThread(a2, b2);
     freeBigInt(a2);
     freeBigInt(b2);
 
@@ -187,22 +223,6 @@ struct toomCookArgs {
 };
 
 bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
-    bool sign;
-    if ((a->negative && b->negative) || (!a->negative && !b->negative)) {
-        sign = false;
-    } else {
-        sign = true;
-    }
-    size_t aLen = a->end - a->start;
-    size_t bLen = b->end - b->start;
-    //if smaller than karatsubaFaster, use karatsuba
-    if (aLen <= KARATSUBAFASTER || bLen <= KARATSUBAFASTER) {
-        bigInt *res = karatsuba(a, b);
-        res->negative = sign;
-        return res;
-    }
-
-
     struct toomCookArgs *args = malloc(sizeof(struct toomCookArgs));
     mallocCheck(args);
     args->a = a;
@@ -217,20 +237,10 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     bigInt *a = ((struct toomCookArgs *) input)->a;
     bigInt *b = ((struct toomCookArgs *) input)->b;
     size_t depth = ((struct toomCookArgs *) input)->depth;
-    bool sign;
-    if ((a->negative && b->negative) || (!a->negative && !b->negative)) {
-        sign = false;
-    } else {
-        sign = true;
-    }
+
     size_t aLen = a->end - a->start;
     size_t bLen = b->end - b->start;
-    //if smaller than karatsubaFaster, use karatsuba
-    if (aLen <= KARATSUBAFASTER || bLen <= KARATSUBAFASTER) {
-        bigInt *res = karatsuba(a, b);
-        res->negative = sign;
-        return res;
-    }
+
     size_t largest;
     if (aLen < bLen) {
         largest = bLen;
@@ -280,7 +290,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul1->depth = depth - 1;
         pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul1);
     } else {
-        v0 = mul(a0, b0);
+        v0 = mulSingleThread(a0, b0);
     }
     bigInt *da1 = add(a2, a0);
     bigInt *db1 = add(b2, b0);
@@ -293,7 +303,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul2->depth = depth - 1;
         pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul2);
     } else {
-        vm1 = mul(temp1, temp2);
+        vm1 = mulSingleThread(temp1, temp2);
     }
     bigInt *da2 = add(da1, a1);
     freeBigInt(da1);
@@ -308,7 +318,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul3->depth = depth - 1;
         pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul3);
     } else {
-        v1 = mul(da2, db2);
+        v1 = mulSingleThread(da2, db2);
     }
     bigInt *temp3 = add(da2, a2);
 
@@ -329,7 +339,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul4->depth = depth - 1;
         pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul4);
     } else {
-        v2 = mul(temp5, temp8);
+        v2 = mulSingleThread(temp5, temp8);
         freeBigInt(temp8);
         freeBigInt(temp5);
     }
@@ -341,7 +351,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
         argsMul5->depth = depth - 1;
         pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5);
     } else {
-        vInf = mul(a2, b2);
+        vInf = mulSingleThread(a2, b2);
         freeBigInt(a2);
         freeBigInt(b2);
     }
@@ -418,7 +428,5 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     bigInt *result = shiftAdd(v0, temp16, k);
     freeBigInt(temp16);
     freeBigInt(v0);
-
-    result->negative = sign;
     return (void *) result;
 }
