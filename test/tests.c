@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <float.h>
-#include "../src/main.h"
 #include "../src/bigInt/config.h"
 #include "../src/bigInt/bigIntUtil.h"
 #include "../src/bigInt/bigIntDiv.h"
+#include "../src/bigInt/bigIntHigherFunctions.h"
 
 char *randomHex(uint64_t n);
 

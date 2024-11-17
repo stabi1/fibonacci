@@ -1,13 +1,14 @@
 #ifndef IMPLEMENTATION_BIGINTASM_H
-#define IMPLEMENTATION_BIGINTASM_H
 
 #include "bigInt.h"
 
-bigInt *add_Asm(bigInt *x, bigInt *y, bool negative);
+#define IMPLEMENTATION_BIGINTASM_H
+
+bigInt *do_add_asm(bigInt *x, bigInt *y, bigInt *res);
+
+bigInt *do_sub_asm(bigInt *x, bigInt *y, bigInt *res);
 
 bigInt *shiftAdd_Asm(bigInt *x, bigInt *toShift, size_t n);
-
-bigInt *sub_Asm(bigInt *x, bigInt *y, bool negative);
 
 bigInt *shiftLeft_Asm(bigInt *x, size_t n);
 

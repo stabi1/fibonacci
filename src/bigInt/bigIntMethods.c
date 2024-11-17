@@ -6,6 +6,10 @@
 #include "bigIntUtil.h"
 #include "bigIntAsm.h"
 
+bigInt *add_helper(bigInt *x, bigInt *y, bool negative);
+
+bigInt *sub_helper(bigInt *x, bigInt *y, bool negative);
+
 //allocates memory for a new bigInt of the given size
 bigInt *newBigInt(size_t len) {
     if (len == 0) {
@@ -423,10 +427,19 @@ bigInt *add(bigInt *x, bigInt *y) {
     }
 
     if (x->negative == y->negative) {
-        return add_Asm(addBigger, addSmaller, addBigger->negative);
+        return add_helper(addBigger, addSmaller, addBigger->negative);
     } else {
-        return sub_Asm(addBigger, addSmaller, addBigger->negative);
+        return sub_helper(addBigger, addSmaller, addBigger->negative);
     }
+}
+
+bigInt *add_helper(bigInt *x, bigInt *y, bool negative) {
+    bigInt *res = newBigInt(getLen(x) + 1);
+    do_add_asm(x, y, res);
+    res->negative = negative;
+    if (getLen(res) > 1 && res->bigIntArray[res->end - 1] == 0)
+        res->end -= 1;
+    return res;
 }
 
 bigInt *sub(bigInt *x, bigInt *y) {
@@ -440,13 +453,22 @@ bigInt *sub(bigInt *x, bigInt *y) {
 
     if (x->negative != y->negative) {
         if (x == subBigger)
-            return add_Asm(subBigger, subSmaller, subBigger->negative);
+            return add_helper(subBigger, subSmaller, subBigger->negative);
         else
-            return add_Asm(subBigger, subSmaller, subSmaller->negative);
+            return add_helper(subBigger, subSmaller, subSmaller->negative);
     } else {
         if (x == subBigger)
-            return sub_Asm(subBigger, subSmaller, subBigger->negative);
+            return sub_helper(subBigger, subSmaller, subBigger->negative);
         else
-            return sub_Asm(subBigger, subSmaller, !subBigger->negative);
+            return sub_helper(subBigger, subSmaller, !subBigger->negative);
     }
+}
+
+bigInt *sub_helper(bigInt *x, bigInt *y, bool negative) {
+    bigInt *res = newBigInt(getLen(x));
+    do_sub_asm(x, y, res);
+    res->negative = negative;
+    size_t blocks = getOccupiedBlocks(res);
+    res->end = res->start + blocks;
+    return res;
 }

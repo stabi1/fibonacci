@@ -1,63 +1,10 @@
 .intel_syntax noprefix
-.global add_Asm
+.global do_add_asm
+.global do_sub_asm
 .global shiftAdd_Asm
-.global sub_Asm
 .global shiftLeft_Asm
 .global shiftRight_Asm
 
-//bigInt *add_Asm(bigInt *x, bigInt *y, bool negative);
-add_Asm:
-    //rdi = x, rsi = y, rdx = negative
-    push r14
-    push r15
-    push rbx
-    push rdx
-    sub rsp, 8 //align stack pointer
-    mov r14, rdi //r14 = x
-    mov r15, rsi //r15 = y
-    mov r8, [rdi + 8]
-    sub r8, [rdi] // r8 = xLen
-    mov r9, [rsi + 8]
-    sub r9, [rsi] // r9 = yLen
-    cmp r8, r9
-    jae .LxSizeBigger
-    mov rdi, r9
-    add rdi, 1
-    call newBigInt
-    mov rdi, r15
-    mov rsi, r14
-    mov rdx, rax
-    mov rbx, rax // rbx = res
-    call addHelper_Asm
-    jmp .LResize
-.LxSizeBigger:
-    mov rdi, r8
-    add rdi, 1
-    call newBigInt
-    mov rdi, r14
-    mov rsi, r15
-    mov rdx, rax
-    mov rbx, rax // rbx = res
-    call addHelper_Asm
-.LResize:
-    //resize - rbx = res
-    mov rcx, [rbx + 24] //res->bigIntArray
-    mov rdx, [rbx + 8] //res->end
-    cmp QWORD PTR [rcx + rdx*8 - 8], 0
-    jnz .LAddEnde
-    sub rdx, [rbx]
-    cmp rdx, 1
-    jbe .LAddEnde
-    sub QWORD PTR [rbx + 8], 1
-.LAddEnde:
-    mov rax, rbx
-    add rsp, 8 //align stack pointer
-    pop rdx
-    mov [rax + 32], rdx
-    pop rbx
-    pop r15
-    pop r14
-    ret
 
 //bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n); uses SSE
 shiftAdd_Asm:
@@ -184,6 +131,7 @@ shiftAdd_Asm:
     pop r12
     ret
 
+
 //void shiftAddHelper(bigInt *bigger, bigInt *smaller, bigInt *res, size_t biggerCount, size_t smallerCount, size_t i);
 shiftAddHelper_Asm:
     //rdi = bigger, rsi = smaller, rdx = res, rcx = biggerCount, r8 = samllerCount, r9 = i
@@ -224,8 +172,9 @@ shiftAddHelper_Asm:
 
     jmp .LShiftAddHelperEntry
 
-//void addHelper(bigInt *bigger, bigInt *smaller, bigInt *res);
-addHelper_Asm:
+
+//void do_add_asm(bigInt *bigger, bigInt *smaller, bigInt *res);
+do_add_asm:
     //rdi = bigger, rsi = smaller, rdx = res
     //rcx = biggerCount, r8 = smallerCount, r9 = i
     push r12
@@ -423,59 +372,9 @@ addHelper_Asm:
     pop r12
     ret
 
-//bigInt *sub(bigInt *x, bigInt *y, bool negative)
-sub_Asm:
-    //rdi = x, rsi = y, rdx = negative
-    push r14
-    push r15
-    push rbx
-    push rdx
-    sub rsp, 8 //align stack pointer
-    mov r14, rdi //r14 = x
-    mov r15, rsi //r15 = y
-    mov r8, [rdi + 8]
-    sub r8, [rdi] // r8 = xLen
-    mov r9, [rsi + 8]
-    sub r9, [rsi] // r9 = yLen
-    cmp r8, r9
-    jae .LxSizeBiggerSub
-    mov rdi, r9
-    call newBigInt
-    mov rdi, r15
-    mov rsi, r14
-    mov rdx, rax
-    mov rbx, rax // rbx = res
-    call subHelper_Asm
-    jmp .LResizeSub
-.LxSizeBiggerSub:
-    mov rdi, r8
-    call newBigInt
-    mov rdi, r14
-    mov rsi, r15
-    mov rdx, rax
-    mov rbx, rax // rbx = res
-    call subHelper_Asm
-.LResizeSub:
-    //resize
-    mov rdi, rbx
-    call getOccupiedBlocks //erg in rax
-    add rax, [rbx]
-    mov [rbx + 8], rax
-.LSubEnde:
-    mov rax, rbx
-    add rsp, 8 //align stack pointer
-    pop rdx
-    mov [rax + 32], rdx
-    pop rbx
-    pop r15
-    pop r14
-    ret
 
-
-
-
-//*bigInt *sub(bigInt *bigger, bigInt *smaller, bigInt *res);
-subHelper_Asm:
+//*bigInt *do_sub_asm(bigInt *bigger, bigInt *smaller, bigInt *res);
+do_sub_asm:
     //rdi = bigger, rsi = smaller, rdx = res
     push r12
     push r13
@@ -663,6 +562,7 @@ subHelper_Asm:
     pop r12
     ret
 
+
 //bigInt *shiftLeft(bigInt *x, size_t n);
 shiftLeft_Asm:
     //rdi = x, rsi = n
@@ -708,6 +608,7 @@ shiftLeft_Asm:
 .LShiftLeftEnd:
     pop r15
     ret
+
 
 //bigInt *shiftRight(bigInt *x, size_t n);
 shiftRight_Asm:

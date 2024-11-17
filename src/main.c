@@ -18,14 +18,14 @@ bool handleCPUFeatures();
 
 void printMissingFeature(char *feature);
 
-const char *filename = "output.txt";
+const char *DEFAULT_FILENAME = "output.txt";
 
-//TODO add sign support to DIV,
-//TODO improve SmartAdd/SmartSub (remove asm helper part)
 //TODO Optimize for memory, maybe add swap capabilities
+//TODO make div and to_dec_string parallel
 //TODO check support for variable starting point of bigIntArray
 //TODO make output filename customizable
 //TODO help message in binary
+//TODO change makefile compilation so every file is compiled individually
 //TODO docu with comments, readme
 
 static struct option long_options[] = {
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     int option;
 
     while (optind < argc) {
-        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:c:n:", long_options, NULL)) != -1) {
+        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:c:n:p:", long_options, NULL)) != -1) {
             switch (option) {
                 case 'h':
                     printHelpMenu();
@@ -167,7 +167,7 @@ void printFibonacci(uint64_t n, char radix, char output) {
 
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    bigInt *res = fibExpFastDoubling(n);
+    bigInt *res = fibonacci(n);
 
     struct timespec end;
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -193,8 +193,8 @@ void printFibonacci(uint64_t n, char radix, char output) {
         if (output == 'f') { // File output
             char infoStr[1000];
             sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
-            if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
-            if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
+            if (writeFile(DEFAULT_FILENAME, infoStr, false) == -1) exit(EXIT_FAILURE);
+            if (writeFile(DEFAULT_FILENAME, resString, true) == -1) exit(EXIT_FAILURE);
         } else { //Terminal output (output == 't')
             printf("Result: %s\n", resString);
         }
@@ -222,69 +222,6 @@ void printFibonacci(uint64_t n, char radix, char output) {
                sizeInMB);
     }
     freeBigInt(res);
-}
-
-bigInt *fibExpFastDoubling(uint64_t n) {
-    bigInt *a = newBigInt(1);
-    bigInt *b = newBigInt(1);
-    b->bigIntArray[0] = 1;
-    unsigned int shift = 64 - custom_lzcnt(n) - 1;
-    uint64_t nBinary = ((n >> shift) << shift);
-
-    //for verbose
-    unsigned long iterations = 64 - custom_lzcnt(nBinary);
-    int counter = 1;
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    if (global_config.verbose) printf("\n");
-
-    for (; nBinary != 0; nBinary >>= 1) {
-        if (global_config.verbose) {
-            clock_gettime(CLOCK_MONOTONIC, &end);
-            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-            size_t sizeInBytes = (a->end - a->start) * 8;
-            double sizeInMB = ((double) sizeInBytes) / 1000000;
-            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s\n", counter,
-                   iterations, sizeInMB, time);
-            counter++;
-            clock_gettime(CLOCK_MONOTONIC, &start);
-        }
-        bigInt *temp1 = shiftLeft(b, 1);
-        bigInt *temp2 = sub(temp1, a);
-        freeBigInt(temp1);
-
-        bigInt *d;
-        bigInt *temp3;
-        bigInt *temp4;
-
-        d = mul(a, temp2);
-        freeBigInt(temp2);
-        temp3 = mul(a, a);
-        temp4 = mul(b, b);
-
-        freeBigInt(a);
-        freeBigInt(b);
-        bigInt *e = add(temp3, temp4);
-        freeBigInt(temp3);
-        freeBigInt(temp4);
-        a = d;
-        b = e;
-
-        // Advance by one conditionally
-        if ((n & nBinary) != 0) {
-            bigInt *c = add(a, b);
-            freeBigInt(a);
-            a = b;
-            b = c;
-        }
-    }
-    freeBigInt(b);
-    if (global_config.verbose) {
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-        printf("Time needed for last Iteration: %fs\n\n", time);
-    }
-    return a;
 }
 
 void printHelpMenu() {

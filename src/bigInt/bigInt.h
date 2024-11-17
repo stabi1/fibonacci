@@ -29,9 +29,9 @@ void printBigIntHex(bigInt *x);
 
 void printBigIntDec(bigInt *x);
 
-void writeBigIntHexToFile(bigInt *x, char* path);
+void writeBigIntHexToFile(bigInt *x, char *path);
 
-void writeBigIntDecToFile(bigInt *x, char* path);
+void writeBigIntDecToFile(bigInt *x, char *path);
 
 bigInt *readBigIntHexFromFile(char *path);
 
@@ -75,6 +75,8 @@ char *readFile(const char *path);
 
 int writeFile(const char *path, const char *string, bool append);
 
+//higherFunctions
+bigInt *fibonacci(uint64_t n);
 
 
 #endif //IMPLEMENTATION_BETTERBIGINT_H
