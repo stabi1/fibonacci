@@ -5,18 +5,13 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "main.h"
 #include "../test/tests.h"
 #include "util.h"
 #include "bigInt/config.h"
 
 void printHelpMenu();
 
-void printFibonacci(uint64_t n, char radix, char output);
-
-bool handleCPUFeatures();
-
-void printMissingFeature(char *feature);
+void printFibonacci(uint64_t n, char radix, char output, char *filename);
 
 const char *DEFAULT_FILENAME = "output.txt";
 
@@ -28,19 +23,26 @@ const char *DEFAULT_FILENAME = "output.txt";
 //TODO change makefile compilation so every file is compiled individually
 //TODO docu with comments, readme
 
+enum {
+    OPT_MAX_THREADS = 1001,
+    OPT_NUM_CORES,
+    OPT_RESULT_FILENAME
+};
+
 static struct option long_options[] = {
-        {"help",          no_argument,       NULL, 'h'},
-        {"output",        required_argument, NULL, 'o'},
-        {"multiThread",   no_argument,       NULL, 'm'},
-        {"numCores",      required_argument, NULL, 'c'},
-        {"radix",         required_argument, NULL, 'r'},
-        {"debug",         no_argument,       NULL, 'd'},
-        {"benchMark",     no_argument,       NULL, 'b'},
-        {"test",          no_argument,       NULL, 't'},
-        {"nth-fibonacci", required_argument, NULL, 'n'},
-        {"verbose",       no_argument,       NULL, 'v'},
-        {"maxThreads",    required_argument, NULL, 'p'},
-        {NULL, 0,                            NULL, 0}
+        {"help",            no_argument,       NULL, 'h'},
+        {"output",          required_argument, NULL, 'o'},
+        {"multithread",     no_argument,       NULL, 'm'},
+        {"radix",           required_argument, NULL, 'r'},
+        {"debug",           no_argument,       NULL, 'd'},
+        {"benchMark",       no_argument,       NULL, 'b'},
+        {"test",            no_argument,       NULL, 't'},
+        {"nth-fibonacci",   required_argument, NULL, 'n'},
+        {"verbose",         no_argument,       NULL, 'v'},
+        {"max_threads",     required_argument, NULL, OPT_MAX_THREADS},
+        {"num_cores",       required_argument, NULL, OPT_NUM_CORES},
+        {"result_filename", required_argument, NULL, OPT_RESULT_FILENAME},
+        {NULL, 0,                              NULL, 0}
 };
 
 Config global_config = {
@@ -50,11 +52,6 @@ Config global_config = {
 };
 
 int main(int argc, char *argv[]) {
-    bool cpuFeatures = handleCPUFeatures();
-    if (!cpuFeatures) {
-        exit(EXIT_FAILURE);
-    }
-
     if (argc == 1) {
         fprintf(stderr, "No arguments, use -h for usage\n");
         exit(EXIT_FAILURE);
@@ -69,11 +66,12 @@ int main(int argc, char *argv[]) {
     bool do_debug = false;
     bool do_test = false;
     bool do_benchmark = false;
+    char *filename = NULL;
 
     int option;
 
     while (optind < argc) {
-        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:c:n:p:", long_options, NULL)) != -1) {
+        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:n:", long_options, NULL)) != -1) {
             switch (option) {
                 case 'h':
                     printHelpMenu();
@@ -93,12 +91,19 @@ int main(int argc, char *argv[]) {
                 case 'v':
                     global_config.verbose = true;
                     break;
-                case 'c':
+                case OPT_NUM_CORES:
                     cores = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
                     break;
-                case 'p':
+                case OPT_MAX_THREADS:
                     max_threads = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
                     break;
+                case OPT_RESULT_FILENAME: {
+                    size_t len = strlen(optarg);
+                    filename = malloc(len + 1);
+                    mallocCheck(filename);
+                    strncpy(filename, optarg, len + 1);
+                    break;
+                }
                 case 'r':
                     if ((optarg[0] != 'h' && optarg[0] != 'd') || optarg[1] != '\0') {
                         fprintf(stderr, "invalid radix option \"%s\" provided, use -h for usage\n", optarg);
@@ -142,24 +147,30 @@ int main(int argc, char *argv[]) {
         else
             global_config.mulDepth = getMulDepthFromMaxThreads(max_threads);
     }
+    if (filename == NULL) {
+        size_t len = strlen(DEFAULT_FILENAME);
+        filename = malloc(len + 1);
+        mallocCheck(filename);
+        strncpy(filename, DEFAULT_FILENAME, len + 1);
+    }
+    if (global_config.verbose && output == 'f')
+        printf("Writing result in file: %s\n", filename);
 
     if (do_test) {
         test();
-        return EXIT_SUCCESS;
     } else if (do_debug) {
         bruteForceDebug();
-        return EXIT_SUCCESS;
     } else if (do_benchmark) {
         benchMark();
-        return EXIT_SUCCESS;
+    } else {
+        printFibonacci(n, radix, output, filename);
     }
 
-    printFibonacci(n, radix, output);
-
+    free(filename);
     return EXIT_SUCCESS;
 }
 
-void printFibonacci(uint64_t n, char radix, char output) {
+void printFibonacci(uint64_t n, char radix, char output, char *filename) {
     size_t estimatedSizeInBytes = (size_t) (0.0868 * (double) n + 3.8275);
     double sizeInMBEst = ((double) estimatedSizeInBytes) / 1000000;
     printf("Starting calculation for n=%zu | estimated size in bytes:%zu in MB:%0.2f\n", n, estimatedSizeInBytes,
@@ -193,8 +204,9 @@ void printFibonacci(uint64_t n, char radix, char output) {
         if (output == 'f') { // File output
             char infoStr[1000];
             sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
-            if (writeFile(DEFAULT_FILENAME, infoStr, false) == -1) exit(EXIT_FAILURE);
-            if (writeFile(DEFAULT_FILENAME, resString, true) == -1) exit(EXIT_FAILURE);
+            if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
+            if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
+            if (global_config.verbose) printf("Result written into file %s\n", filename);
         } else { //Terminal output (output == 't')
             printf("Result: %s\n", resString);
         }
@@ -225,42 +237,21 @@ void printFibonacci(uint64_t n, char radix, char output) {
 }
 
 void printHelpMenu() {
-    char *fileName = "HelpMenu.txt";
-    char *helpMenuText = readFile(fileName);
-    if (helpMenuText == NULL) {
-        fprintf(stderr, "Error printing help message");
-        exit(EXIT_FAILURE);
-    }
+    char *helpMenuText = "Usage:\n"
+                         "fibonacci:  -o -> output f|t|n (f=file, t=terminal, n=none); default value: t\n"
+                         "            -r -> radix d|h (d=decimal, h=hexadecimal); default value: h\n"
+                         "            -m -> enables multithreading; default value: false\n"
+                         "            -n -> nth-fibonacci number; default value: 0 | n needs to be a positive 64bit integer\n"
+                         "\n"
+                         "            e.g.: ./fib -o f -r d -n 10000000\n"
+                         "\n"
+                         "            The default filename is output.txt | if the file exists, it will be overwritten\n"
+                         "\n"
+                         "miscellaneous:  -h -> display this help message\n"
+                         "                -d -> debug\n"
+                         "                -t -> test\n"
+                         "                -b -> benchMark\n"
+                         "                -v -> verbose\n"
+                         "                --result_filename -> set filename for output file\n";
     printf("%s\n", helpMenuText);
-}
-
-bool handleCPUFeatures() {
-    __builtin_cpu_init();
-    if (!__builtin_cpu_supports("sse")) {
-        printMissingFeature("sse");
-        return false;
-    } else if (!__builtin_cpu_supports("sse2")) {
-        printMissingFeature("sse2");
-        return false;
-    } else if (!__builtin_cpu_supports("sse3")) {
-        printMissingFeature("sse3");
-        return false;
-    } else if (!__builtin_cpu_supports("sse4.1")) {
-        printMissingFeature("sse4.1");
-        return false;
-    } else if (!__builtin_cpu_supports("sse4.2")) {
-        printMissingFeature("sse4.2");
-        return false;
-    } else if (!__builtin_cpu_supports("avx")) {
-        printMissingFeature("avx");
-        return false;
-    } else if (!__builtin_cpu_supports("avx2")) {
-        printMissingFeature("avx2");
-        return false;
-    }
-    return true;
-}
-
-void printMissingFeature(char *feature) {
-    fprintf(stderr, "Missing Feature: %s; program terminated\n", feature);
 }

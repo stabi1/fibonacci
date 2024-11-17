@@ -8,8 +8,6 @@
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
-void mallocCheck(void *p);
-
 char *uint64tArrayToHexString(uint64_t *array, size_t lenInNibbles, size_t start, bool negative);
 
 void decStringToBigIntHelper(uint64_t *array, size_t arrayLen, const char *decStr, size_t decStrLen);

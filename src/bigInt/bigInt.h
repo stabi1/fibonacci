@@ -69,6 +69,8 @@ size_t bitLength(bigInt *x);
 size_t getLen(bigInt *x);
 
 //misc utility
+void mallocCheck(void *p);
+
 size_t custom_lzcnt(uint64_t n);
 
 char *readFile(const char *path);
