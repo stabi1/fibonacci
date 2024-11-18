@@ -51,7 +51,7 @@ def handler(signum, frame):
     print("Caught signal, preventing exit")
 
 
-big_int_lib = ctypes.CDLL('./test/bigInt.so')
+big_int_lib = ctypes.CDLL('./pytest/bigInt.so')
 
 # bigInt *newBigInt(size_t len);
 big_int_lib.newBigInt.argtypes = [ctypes.c_size_t]

@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "../test/tests.h"
+#include "test/tests.h"
 #include "util.h"
 #include "bigInt/config.h"
 

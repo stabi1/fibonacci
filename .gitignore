@@ -19,3 +19,6 @@ output.txt
 **/**.so
 venv
 **/__pycache__
+**/**.o
+build
+build/**
