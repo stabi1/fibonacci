@@ -37,6 +37,10 @@ bigInt *readBigIntHexFromFile(char *path);
 
 bigInt *readBigIntDecFromFile(char *path);
 
+char *storeBigIntInSwap(bigInt *x);
+
+bigInt *loadBigIntFromSwap(bigInt *x, char *filename);
+
 // calc methods
 bigInt *sub(bigInt *x, bigInt *y);
 

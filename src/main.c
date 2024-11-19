@@ -18,15 +18,15 @@ const char *DEFAULT_FILENAME = "output.txt";
 //TODO Optimize for memory, maybe add swap capabilities
 //TODO make div and to_dec_string parallel
 //TODO check support for variable starting point of bigIntArray
-//TODO make output filename customizable
-//TODO help message in binary
-//TODO change makefile compilation so every file is compiled individually
-//TODO docu with comments, readme
+//TODO fix makefile
+//TODO docu with comments, readme, help-message
 
 enum {
     OPT_MAX_THREADS = 1001,
     OPT_NUM_CORES,
-    OPT_RESULT_FILENAME
+    OPT_RESULT_FILENAME,
+    OPT_DO_SWAP,
+    OPT_SWAP_THRESHOLD
 };
 
 static struct option long_options[] = {
@@ -41,14 +41,18 @@ static struct option long_options[] = {
         {"verbose",         no_argument,       NULL, 'v'},
         {"max_threads",     required_argument, NULL, OPT_MAX_THREADS},
         {"num_cores",       required_argument, NULL, OPT_NUM_CORES},
-        {"result_filename", required_argument, NULL, OPT_RESULT_FILENAME},
+        {"result-filename", required_argument, NULL, OPT_RESULT_FILENAME},
+        {"do-swap",         no_argument,       NULL, OPT_DO_SWAP},
+        {"swap-threshold",  required_argument, NULL, OPT_SWAP_THRESHOLD},
         {NULL, 0,                              NULL, 0}
 };
 
 Config global_config = {
         .verbose = false,
         .parallel = false,
-        .mulDepth = 0
+        .mulDepth = 0,
+        .swap = false,
+        .swapThreshold = 100
 };
 
 int main(int argc, char *argv[]) {
@@ -97,6 +101,12 @@ int main(int argc, char *argv[]) {
                 case OPT_MAX_THREADS:
                     max_threads = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
                     break;
+                case OPT_DO_SWAP:
+                    global_config.swap = true;
+                    break;
+                case OPT_SWAP_THRESHOLD:
+                    global_config.swapThreshold = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 0);
+                    break;
                 case OPT_RESULT_FILENAME: {
                     size_t len = strlen(optarg);
                     filename = malloc(len + 1);
@@ -135,6 +145,9 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
     }
+
+    if (global_config.verbose && global_config.swap)
+        printf("Swapping is activated with threshold: %lu MB\n", global_config.swapThreshold);
 
     if (global_config.parallel) {
         printf("Multithreading enabled\n");

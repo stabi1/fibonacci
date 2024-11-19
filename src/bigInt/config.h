@@ -8,7 +8,9 @@
 typedef struct {
     bool verbose;
     bool parallel;
-    bool mulDepth;
+    size_t mulDepth;
+    bool swap;
+    size_t swapThreshold; // in MB
 } Config;
 
 extern Config global_config;

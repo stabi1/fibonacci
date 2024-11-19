@@ -22,3 +22,5 @@ venv
 **/**.o
 build
 build/**
+swap_storage/**
+swap_storage

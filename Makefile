@@ -1,8 +1,9 @@
 # Flags
-NEED_FLAGS=-O3 -pthread -lpthread -march=native -z noexecstack
+NEED_FLAGS=-pthread -lpthread -march=native -z noexecstack
+PERFORMANCE_FLAGS=-O3 -flto -fuse-linker-plugin
 WARNING_FLAGS=-Wall -Wextra
 LINKER_FLAGS=-lm
-DEBUG_FLAGS=-g -no-pie
+DEBUG_FLAGS=-O1 -g -no-pie
 SANITIZER_FLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsanitize=leak
 TEST_FLAGS=-fPIC
 
@@ -18,7 +19,7 @@ OUTPUT_LIBNAME=test/bigInt.so
 all: main
 
 main: TARGET_NAME=main
-main: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS)
+main: CFLAGS=$(NEED_FLAGS) $(PERFORMANCE_FLAGS) $(WARNING_FLAGS)
 main: $(OUTPUT_FILENAME)
 
 debug: TARGET_NAME+=debug
@@ -30,7 +31,7 @@ sanitize: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(DEBUG_FLAGS) $(SANITIZER_FLAGS
 sanitize: $(OUTPUT_FILENAME)
 
 test: TARGET_NAME=test
-test: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(TEST_FLAGS)
+test: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(TEST_FLAGS) $(PERFORMANCE_FLAGS)
 test: $(OUTPUT_LIBNAME)
 
 # BUILD_DIR=$(BUILD_ROOT)/$(TARGET_NAME) TODO

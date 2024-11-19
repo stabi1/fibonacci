@@ -1,8 +1,49 @@
-#include "bigInt.h"
+#include "bigIntIO.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include "config.h"
+
+const char *NOT_STORED = "NOT_STORED";
+const char *FILE_ENDING = ".bigint";
+const char *SWAP_DIR = "swap_storage/";
+
+__uint128_t counter = 0;
+
+char *get_32_hex_string() {
+    unsigned char *hex_str = malloc(33);
+    mallocCheck(hex_str);
+    for (int i = 31; i >= 0; --i) {
+        uint8_t digit = counter >> (i * 4) & 0xF;
+        hex_str[31 - i] = (digit < 10) ? (unsigned char) ('0' + digit) : (unsigned char) ('A' + (digit - 10));
+    }
+    hex_str[32] = '\0';
+    counter++;
+    return (char *) hex_str;
+}
+
+char *getFilename() {
+    size_t endingLen = strlen(FILE_ENDING);
+    char *filename;
+    while (true) {
+        char *file_prefix = get_32_hex_string();
+        size_t prefixLen = strlen(file_prefix);
+        size_t pathLen = strlen(SWAP_DIR);
+        filename = malloc(pathLen + prefixLen + endingLen + 1);
+        strncpy(filename, SWAP_DIR, pathLen);
+        strncpy(filename + pathLen, file_prefix, prefixLen);
+        strncpy(filename + pathLen + prefixLen, FILE_ENDING, endingLen);
+        filename[pathLen + prefixLen + endingLen] = '\0';
+        free(file_prefix);
+        if (!fileExists(filename)) {
+            break;
+        } else {
+            free(filename);
+        }
+    }
+    return filename;
+}
 
 //prints bigInt in Hex
 void printBigIntHex(bigInt *x) {
@@ -18,13 +59,13 @@ void printBigIntDec(bigInt *x) {
     free(tmp);
 }
 
-void writeBigIntHexToFile(bigInt *x, char* path) {
+void writeBigIntHexToFile(bigInt *x, char *path) {
     char *tmp = bigIntToHexString(x);
     writeFile(path, tmp, false);
     free(tmp);
 }
 
-void writeBigIntDecToFile(bigInt *x, char* path) {
+void writeBigIntDecToFile(bigInt *x, char *path) {
     char *tmp = bigIntToDecString(x);
     writeFile(path, tmp, false);
     free(tmp);
@@ -32,15 +73,63 @@ void writeBigIntDecToFile(bigInt *x, char* path) {
 
 bigInt *readBigIntHexFromFile(char *path) {
     char *fileContent = readFile(path);
-    if(fileContent == NULL) exit(EXIT_FAILURE);
-    bigInt* res = hexStringToBigInt(fileContent);
+    if (fileContent == NULL) exit(EXIT_FAILURE);
+    bigInt *res = hexStringToBigInt(fileContent);
     return res;
 }
 
 bigInt *readBigIntDecFromFile(char *path) {
     char *fileContent = readFile(path);
-    if(fileContent == NULL) exit(EXIT_FAILURE);
-    bigInt* res = decStringToBigInt(fileContent);
+    if (fileContent == NULL) exit(EXIT_FAILURE);
+    bigInt *res = decStringToBigInt(fileContent);
+    return res;
+}
+
+inline __attribute__((always_inline)) char *storeBigIntInSwap(bigInt *x) {
+    if (!global_config.swap || getLen(x) * 8 < global_config.swapThreshold * 1000000) {
+        size_t l = strlen(NOT_STORED);
+        char *res = malloc(l + 1);
+        strncpy(res, NOT_STORED, l + 1);
+        return res;
+    }
+    return doStoreBigIntInSwap(x);
+}
+
+inline __attribute__((always_inline)) bigInt *loadBigIntFromSwap(bigInt *x, char *filename) {
+    if (strcmp(filename, NOT_STORED) == 0) {
+        free(filename);
+        return x;
+    }
+    return doLoadBigIntFromSwap(filename);
+}
+
+char *doStoreBigIntInSwap(bigInt *x) {
+    //build filename
+    char *filename = getFilename();
+    //check swap directory
+    if (!directoryExists(SWAP_DIR)) {
+        int status = createDirectory(SWAP_DIR);
+        if (status == -1) {
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    //write to file
+    int status = writeBigIntToFile(filename, x);
+    if (status == -1) {
+        exit(EXIT_FAILURE);
+    }
+    freeBigInt(x);
+    return filename;
+}
+
+bigInt *doLoadBigIntFromSwap(char *filename) {
+    bigInt *res = readBigIntFromFile(filename);
+    if (res == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    removeFile(filename);
+    free(filename);
     return res;
 }
 
@@ -69,7 +158,7 @@ char *readFile(const char *path) {
     }
     if (fread(string, 1, statbuf.st_size, file) != (size_t) statbuf.
             st_size) {
-        fprintf(stderr, "Error reading file");
+        perror("Error reading file");
         free(string);
         string = NULL;
         goto cleanup;
@@ -89,11 +178,148 @@ int writeFile(const char *path, const char *string, bool append) {
         perror("Error opening file");
         return -1;
     }
-    const size_t stringlen = strlen(string);
-    if (fwrite(string, 1, stringlen, file) != stringlen) {
-        fprintf(stderr, "Error writing to file \n");
+    const size_t stringLen = strlen(string);
+    if (fwrite(string, 1, stringLen, file) != stringLen) {
+        perror("Error writing to file");
+        fclose(file);
         return -1;
     }
     fclose(file);
     return 0;
+}
+
+bigInt *readBigIntFromFile(const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        perror("Error opening file");
+        return NULL;
+    }
+
+    bigInt *res = (bigInt *) malloc(sizeof(bigInt));
+    if (res == NULL) {
+        perror("Failed to allocate memory for bigInt");
+        fclose(file);
+        return NULL;
+    }
+
+    // Load the primitive fields
+    if (fread(&res->start, sizeof(size_t), 1, file) != 1) {
+        perror("Error reading file");
+        free(res);
+        fclose(file);
+        return NULL;
+    }
+    if (fread(&res->end, sizeof(size_t), 1, file) != 1) {
+        perror("Error reading file");
+        free(res);
+        fclose(file);
+        return NULL;
+    }
+    if (fread(&res->arrayOwner, sizeof(bool), 1, file) != 1) {
+        perror("Error reading file");
+        free(res);
+        fclose(file);
+        return NULL;
+    }
+    if (fread(&res->negative, sizeof(bool), 1, file) != 1) {
+        perror("Error reading file");
+        free(res);
+        fclose(file);
+        return NULL;
+    }
+
+    // Load the bigIntArray length and data
+    size_t arrayLength = res->end - res->start;
+    res->bigIntArray = (uint64_t *) malloc(arrayLength * sizeof(uint64_t));
+    if (!res->bigIntArray) {
+        perror("Failed to allocate memory for bigIntArray");
+        free(res);
+        return NULL;
+    }
+    if (fread(res->bigIntArray, sizeof(uint64_t), arrayLength, file) != arrayLength) {
+        perror("Error reading file");
+        free(res);
+        fclose(file);
+        return NULL;
+    }
+
+    fclose(file);
+    return res;
+}
+
+int writeBigIntToFile(const char *filename, const bigInt *b) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    // Save the primitive fields
+    if (fwrite(&b->start, sizeof(size_t), 1, file) != 1) {
+        perror("Error writing to file");
+        fclose(file);
+        return -1;
+    }
+    if (fwrite(&b->end, sizeof(size_t), 1, file) != 1) {
+        perror("Error writing to file");
+        fclose(file);
+        return -1;
+    }
+    if (fwrite(&b->arrayOwner, sizeof(bool), 1, file) != 1) {
+        perror("Error writing to file");
+        fclose(file);
+        return -1;
+    }
+    if (fwrite(&b->negative, sizeof(bool), 1, file) != 1) {
+        perror("Error writing to file");
+        fclose(file);
+        return -1;
+    }
+
+    // Save the bigIntArray length and data
+    size_t arrayLength = b->end - b->start;
+    if (fwrite(b->bigIntArray, sizeof(uint64_t), arrayLength, file) != arrayLength) {
+        perror("Error writing to file");
+        fclose(file);
+        return -1;
+    }
+
+    fclose(file);
+    return 0;
+}
+
+void removeFile(const char *path) {
+    if (remove(path) != 0)
+        perror("Error deleting file");
+}
+
+bool fileExists(const char *path) {
+    FILE *file = fopen(path, "r");
+    if (file != NULL) {
+        fclose(file);
+        return true;
+    }
+    return false;
+}
+
+int createDirectory(const char *path) {
+    if (mkdir(path, 0755) == 0) {
+        return 0;
+    } else {
+        perror("Error creating directory");
+        return -1;
+    }
+}
+
+int directoryExists(const char *path) {
+    struct stat info;
+    if (stat(path, &info) != 0)
+        return false;
+
+    if (info.st_mode & S_IFDIR) {
+        return true;
+    } else {
+        // The path exists but is not a directory
+        return false;
+    }
 }
