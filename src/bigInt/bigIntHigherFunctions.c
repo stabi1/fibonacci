@@ -43,16 +43,29 @@ bigInt *fibExpFastDoubling(uint64_t n) {
         bigInt *temp3;
         bigInt *temp4;
 
+        //to swap: b
+        char* filename_b = storeBigIntInSwap(b);
         d = mul(a, temp2);
         freeBigInt(temp2);
+
+        //to swap: b, d
+        char* filename_d = storeBigIntInSwap(d);
         temp3 = mul(a, a);
         freeBigInt(a);
-        temp4 = mul(b, b);
 
+
+        //to swap: d, temp3
+        char* filename_temp3 = storeBigIntInSwap(temp3);
+        b = loadBigIntFromSwap(b, filename_b);
+        temp4 = mul(b, b);
         freeBigInt(b);
+        temp3 = loadBigIntFromSwap(temp3, filename_temp3);
+
         bigInt *e = add(temp3, temp4);
         freeBigInt(temp3);
         freeBigInt(temp4);
+
+        d = loadBigIntFromSwap(d, filename_d);
         a = d;
         b = e;
 

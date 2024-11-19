@@ -1,26 +1,38 @@
+#Cmake and CLion
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
-Testing
 CMakeLists.txt
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
-main
-fib
+cmake-build-debug
 .idea/
+
+#Perf
 perf.data
 perf.data.old
-cmake-build-debug
-output.txt
-**/**.so
+
+#Python
 venv
 **/__pycache__
+
+#Swap
+swap_storage/**
+swap_storage
+
+#Compilation:
 **/**.o
 build
 build/**
-swap_storage/**
-swap_storage
+
+#Compilation results:
+fib
+**/**.so
+
+#Output files:
+output.txt
+res.txt

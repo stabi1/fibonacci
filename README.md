@@ -3,8 +3,13 @@ Compute the nth fibonacci number. Optimized for speed with my own bignum impleme
 
 
 ## Memory
-Single Thread fibonacci takes up around 5.5 times the memory of size of the predicted result
-E.g. result size is 40 MB, then peak memory usage is around 220 MB
+
+Single thread fibonacci takes up around 5.5 times as much memory as the size of the predicted result.
+Single thread conversion to decimal takes around 9 times as much memory as the size of the predicted result.
+
+Example for n=500000000; the result size is 40 MB:
+* Then peak memory usage is around 220 MB
+* Then peak memory usage for the conversion to decimal is 360 MB
 
 ## Requirements
 The OS must be Linux!
