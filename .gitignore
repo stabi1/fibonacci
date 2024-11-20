@@ -36,3 +36,6 @@ fib
 #Output files:
 output.txt
 res.txt
+
+# plots
+*.png

@@ -30,8 +30,10 @@ bigInt *fibExpFastDoubling(uint64_t n) {
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
             size_t sizeInBytes = (a->end - a->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
-            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s\n", counter,
-                   iterations, sizeInMB, time);
+            char* localTime = getCurrentDateTime();
+            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s; Time: %s\n", counter,
+                   iterations, sizeInMB, time, localTime);
+            free(localTime);
             counter++;
             clock_gettime(CLOCK_MONOTONIC, &start);
         }

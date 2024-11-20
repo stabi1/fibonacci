@@ -8,7 +8,7 @@ SANITIZER_FLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsa
 TEST_FLAGS=-fPIC
 
 # Source files
-SOURCE_FILES_C=src/main.c src/util.c src/bigInt/bigIntMul.c src/bigInt/bigIntDiv.c src/bigInt/bigIntMethods.c src/bigInt/bigIntIO.c src/test/tests.c src/bigInt/bigIntUtil.c src/bigInt/config.c src/bigInt/bigIntHigherFunctions.c
+SOURCE_FILES_C=src/main.c src/util.c src/bigInt/bigIntMul.c src/bigInt/bigIntDiv.c src/bigInt/bigIntMethods.c src/bigInt/bigIntIO.c src/test/tests.c src/bigInt/bigIntUtil.c src/bigInt/config.c src/bigInt/bigIntHigherFunctions.c src/bigInt/misc.c
 SOURCE_FILES_S=src/bigInt/bigIntAsm.S src/bigInt/mulAsm.S
 
 BUILD_ROOT=build
@@ -60,7 +60,10 @@ $(BUILD_DIR)/%.o: src/%.S
 setup:
 	sudo apt install python3-full python3-pip
 	python3 -m venv ./venv
+	source ./venv/bin/activate
+	pip3 install --upgrade pip
 	pip install pytest
+	pip install psutil
 
 clean:
 	rm -f $(OUTPUT_FILENAME)

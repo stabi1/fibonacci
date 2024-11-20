@@ -1,0 +1,4 @@
+#ifndef FIBONACCI_MISC_H
+#define FIBONACCI_MISC_H
+
+#endif //FIBONACCI_MISC_H

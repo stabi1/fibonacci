@@ -81,6 +81,8 @@ char *readFile(const char *path);
 
 int writeFile(const char *path, const char *string, bool append);
 
+char *getCurrentDateTime();
+
 //higherFunctions
 bigInt *fibonacci(uint64_t n);
 
