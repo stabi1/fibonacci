@@ -14,7 +14,7 @@ SOURCE_FILES_S=src/bigInt/bigIntAsm.S src/bigInt/mulAsm.S
 BUILD_ROOT=build
 
 OUTPUT_FILENAME=fib
-OUTPUT_LIBNAME=test/bigInt.so
+OUTPUT_LIBNAME=pytest/bigInt.so
 
 all: main
 
@@ -33,6 +33,7 @@ sanitize: $(OUTPUT_FILENAME)
 test: TARGET_NAME=test
 test: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(TEST_FLAGS) $(PERFORMANCE_FLAGS)
 test: $(OUTPUT_LIBNAME)
+	pytest
 
 # BUILD_DIR=$(BUILD_ROOT)/$(TARGET_NAME) TODO
 BUILD_DIR=$(BUILD_ROOT)

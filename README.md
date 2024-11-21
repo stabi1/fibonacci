@@ -11,6 +11,8 @@ Example for n=500000000; the result size is 40 MB:
 * Then peak memory usage is around 220 MB
 * Then peak memory usage for the conversion to decimal is 360 MB
 
+TMP: ./fib -o n -v --do-swap --swap-threshold 1 -n 500000000
+
 ## Requirements
 The OS must be Linux!
 

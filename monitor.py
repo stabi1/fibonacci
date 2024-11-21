@@ -10,11 +10,13 @@ import subprocess
 data: List[Tuple[int, int, float]] = []
 
 
-def calculate_plot():
+def calculate_plot(command: str):
     # Extracting the components from data
     memory_size = [item[0] for item in data]
     swap_size = [item[1] for item in data]
     timestamps = [item[2] for item in data]
+
+    print(f"Max memory: {human_readable_size(max(memory_size))}; Max swap: {human_readable_size(max(swap_size))}")
 
     # Convert timestamps to a more readable format if needed (seconds -> hours:minutes:seconds)
     readable_time = [timestamp for timestamp in timestamps]  # Use as-is or convert if needed
@@ -27,6 +29,7 @@ def calculate_plot():
     plt.plot(readable_time, swap_size, label="Swap Size (KB)", color="red", marker="x")
 
     plt.title("Memory and Swap Size Over Time")
+    plt.suptitle(f"Command: {' '.join(command)}")
     plt.xlabel("Timestamp (seconds)")
     plt.ylabel("Size (KB)")
     plt.legend()
@@ -65,10 +68,12 @@ def get_swap_storage_size() -> str:
         return f"Error: {str(e)}"
 
 
-def monitor_process(pid):
+def monitor_process(pid) -> str:
     start_time = time.perf_counter()
+    command: str = ""
     try:
         process = psutil.Process(pid)
+        command = process.cmdline()
         while True:
             # Get the size of the swap_storage folder
             swap_size: int = int(get_swap_storage_size())
@@ -93,6 +98,7 @@ def monitor_process(pid):
         data.append((0, 0, data[-1][2] + 1))
     except psutil.AccessDenied:
         print("Access denied to process information.")
+    return command
 
 
 if __name__ == '__main__':
@@ -104,7 +110,7 @@ if __name__ == '__main__':
             break
 
     if pid_to_monitor:
-        monitor_process(pid_to_monitor)
-        calculate_plot()
+        command_ret = monitor_process(pid_to_monitor)
+        calculate_plot(command_ret)
     else:
         print("Process './fib' not found.")

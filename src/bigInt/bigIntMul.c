@@ -3,11 +3,10 @@
 #include "bigIntMul.h"
 #include "mulAsm.h"
 #include "bigIntAsm.h"
-#include "bigIntUtil.h"
 #include "bigIntDiv.h"
 #include "config.h"
 
-size_t NAIVLEMUL_FASTER = 60; //Size when naiveMul is faster than karatsuba
+size_t NAIVEMUL_FASTER = 60; //Size when naiveMul is faster than karatsuba
 size_t KARATSUBA_FASTER = 200; //Size when karatsuba is faster than toom-cook
 size_t PARALLEL_FASTER = 1000; //Size when toom-cook-multithread is faster than toom-cook
 
@@ -56,7 +55,7 @@ bigInt *mulExecute(bigInt *x, bigInt *y) {
     }
 
     size_t yLen = getLen(y);
-    if (yLen <= NAIVLEMUL_FASTER) {
+    if (yLen <= NAIVEMUL_FASTER) {
         return naiveMul_Asm(x, y);
     } else if (yLen <= KARATSUBA_FASTER) {
         return karatsuba(x, y);
@@ -71,7 +70,7 @@ bigInt *mulParallelExecute(bigInt *x, bigInt *y) {
     }
 
     size_t yLen = getLen(y);
-    if (yLen <= NAIVLEMUL_FASTER) {
+    if (yLen <= NAIVEMUL_FASTER) {
         return naiveMul_Asm(x, y);
     } else if (yLen <= KARATSUBA_FASTER) {
         return karatsuba(x, y);
@@ -139,52 +138,64 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *b1 = slicesB[1];
     bigInt *b0 = slicesB[0];
 
+    // (not used in mul): nothing
     bigInt *v0 = mulSingleThread(a0, b0);
+    char* filename_v0 = storeBigIntInSwap(v0);
     bigInt *da1 = add(a2, a0);
     bigInt *db1 = add(b2, b0);
     bigInt *temp1 = sub(db1, b1);
+    char* filename_db1 = storeBigIntInSwap(db1);
     bigInt *temp2 = sub(da1, a1);
+    char* filename_da1 = storeBigIntInSwap(da1);
+    // in swap (not used in mul): v0, da1 db1
     bigInt *vm1 = mulSingleThread(temp1, temp2);
+    char* filename_vm1 = storeBigIntInSwap(vm1);
     freeBigInt(temp1);
     freeBigInt(temp2);
 
+    da1 = loadBigIntFromSwap(da1, filename_da1);
     bigInt *da2 = add(da1, a1);
     freeBigInt(da1);
-    freeBigInt(a1);
+    db1 = loadBigIntFromSwap(db1, filename_db1);
     bigInt *db2 = add(db1, b1);
     freeBigInt(db1);
-    freeBigInt(b1);
+    // in swap (not used in mul): v0, vm1
     bigInt *v1 = mulSingleThread(da2, db2);
+    char* filename_v1 = storeBigIntInSwap(v1);
     bigInt *temp3 = add(da2, a2);
     freeBigInt(da2);
     bigInt *temp4 = shiftLeft_Asm(temp3, 1);
     freeBigInt(temp3);
     bigInt *temp5 = sub(temp4, a0);
     freeBigInt(temp4);
-    freeBigInt(a0);
     bigInt *temp6 = add(db2, b2);
     freeBigInt(db2);
     bigInt *temp7 = shiftLeft_Asm(temp6, 1);
     freeBigInt(temp6);
     bigInt *temp8 = sub(temp7, b0);
     freeBigInt(temp7);
-    freeBigInt(b0);
+    // in swap (not used in mul): v0, vm1
     bigInt *v2 = mulSingleThread(temp5, temp8);
     freeBigInt(temp8);
     freeBigInt(temp5);
+    char* filename_v2 = storeBigIntInSwap(v2);
+    // in swap (not used in mul): v0, vm1, v2
     bigInt *vInf = mulSingleThread(a2, b2);
-    freeBigInt(a2);
-    freeBigInt(b2);
-
+    char* filename_vInf = storeBigIntInSwap(vInf);
+    vm1 = loadBigIntFromSwap(vm1, filename_vm1);
+    v2 = loadBigIntFromSwap(v2, filename_v2);
     bigInt *temp9 = sub(v2, vm1);
     freeBigInt(v2);
     bigInt *t2 = exactDivideBy3(temp9);
     freeBigInt(temp9);
+    v1 = loadBigIntFromSwap(v1, filename_v1);
     bigInt *temp10 = sub(v1, vm1);
     freeBigInt(vm1);
     bigInt *tm1 = shiftRight_Asm(temp10, 1);
     freeBigInt(temp10);
+    v0 = loadBigIntFromSwap(v0, filename_v0);
     bigInt *t1 = sub(v1, v0);
+    filename_v0 = storeBigIntInSwap(v0);
     freeBigInt(v1);
     bigInt *temp11 = sub(t2, t1);
     freeBigInt(t2);
@@ -192,6 +203,7 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     freeBigInt(temp11);
     bigInt *temp12 = sub(t1, tm1);
     freeBigInt(t1);
+    vInf = loadBigIntFromSwap(vInf, filename_vInf);
     bigInt *t1_2 = sub(temp12, vInf);
     freeBigInt(temp12);
     bigInt *temp13 = shiftLeft_Asm(vInf, 1);
@@ -210,9 +222,18 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *temp16 = shiftAdd(tm2, temp15, k);
     freeBigInt(temp15);
     freeBigInt(tm2);
+    v0 = loadBigIntFromSwap(v0, filename_v0);
     bigInt *result = shiftAdd(v0, temp16, k);
     freeBigInt(temp16);
     freeBigInt(v0);
+
+    freeBigInt(a0);
+    freeBigInt(a1);
+    freeBigInt(a2);
+    freeBigInt(b0);
+    freeBigInt(b1);
+    freeBigInt(b2);
+
     return result;
 }
 
