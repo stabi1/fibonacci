@@ -20,4 +20,6 @@ int createDirectory(const char *path);
 
 int directoryExists(const char *path);
 
+int delete_files_in_folder(const char *folder_path);
+
 #endif //FIBONACCI_BIGINTIO_H

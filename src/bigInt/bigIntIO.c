@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <signal.h>
+#include <dirent.h>
+#include <unistd.h>
 #include "config.h"
 
 const char *NOT_STORED = "NOT_STORED";
@@ -10,6 +13,22 @@ const char *FILE_ENDING = ".bigint";
 const char *SWAP_DIR = "swap_storage/";
 
 __uint128_t counter = 0;
+
+void handleSignals(int sig, siginfo_t *info, void *context) {
+    (void) info;     // Unused parameter
+    (void) context;  // Unused parameter
+    if (sig == SIGTERM || sig == SIGINT) {
+        printf("\nSIGINT or SIGTERM received, cleaning up resources\n");
+        fflush(stdout); // Ensure the output is immediately visible
+        int status = delete_files_in_folder(SWAP_DIR);
+        if (status == 0) {
+            printf("Cleanup successful, exiting\n");
+        } else {
+            printf("Errors occurred during cleanup, exiting\n");
+        }
+        exit(EXIT_FAILURE);
+    }
+}
 
 char *get_32_hex_string() {
     unsigned char *hex_str = malloc(33);
@@ -322,4 +341,35 @@ int directoryExists(const char *path) {
         // The path exists but is not a directory
         return false;
     }
+}
+
+int delete_files_in_folder(const char *folder_path) {
+    struct dirent *entry;
+    DIR *dir = opendir(folder_path);
+    bool error = false;
+
+    if (dir == NULL) {
+        perror("opendir");
+        return -1;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        // Skip special entries "." and ".."
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        // Construct the full path to the file
+        char file_path[4096];
+        snprintf(file_path, sizeof(file_path), "%s/%s", folder_path, entry->d_name);
+
+        // Attempt to delete the file
+        if (unlink(file_path) == -1) {
+            perror(file_path);
+            error = true;
+        }
+    }
+
+    closedir(dir);
+    return error ? -1 : 0;
 }

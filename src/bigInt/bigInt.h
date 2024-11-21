@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <signal.h>
+
+#include "config.h"
 
 #define IMPLEMENTATION_BETTERBIGINT_H
 
@@ -82,6 +85,8 @@ char *readFile(const char *path);
 int writeFile(const char *path, const char *string, bool append);
 
 char *getCurrentDateTime();
+
+void handleSignals(int sig, siginfo_t *info, void *context);
 
 //higherFunctions
 bigInt *fibonacci(uint64_t n);

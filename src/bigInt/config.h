@@ -13,7 +13,13 @@ typedef struct {
     size_t swapThreshold; // in MB
 } Config;
 
-extern Config global_config;
+Config global_config = {
+        .verbose = false,
+        .parallel = false,
+        .mulDepth = 0,
+        .swap = false,
+        .swapThreshold = 100
+};
 
 size_t getMulDepthFromMaxThreads(size_t maxThreads);
 

@@ -4,10 +4,11 @@
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
+#include <signal.h>
 
 #include "test/tests.h"
+#include "bigInt/bigInt.h"
 #include "util.h"
-#include "bigInt/config.h"
 
 void printHelpMenu();
 
@@ -49,18 +50,23 @@ static struct option long_options[] = {
         {NULL, 0,                              NULL, 0}
 };
 
-Config global_config = {
-        .verbose = false,
-        .parallel = false,
-        .mulDepth = 0,
-        .swap = false,
-        .swapThreshold = 100
-};
-
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         fprintf(stderr, "No arguments, use -h for usage\n");
         exit(EXIT_FAILURE);
+    }
+
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = handleSignals;
+    sa.sa_flags = SA_SIGINFO;
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        perror("Error registering SIGINT handler");
+        return 1;
+    }
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        perror("Error registering SIGTERM handler");
+        return 1;
     }
 
     // default values
@@ -216,13 +222,15 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename) {
             strSizeInBytes = strlen(resString);
         }
 
-        if (output == 'f') { // File output
+        if (output == 'f') {
+            // File output
             char infoStr[1000];
             sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
             if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
             if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
             if (global_config.verbose) printf("Result written into file %s\n", filename);
-        } else { //Terminal output (output == 't')
+        } else {
+            //Terminal output (output == 't')
             printf("Result: %s\n", resString);
         }
 
@@ -258,11 +266,11 @@ void printHelpMenu() {
                          "            -m -> enables multithreading; default value: false\n"
                          "            -n -> nth-fibonacci number; default value: 0 | n needs to be a positive 64bit integer\n"
                          "\n"
-                         "            e.g.: "
+                         "            e.g.:\n "
                          "                  Calculate 10000000t fibonacci number and write the result in decimal into the file res.txt\n"
                          "                  ./fib -o f -r d --result-filename res.txt -n 10000000\n"
-                         "                  Same as before, now with verbose output and swap activated if a bigInt is bigger than 1 MB"
-                         "                  ./fib -o f -r d --result-filename res.txt -n 10000000 -v --do-swap --swap-threshold 1\n"
+                         "                  Same as before, now with verbose output and swap activated if a bigInt is bigger than 1 MB\n"
+                         "                  ./fib -o f -r d --result-filename res.txt -v --do-swap --swap-threshold 1 -n 10000000 \n"
                          "\n"
                          "            The default filename is output.txt | if the file exists, it will be overwritten\n"
                          "\n"

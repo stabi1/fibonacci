@@ -64,6 +64,7 @@ setup:
 	pip3 install --upgrade pip
 	pip install pytest
 	pip install psutil
+	pip install matplotlib
 
 clean:
 	rm -f $(OUTPUT_FILENAME)
