@@ -5,60 +5,11 @@
 #include "bigIntMethods.h"
 #include "bigIntUtil.h"
 #include "bigIntAsm.h"
+#include "bigIntAlloc.h"
 
 bigInt *add_helper(bigInt *x, bigInt *y, bool negative);
 
 bigInt *sub_helper(bigInt *x, bigInt *y, bool negative);
-
-//allocates memory for a new bigInt of the given size
-bigInt *newBigInt(size_t len) {
-    if (len == 0) {
-        fprintf(stderr, "newBigInt: len can not be zero!\n");
-        exit(4);
-    }
-    bigInt *res = malloc(sizeof(bigInt));
-    mallocCheck(res);
-
-    res->bigIntArray = calloc(len, sizeof(uint64_t));
-    mallocCheck(res->bigIntArray);
-    res->start = 0;
-    res->end = len;
-    res->arrayOwner = true;
-    res->negative = false;
-    return res;
-}
-
-//creates a new bigInt Struct with the array of another bigInt->not the owner of the array
-bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray) {
-    if (start - end == 0) {
-        return getZeroBigInt();
-    }
-    bigInt *res = malloc(sizeof(bigInt));
-    mallocCheck(res);
-    res->bigIntArray = bigIntArray;
-    res->start = start;
-    res->end = end;
-    res->arrayOwner = false;
-    res->negative = false;
-    return res;
-}
-
-//Frees the memory of the BigInteger
-void freeBigInt(bigInt *toDelete) {
-    if (toDelete->arrayOwner) { //if the bigInt is the owner free the array
-        free(toDelete->bigIntArray);
-    }
-    free(toDelete);
-}
-
-//deep copies BigInt
-bigInt *copyBigInt(bigInt *x) {
-    size_t xLen = x->end - x->start;
-    bigInt *res = newBigInt(xLen);
-    memcpy(res->bigIntArray, x->bigIntArray + x->start, xLen * 8);
-    res->negative = x->negative;
-    return res;
-}
 
 bool isValidBigInt(bigInt *x) {
     if (isZero(x)) return true;

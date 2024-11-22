@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/sysinfo.h>
 #include "config.h"
+#include "bigIntAlloc.h"
 
 Config global_config = {
         .verbose = false,
@@ -9,6 +10,11 @@ Config global_config = {
         .swap = false,
         .swapThreshold = 100
 };
+
+void cleanupBigIntLib() {
+    //clear bigIntStructStack
+    free_BigIntStack(get_thread_BigIntStack());
+}
 
 size_t getMulDepthFromMaxThreads(size_t maxThreads) {
     if (maxThreads == 0) {

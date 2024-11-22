@@ -15,6 +15,8 @@ typedef struct {
 
 extern Config global_config;
 
+void cleanupBigIntLib();
+
 size_t getMulDepthFromMaxThreads(size_t maxThreads);
 
 size_t getMulDepthFromCores(size_t nprocsSet);

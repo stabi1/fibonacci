@@ -16,6 +16,7 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename);
 
 const char *DEFAULT_FILENAME = "output.txt";
 
+//TODO fix header files
 //TODO Optimize for memory, maybe add swap capabilities
 //TODO make div and to_dec_string parallel
 //TODO check support for variable starting point of bigIntArray
@@ -187,6 +188,7 @@ int main(int argc, char *argv[]) {
     }
 
     free(filename);
+    cleanupBigIntLib();
     return EXIT_SUCCESS;
 }
 
