@@ -6,8 +6,8 @@
 #include "bigIntDiv.h"
 #include "config.h"
 
-size_t NAIVEMUL_FASTER = 60; //Size when naiveMul is faster than karatsuba
-size_t KARATSUBA_FASTER = 200; //Size when karatsuba is faster than toom-cook
+size_t NAIVEMUL_FASTER = 100; //Size when naiveMul is faster than karatsuba
+size_t KARATSUBA_FASTER = 400; //Size when karatsuba is faster than toom-cook
 size_t PARALLEL_FASTER = 1000; //Size when toom-cook-multithread is faster than toom-cook
 
 bigInt *mulSingleThread(bigInt *x, bigInt *y);

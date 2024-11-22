@@ -74,7 +74,7 @@ char *bigIntToHexString(bigInt *x);
 //misc
 size_t bitLength(bigInt *x);
 
-size_t getLen(bigInt *x);
+size_t getLen(const bigInt *x);
 
 //misc utility
 void mallocCheck(void *p);

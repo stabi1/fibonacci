@@ -31,6 +31,8 @@ BigIntArrayStack_2KB *get_thread_bigIntArrayStack_2KB();
 
 void free_BigIntStack(void *ptr);
 
+uint64_t *allocBigIntArray(size_t len, size_t* completeLen, bool setZero);
+
 bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray);
 
 #endif //FIBONACCI_BIGINTALLOC_H

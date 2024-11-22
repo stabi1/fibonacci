@@ -41,7 +41,7 @@ bool isZero(bigInt *x) {
     return false;
 }
 
-size_t getLen(bigInt *x) {
+size_t getLen(const bigInt *x) {
     return (x->end) - (x->start);
 }
 

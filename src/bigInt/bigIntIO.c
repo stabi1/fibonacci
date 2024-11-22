@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include "config.h"
+#include "bigIntAlloc.h"
 
 const char *NOT_STORED = "NOT_STORED";
 const char *FILE_ENDING = ".bigint";
@@ -214,42 +215,30 @@ bigInt *readBigIntFromFile(const char *filename) {
         return NULL;
     }
 
-    bigInt *res = (bigInt *) malloc(sizeof(bigInt));
-    if (res == NULL) {
-        perror("Failed to allocate memory for bigInt");
-        fclose(file);
-        return NULL;
-    }
-
     // Load the primitive fields
-    if (fread(&res->start, sizeof(size_t), 1, file) != 1) {
+    size_t end;
+    if (fread(&end, sizeof(size_t), 1, file) != 1) {
         perror("Error reading file");
-        free(res);
-        fclose(file);
-        return NULL;
-    }
-    if (fread(&res->end, sizeof(size_t), 1, file) != 1) {
-        perror("Error reading file");
-        free(res);
-        fclose(file);
-        return NULL;
-    }
-    res->arrayOwner = true;
-    if (fread(&res->negative, sizeof(bool), 1, file) != 1) {
-        perror("Error reading file");
-        free(res);
         fclose(file);
         return NULL;
     }
 
-    // Load the bigIntArray length and data
-    size_t arrayLength = res->end - res->start;
-    res->bigIntArray = (uint64_t *) malloc(arrayLength * sizeof(uint64_t));
-    if (!res->bigIntArray) {
-        perror("Failed to allocate memory for bigIntArray");
-        free(res);
+    bool negative;
+    if (fread(&negative, sizeof(bool), 1, file) != 1) {
+        perror("Error reading file");
+        fclose(file);
         return NULL;
     }
+
+    // Create the bigInt
+    size_t arrayLength = end;
+    size_t completeLength;
+    uint64_t *array = allocBigIntArray(arrayLength, &completeLength, false);
+    bigInt *res = newBigIntStruct(0, arrayLength, array);
+    res->arrayOwner = true;
+    res->completeLength = completeLength;
+    res->negative = negative;
+
     if (fread(res->bigIntArray, sizeof(uint64_t), arrayLength, file) != arrayLength) {
         perror("Error reading file");
         free(res);
@@ -269,17 +258,8 @@ int writeBigIntToFile(const char *filename, const bigInt *b) {
     }
 
     // Save the primitive fields
-    if (fwrite(&b->start, sizeof(size_t), 1, file) != 1) {
-        perror("Error writing to file");
-        fclose(file);
-        return -1;
-    }
-    if (fwrite(&b->end, sizeof(size_t), 1, file) != 1) {
-        perror("Error writing to file");
-        fclose(file);
-        return -1;
-    }
-    if (fwrite(&b->arrayOwner, sizeof(bool), 1, file) != 1) {
+    size_t length = getLen(b);
+    if (fwrite(&length, sizeof(size_t), 1, file) != 1) {
         perror("Error writing to file");
         fclose(file);
         return -1;

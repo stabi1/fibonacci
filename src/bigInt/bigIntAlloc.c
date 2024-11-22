@@ -14,8 +14,6 @@ BigIntStack *create_stack();
 
 bigInt *allocBigIntStruct();
 
-uint64_t *allocBigIntArray(size_t len, size_t* completeLen);
-
 //allocates memory for a new bigInt of the given size
 bigInt *newBigInt(size_t len) {
     if (len == 0) {
@@ -24,7 +22,7 @@ bigInt *newBigInt(size_t len) {
     }
     bigInt *res = allocBigIntStruct();
     size_t completeLen;
-    res->bigIntArray = allocBigIntArray(len, &completeLen);
+    res->bigIntArray = allocBigIntArray(len, &completeLen, true);
     res->start = 0;
     res->end = len;
     res->arrayOwner = true;
@@ -80,14 +78,18 @@ bigInt *allocBigIntStruct() {
     return res;
 }
 
-uint64_t *allocBigIntArray(size_t len, size_t* completeLen) {
+uint64_t *allocBigIntArray(size_t len, size_t* completeLen, bool setZero) {
     uint64_t *res;
     if (popBigIntArrayStack(&res, len, completeLen) == -1) {
-        res = calloc(len, sizeof(uint64_t));
+        if (setZero)
+            res = calloc(len, sizeof(uint64_t));
+        else
+            res = malloc(sizeof(uint64_t) * len);
         mallocCheck(res);
         *completeLen = len;
     } else {
-        memset(res, 0, len*8);
+        if (setZero)
+            memset(res, 0, len*8);
     }
     return res;
 }
