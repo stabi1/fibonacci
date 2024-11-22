@@ -18,3 +18,10 @@ The OS must be Linux!
 
 cpu features needed:
 * bmi2
+
+
+
+
+# TMP:
+valgrind ./fib -o n -v -n 5000000
+-> total heap usage: 680,772 allocs, 680,772 frees, 482,708,078 bytes allocated

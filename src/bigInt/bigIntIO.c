@@ -105,7 +105,7 @@ bigInt *readBigIntDecFromFile(char *path) {
 }
 
 inline __attribute__((always_inline)) char *storeBigIntInSwap(bigInt *x) {
-    if (!global_config.swap || getLen(x) * 8 < global_config.swapThreshold * 1000000) {
+    if (!global_config.swap || !x->arrayOwner || getLen(x) * 8 < global_config.swapThreshold * 1000000) {
         size_t l = strlen(NOT_STORED);
         char *res = malloc(l + 1);
         strncpy(res, NOT_STORED, l + 1);
@@ -234,12 +234,7 @@ bigInt *readBigIntFromFile(const char *filename) {
         fclose(file);
         return NULL;
     }
-    if (fread(&res->arrayOwner, sizeof(bool), 1, file) != 1) {
-        perror("Error reading file");
-        free(res);
-        fclose(file);
-        return NULL;
-    }
+    res->arrayOwner = true;
     if (fread(&res->negative, sizeof(bool), 1, file) != 1) {
         perror("Error reading file");
         free(res);
@@ -297,7 +292,7 @@ int writeBigIntToFile(const char *filename, const bigInt *b) {
 
     // Save the bigIntArray length and data
     size_t arrayLength = b->end - b->start;
-    if (fwrite(b->bigIntArray, sizeof(uint64_t), arrayLength, file) != arrayLength) {
+    if (fwrite(b->bigIntArray + b->start, sizeof(uint64_t), arrayLength, file) != arrayLength) {
         perror("Error writing to file");
         fclose(file);
         return -1;

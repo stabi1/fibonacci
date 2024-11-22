@@ -57,15 +57,12 @@ def get_swap_storage_size() -> str:
     swap_storage_path = os.path.join(script_dir, 'swap_storage')
 
     # Get the size of the folder using du command, -k so the result is always in KB, -s for summary
-    try:
-        result = subprocess.run(['du', '-sk', swap_storage_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True)
-        if result.returncode == 0:
-            return result.stdout.split()[0]  # Return the size from the du output
-        else:
-            return "Error retrieving size"
-    except Exception as e:
-        return f"Error: {str(e)}"
+    result = subprocess.run(['du', '-sk', swap_storage_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True)
+    if result.returncode == 0:
+        return result.stdout.split()[0]  # Return the size from the du output
+    else:
+        raise Exception(f"Error retrieving value; stderr: {result.stderr}, stdout: {result.stdout}")
 
 
 def monitor_process(pid) -> str:
@@ -76,7 +73,11 @@ def monitor_process(pid) -> str:
         command = process.cmdline()
         while True:
             # Get the size of the swap_storage folder
-            swap_size: int = int(get_swap_storage_size())
+            try:
+                swap_size: int = int(get_swap_storage_size())
+            except Exception as e:
+                print(f"{str(e)}")
+                swap_size = -1
 
             # get time
             now_time = time.perf_counter()
@@ -92,25 +93,36 @@ def monitor_process(pid) -> str:
             # log data
             data.append((process.memory_info().rss // 1024, int(float(swap_size)), timestamp))
 
-            time.sleep(1)
+            time.sleep(0.05)
     except psutil.NoSuchProcess:
         print("Process not found.")
         data.append((0, 0, data[-1][2] + 1))
     except psutil.AccessDenied:
         print("Access denied to process information.")
+    except Exception as ex:
+        print(f"Exception occurred, terminating monitoring: {str(ex)}")
     return command
 
 
+def get_PID(command: str) -> str|None:
+    pid = None
+    for proc in psutil.process_iter(attrs=['pid', 'cmdline']):
+        if command in proc.info['cmdline']:
+            pid = proc.info['pid']
+            break
+    return pid
+
 if __name__ == '__main__':
     # Get the PID of the process running './fib'
-    pid_to_monitor = None
-    for proc in psutil.process_iter(attrs=['pid', 'cmdline']):
-        if './fib' in proc.info['cmdline']:
-            pid_to_monitor = proc.info['pid']
-            break
+    command_to_monitor = './fib'
+    pid_to_monitor = get_PID(command_to_monitor)
+    if pid_to_monitor is None:
+        print(f"Process '{command_to_monitor}' not found, looping until found")
 
-    if pid_to_monitor:
-        command_ret = monitor_process(pid_to_monitor)
-        calculate_plot(command_ret)
-    else:
-        print("Process './fib' not found.")
+    while pid_to_monitor is None:
+        pid_to_monitor = get_PID(command_to_monitor)
+
+    print(f"Process '{command_to_monitor}' found, monitoring is starting")
+    command_ret = monitor_process(pid_to_monitor)
+    calculate_plot(command_ret)
+

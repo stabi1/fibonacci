@@ -138,50 +138,56 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     bigInt *b1 = slicesB[1];
     bigInt *b0 = slicesB[0];
 
-    // (not used in mul): nothing
+    // in swap (not used in mul): nothing
     bigInt *v0 = mulSingleThread(a0, b0);
-    char* filename_v0 = storeBigIntInSwap(v0);
+    char *filename_v0 = storeBigIntInSwap(v0);
     bigInt *da1 = add(a2, a0);
     bigInt *db1 = add(b2, b0);
     bigInt *temp1 = sub(db1, b1);
-    char* filename_db1 = storeBigIntInSwap(db1);
+    char *filename_db1 = storeBigIntInSwap(db1);
     bigInt *temp2 = sub(da1, a1);
-    char* filename_da1 = storeBigIntInSwap(da1);
+    char *filename_da1 = storeBigIntInSwap(da1);
     // in swap (not used in mul): v0, da1 db1
     bigInt *vm1 = mulSingleThread(temp1, temp2);
-    char* filename_vm1 = storeBigIntInSwap(vm1);
+    char *filename_vm1 = storeBigIntInSwap(vm1);
     freeBigInt(temp1);
     freeBigInt(temp2);
 
     da1 = loadBigIntFromSwap(da1, filename_da1);
     bigInt *da2 = add(da1, a1);
     freeBigInt(da1);
+    freeBigInt(a1);
     db1 = loadBigIntFromSwap(db1, filename_db1);
     bigInt *db2 = add(db1, b1);
+    freeBigInt(b1);
     freeBigInt(db1);
     // in swap (not used in mul): v0, vm1
     bigInt *v1 = mulSingleThread(da2, db2);
-    char* filename_v1 = storeBigIntInSwap(v1);
+    char *filename_v1 = storeBigIntInSwap(v1);
     bigInt *temp3 = add(da2, a2);
     freeBigInt(da2);
     bigInt *temp4 = shiftLeft_Asm(temp3, 1);
     freeBigInt(temp3);
     bigInt *temp5 = sub(temp4, a0);
+    freeBigInt(a0);
     freeBigInt(temp4);
     bigInt *temp6 = add(db2, b2);
     freeBigInt(db2);
     bigInt *temp7 = shiftLeft_Asm(temp6, 1);
     freeBigInt(temp6);
     bigInt *temp8 = sub(temp7, b0);
+    freeBigInt(b0);
     freeBigInt(temp7);
     // in swap (not used in mul): v0, vm1
     bigInt *v2 = mulSingleThread(temp5, temp8);
     freeBigInt(temp8);
     freeBigInt(temp5);
-    char* filename_v2 = storeBigIntInSwap(v2);
+    char *filename_v2 = storeBigIntInSwap(v2);
     // in swap (not used in mul): v0, vm1, v2
     bigInt *vInf = mulSingleThread(a2, b2);
-    char* filename_vInf = storeBigIntInSwap(vInf);
+    freeBigInt(a2);
+    freeBigInt(b2);
+    char *filename_vInf = storeBigIntInSwap(vInf);
     vm1 = loadBigIntFromSwap(vm1, filename_vm1);
     v2 = loadBigIntFromSwap(v2, filename_v2);
     bigInt *temp9 = sub(v2, vm1);
@@ -227,13 +233,6 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
     freeBigInt(temp16);
     freeBigInt(v0);
 
-    freeBigInt(a0);
-    freeBigInt(a1);
-    freeBigInt(a2);
-    freeBigInt(b0);
-    freeBigInt(b1);
-    freeBigInt(b2);
-
     return result;
 }
 
@@ -243,21 +242,36 @@ struct toomCookArgs {
     size_t depth;
 };
 
+struct toomCookReturn {
+    bigInt *res;
+    char *res_filename;
+};
+
 bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
     struct toomCookArgs *args = malloc(sizeof(struct toomCookArgs));
     mallocCheck(args);
     args->a = a;
     args->b = b;
     args->depth = depth;
-    bigInt *temp = multiplyToomCook3MultiThreadHelper((void *) args);
+    struct toomCookReturn *temp = multiplyToomCook3MultiThreadHelper((void *) args);
     free(args);
-    return temp;
+    bigInt *res = loadBigIntFromSwap(temp->res, temp->res_filename);
+    free(temp);
+    return res;
 }
 
 void *multiplyToomCook3MultiThreadHelper(void *input) {
     bigInt *a = ((struct toomCookArgs *) input)->a;
     bigInt *b = ((struct toomCookArgs *) input)->b;
     size_t depth = ((struct toomCookArgs *) input)->depth;
+
+    if (depth == 0) {
+        bigInt *result = mulSingleThread(a, b);
+        struct toomCookReturn *ret = malloc(sizeof(struct toomCookReturn));
+        ret->res = result;
+        ret->res_filename = storeBigIntInSwap(result);
+        return (void *) ret;
+    }
 
     size_t aLen = a->end - a->start;
     size_t bLen = b->end - b->start;
@@ -305,42 +319,35 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     mallocCheck(argsMul5);
 
     bigInt *v0;
-    if (depth > 0) {
-        argsMul1->a = a0;
-        argsMul1->b = b0;
-        argsMul1->depth = depth - 1;
-        pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul1);
-    } else {
-        v0 = mulSingleThread(a0, b0);
-    }
+    argsMul1->a = a0;
+    argsMul1->b = b0;
+    argsMul1->depth = depth - 1;
+    pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul1);
+
     bigInt *da1 = add(a2, a0);
     bigInt *db1 = add(b2, b0);
     bigInt *temp1 = sub(db1, b1);
     bigInt *temp2 = sub(da1, a1);
+
     bigInt *vm1;
-    if (depth > 0) {
-        argsMul2->a = temp1;
-        argsMul2->b = temp2;
-        argsMul2->depth = depth - 1;
-        pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul2);
-    } else {
-        vm1 = mulSingleThread(temp1, temp2);
-    }
+    argsMul2->a = temp1;
+    argsMul2->b = temp2;
+    argsMul2->depth = depth - 1;
+    pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul2);
+
     bigInt *da2 = add(da1, a1);
     freeBigInt(da1);
     freeBigInt(a1);
     bigInt *db2 = add(db1, b1);
     freeBigInt(db1);
     freeBigInt(b1);
+
     bigInt *v1;
-    if (depth > 0) {
-        argsMul3->a = da2;
-        argsMul3->b = db2;
-        argsMul3->depth = depth - 1;
-        pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul3);
-    } else {
-        v1 = mulSingleThread(da2, db2);
-    }
+    argsMul3->a = da2;
+    argsMul3->b = db2;
+    argsMul3->depth = depth - 1;
+    pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul3);
+
     bigInt *temp3 = add(da2, a2);
 
     bigInt *temp4 = shiftLeft_Asm(temp3, 1);
@@ -353,58 +360,51 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(temp6);
     bigInt *temp8 = sub(temp7, b0);
     freeBigInt(temp7);
+
     bigInt *v2;
-    if (depth > 0) {
-        argsMul4->a = temp5;
-        argsMul4->b = temp8;
-        argsMul4->depth = depth - 1;
-        pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul4);
-    } else {
-        v2 = mulSingleThread(temp5, temp8);
-        freeBigInt(temp8);
-        freeBigInt(temp5);
-    }
+    argsMul4->a = temp5;
+    argsMul4->b = temp8;
+    argsMul4->depth = depth - 1;
+    pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul4);
 
     bigInt *vInf;
-    if (depth > 0) {
-        argsMul5->a = a2;
-        argsMul5->b = b2;
-        argsMul5->depth = depth - 1;
-        pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5);
-    } else {
-        vInf = mulSingleThread(a2, b2);
-        freeBigInt(a2);
-        freeBigInt(b2);
-    }
+    argsMul5->a = a2;
+    argsMul5->b = b2;
+    argsMul5->depth = depth - 1;
+    pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5);
 
-    if (depth > 0) {
-        //join Threads
-        void *temp;
-        pthread_join(thread_idMul1, &temp);
-        v0 = (bigInt *) temp;
-
-        pthread_join(thread_idMul2, &temp);
-        vm1 = (bigInt *) temp;
-
-        pthread_join(thread_idMul3, &temp);
-        v1 = (bigInt *) temp;
-
-        pthread_join(thread_idMul4, &temp);
-        v2 = (bigInt *) temp;
-        freeBigInt(temp8);
-        freeBigInt(temp5);
-
-        pthread_join(thread_idMul5, &temp);
-        vInf = (bigInt *) temp;
-        freeBigInt(a2);
-        freeBigInt(b2);
-    }
-    freeBigInt(temp1);
-    freeBigInt(temp2);
+    //join Threads
+    void *temp;
+    pthread_join(thread_idMul1, &temp);
+    struct toomCookReturn *ret_v0 = temp;
     freeBigInt(a0);
     freeBigInt(b0);
+
+    pthread_join(thread_idMul2, &temp);
+    struct toomCookReturn *ret = temp;
+    vm1 = loadBigIntFromSwap(ret->res, ret->res_filename);
+    free(ret);
+    freeBigInt(temp1);
+    freeBigInt(temp2);
+
+    pthread_join(thread_idMul3, &temp);
+    ret = temp;
+    v1 = loadBigIntFromSwap(ret->res, ret->res_filename);
+    free(ret);
     freeBigInt(da2);
     freeBigInt(db2);
+
+    pthread_join(thread_idMul4, &temp);
+    ret = temp;
+    v2 = loadBigIntFromSwap(ret->res, ret->res_filename);
+    free(ret);
+    freeBigInt(temp8);
+    freeBigInt(temp5);
+
+    pthread_join(thread_idMul5, &temp);
+    struct toomCookReturn *ret_vInf = temp;
+    freeBigInt(a2);
+    freeBigInt(b2);
 
     free(argsMul1);
     free(argsMul2);
@@ -420,7 +420,10 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(vm1);
     bigInt *tm1 = shiftRight_Asm(temp10, 1);
     freeBigInt(temp10);
+    v0 = loadBigIntFromSwap(ret_v0->res, ret_v0->res_filename);
+    free(ret_v0);
     bigInt *t1 = sub(v1, v0);
+    char *filename_v0 = storeBigIntInSwap(v0);
     freeBigInt(v1);
     bigInt *temp11 = sub(t2, t1);
     freeBigInt(t2);
@@ -428,6 +431,8 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(temp11);
     bigInt *temp12 = sub(t1, tm1);
     freeBigInt(t1);
+    vInf = loadBigIntFromSwap(ret_vInf->res, ret_vInf->res_filename);
+    free(ret_vInf);
     bigInt *t1_2 = sub(temp12, vInf);
     freeBigInt(temp12);
     bigInt *temp13 = shiftLeft_Asm(vInf, 1);
@@ -446,8 +451,13 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     bigInt *temp16 = shiftAdd(tm2, temp15, k);
     freeBigInt(temp15);
     freeBigInt(tm2);
+    v0 = loadBigIntFromSwap(v0, filename_v0);
     bigInt *result = shiftAdd(v0, temp16, k);
     freeBigInt(temp16);
     freeBigInt(v0);
-    return (void *) result;
+
+    struct toomCookReturn *returnStruct = malloc(sizeof(struct toomCookReturn));
+    returnStruct->res = result;
+    returnStruct->res_filename = storeBigIntInSwap(result);
+    return (void *) returnStruct;
 }
