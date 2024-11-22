@@ -15,6 +15,7 @@ typedef struct BigIntTag { //The datastructure that represents a large number
     bool arrayOwner; //if the bigInt is the "owner" of the array. If false the array is not freed with the bigInt
     uint64_t *bigIntArray;
     bool negative;
+    size_t completeLength;
 } bigInt;
 
 // create/delete

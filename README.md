@@ -24,4 +24,7 @@ cpu features needed:
 
 # TMP:
 valgrind ./fib -o n -v -n 5000000
--> total heap usage: 680,772 allocs, 680,772 frees, 482,708,078 bytes allocated
+No cache-> total heap usage: 680,772 allocs, 680,772 frees, 482,708,078 bytes allocated
+BigIntStruct cache-> total heap usage: 304,186 allocs, 304,186 frees, 467,644,846 bytes allocated
+All cache-> total heap usage: 35,252 allocs, 35,252 frees, 127,921,638 bytes allocated
+
