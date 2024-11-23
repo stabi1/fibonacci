@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <stdatomic.h>
 #include "config.h"
 #include "bigIntAlloc.h"
 
@@ -13,7 +14,7 @@ const char *NOT_STORED = "NOT_STORED";
 const char *FILE_ENDING = ".bigint";
 const char *SWAP_DIR = "swap_storage/";
 
-__uint128_t counter = 0;
+uint64_t counter = 0;
 
 void handleSignals(int sig, siginfo_t *info, void *context) {
     (void) info;     // Unused parameter
@@ -31,15 +32,16 @@ void handleSignals(int sig, siginfo_t *info, void *context) {
     }
 }
 
-char *get_32_hex_string() {
-    unsigned char *hex_str = malloc(33);
+char *get_16_hex_string() {
+    unsigned char *hex_str = malloc(17);
     mallocCheck(hex_str);
-    for (int i = 31; i >= 0; --i) {
-        uint8_t digit = counter >> (i * 4) & 0xF;
-        hex_str[31 - i] = (digit < 10) ? (unsigned char) ('0' + digit) : (unsigned char) ('A' + (digit - 10));
+    size_t counterLocal = atomic_fetch_add_explicit(&counter, 1, memory_order_relaxed);
+    for (int i = 15; i >= 0; --i) {
+        uint8_t digit = counterLocal >> (i * 4) & 0xF;
+        hex_str[15 - i] = (digit < 10) ? (unsigned char) ('0' + digit) : (unsigned char) ('A' + (digit - 10));
     }
-    hex_str[32] = '\0';
-    counter++;
+    hex_str[16] = '\0';
+
     return (char *) hex_str;
 }
 
@@ -47,7 +49,7 @@ char *getFilename() {
     size_t endingLen = strlen(FILE_ENDING);
     char *filename;
     while (true) {
-        char *file_prefix = get_32_hex_string();
+        char *file_prefix = get_16_hex_string();
         size_t prefixLen = strlen(file_prefix);
         size_t pathLen = strlen(SWAP_DIR);
         filename = malloc(pathLen + prefixLen + endingLen + 1);
