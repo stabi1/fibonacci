@@ -234,11 +234,7 @@ bigInt *readBigIntFromFile(const char *filename) {
 
     // Create the bigInt
     size_t arrayLength = end;
-    size_t completeLength;
-    uint64_t *array = allocBigIntArray(arrayLength, &completeLength, false);
-    bigInt *res = newBigIntStruct(0, arrayLength, array);
-    res->arrayOwner = true;
-    res->completeLength = completeLength;
+    bigInt *res = newBigIntNotZeroed(arrayLength);
     res->negative = negative;
 
     if (fread(res->bigIntArray, sizeof(uint64_t), arrayLength, file) != arrayLength) {

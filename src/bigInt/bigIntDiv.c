@@ -5,7 +5,7 @@ size_t D4FASTER = 70;
 //To be used when the number is known to be exactly divisible by 3
 bigInt *exactDivideBy3(bigInt *x) {
     long len = (long) x->end - (long) x->start;
-    bigInt *result = newBigInt(x->end - x->start);
+    bigInt *result = newBigIntNotZeroed(x->end - x->start);
     result->negative = x->negative;
     unsigned long borrow;
     unsigned __int128 q, xx, w;
@@ -59,29 +59,29 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
     if (comp < 0) {
         bigInt *quotient = getZeroBigInt();
         if (reminder != NULL) {
-            *reminder = newBigInt(m);
+            *reminder = newBigIntNotZeroed(m);
             memcpy((*reminder)->bigIntArray + (*reminder)->start, u, m * 8);
         }
         return quotient;
     } else if (comp == 0) {
-        bigInt *quotient = newBigInt(1);
+        bigInt *quotient = newBigIntNotZeroed(1);
         quotient->bigIntArray[0] = 1;
         if (reminder != NULL) {
             *reminder = getZeroBigInt();
         }
         return quotient;
     } else if (m <= 1) {
-        bigInt *quotient = newBigInt(1);
+        bigInt *quotient = newBigIntNotZeroed(1);
         quotient->bigIntArray[0] = u[0] / v[0];
         if (reminder != NULL) {
-            *reminder = newBigInt(n);
+            *reminder = newBigIntNotZeroed(n);
             (*reminder)->bigIntArray[(*reminder)->start] = u[0] % v[0];
         }
         return quotient;
     } else if (n <= 1) {
         bigInt *quotient = newBigInt(m - n + 1);
         if (reminder != NULL) {
-            *reminder = newBigInt(n);
+            *reminder = newBigIntNotZeroed(n);
             divideOneWord(dividend, v[0], quotient, *reminder);
         } else {
             divideOneWord(dividend, v[0], quotient, NULL);
@@ -89,8 +89,8 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
         return quotient;
     }
 
-    bigInt *quotient = newBigInt(m - n + 1);
     if (n < D4FASTER || noBurnikelZiegler) {
+        bigInt *quotient = newBigInt(m - n + 1);
         if (reminder == NULL) {
             divideD4(dividend, divisor, quotient, NULL);
         } else {
@@ -99,7 +99,6 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
         }
         return quotient;
     } else {
-        freeBigInt(quotient);
         if (reminder == NULL) {
             bigInt *reminderTmp;
             bigInt *qTmp = divideBurnikelZiegler(dividend, divisor, &reminderTmp);
@@ -111,7 +110,7 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
     }
 }
 
-//used by divideBurnikelZiegler
+//used by tests
 bigInt *divideD4Helper(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
     uint64_t m = dividend->end - dividend->start;
     uint64_t n = divisor->end - divisor->start;
@@ -132,8 +131,9 @@ void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt 
     if (rem < divisor) {
         q[m - 1] = 0;
     } else {
-        q[m - 1] = rem / divisor;
-        rem = (uint64_t) (rem128 - (q[m - 1] * divisor128));
+        uint64_t tmp = rem / divisor;
+        q[m - 1] = tmp;
+        rem = (uint64_t) (rem128 - (tmp * divisor128));
         rem128 = (unsigned __int128) rem;
     }
     size_t xLen = 1;

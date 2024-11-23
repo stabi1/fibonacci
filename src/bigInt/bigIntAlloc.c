@@ -14,15 +14,25 @@ BigIntStack *create_stack();
 
 bigInt *allocBigIntStruct();
 
+bigInt *newBigIntHelper(size_t len, bool setZero);
+
 //allocates memory for a new bigInt of the given size
 bigInt *newBigInt(size_t len) {
+    return newBigIntHelper(len, true);
+}
+
+bigInt *newBigIntNotZeroed(size_t len) {
+    return newBigIntHelper(len, false);
+}
+
+bigInt *newBigIntHelper(size_t len, bool setZero) {
     if (len == 0) {
         fprintf(stderr, "newBigInt: len can not be zero!\n");
         exit(4);
     }
     bigInt *res = allocBigIntStruct();
     size_t completeLen;
-    res->bigIntArray = allocBigIntArray(len, &completeLen, true);
+    res->bigIntArray = allocBigIntArray(len, &completeLen, setZero);
     res->start = 0;
     res->end = len;
     res->arrayOwner = true;
@@ -62,7 +72,7 @@ void freeBigInt(bigInt *toDelete) {
 //deep copies BigInt
 bigInt *copyBigInt(bigInt *x) {
     size_t xLen = x->end - x->start;
-    bigInt *res = newBigInt(xLen);
+    bigInt *res = newBigIntNotZeroed(xLen);
     memcpy(res->bigIntArray, x->bigIntArray + x->start, xLen * 8);
     res->negative = x->negative;
     return res;

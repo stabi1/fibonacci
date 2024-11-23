@@ -21,6 +21,8 @@ typedef struct BigIntTag { //The datastructure that represents a large number
 // create/delete
 bigInt *newBigInt(size_t len);
 
+bigInt *newBigIntNotZeroed(size_t len);
+
 void freeBigInt(bigInt *toDelete);
 
 bigInt *copyBigInt(bigInt *x);

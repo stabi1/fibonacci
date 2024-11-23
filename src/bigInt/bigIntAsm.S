@@ -381,11 +381,11 @@ do_sub_asm:
     push r14
     push r15
     push rbx
-    mov r12, [rdi + 8] //r8 := bigger->end
-    mov r13, [rsi + 8] //r9 := smaller->end
-    mov r14, [rdi + 24] //r10 = bigger->bigIntArray
-    mov r15, [rsi + 24] //r11 = smaller->bigIntArray
-    mov r11, [rdx + 24] //r15 = res->BigIntArray
+    mov r12, [rdi + 8] //r12 := bigger->end
+    mov r13, [rsi + 8] //r13 := smaller->end
+    mov r14, [rdi + 24] //r14 = bigger->bigIntArray
+    mov r15, [rsi + 24] //r15 = smaller->bigIntArray
+    mov r11, [rdx + 24] //r11 = res->BigIntArray
     mov rdi, [rdi] //rdi := bigger->start
     mov rsi, [rsi] //rsi := smaller->start
     lea r14, [r14 + r12*8]

@@ -222,7 +222,8 @@ bigInt *hexStringToBigInt(const char *hexStr) {
 
     size_t resLength = hexStrLength / 16;
     if (hexStrLength % 16 != 0) resLength++;
-    bigInt *res = newBigInt(resLength);
+    bigInt *res = newBigIntNotZeroed(resLength);
+    res->bigIntArray[res->end - 1] = 0;
     if (negative) res->negative = true;
 
     size_t j = 0;
@@ -385,7 +386,8 @@ bigInt *add(bigInt *x, bigInt *y) {
 }
 
 bigInt *add_helper(bigInt *x, bigInt *y, bool negative) {
-    bigInt *res = newBigInt(getLen(x) + 1);
+    bigInt *res = newBigIntNotZeroed(getLen(x) + 1);
+    res->bigIntArray[res->end - 1] = 0;
     do_add_asm(x, y, res);
     res->negative = negative;
     if (getLen(res) > 1 && res->bigIntArray[res->end - 1] == 0)
