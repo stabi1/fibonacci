@@ -35,7 +35,7 @@ fib
 
 #Output files:
 output.txt
-res.txt
+res**.txt
 
 # plots
 *.png

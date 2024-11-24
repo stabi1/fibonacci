@@ -94,7 +94,7 @@ bigInt *allocBigIntStruct() {
     return res;
 }
 
-uint64_t *allocBigIntArray(size_t len, size_t* completeLen, bool setZero) {
+uint64_t *allocBigIntArray(size_t len, size_t *completeLen, bool setZero) {
     uint64_t *res;
     if (popBigIntArrayStack(&res, len, completeLen) == -1) {
         if (setZero)
@@ -105,7 +105,7 @@ uint64_t *allocBigIntArray(size_t len, size_t* completeLen, bool setZero) {
         *completeLen = len;
     } else {
         if (setZero)
-            memset(res, 0, len*8);
+            memset(res, 0, len * 8);
     }
     return res;
 }
@@ -136,13 +136,13 @@ int pushBigIntArrayStack(uint64_t *x, size_t len) {
     BigIntArrayStack *stack;
     if (len < 1000) {
         return -1;
-    }else if (len < 10000) {
+    } else if (len < 10000) {
         stack = get_thread_bigIntArrayStack_1KB();
-    } else if(len < 100000) {
+    } else if (len < 100000) {
         stack = get_thread_bigIntArrayStack_10KB();
-    } else if(len < 1000000) {
+    } else if (len < 1000000) {
         stack = get_thread_bigIntArrayStack_100KB();
-    }else {
+    } else {
         return -1;
     }
 
@@ -154,15 +154,15 @@ int pushBigIntArrayStack(uint64_t *x, size_t len) {
     }
 }
 
-int popBigIntArrayStack(uint64_t **x, size_t len, size_t* completeLen) {
+int popBigIntArrayStack(uint64_t **x, size_t len, size_t *completeLen) {
     BigIntArrayStack *stack;
     if (len <= 1000) {
         *completeLen = 1000;
         stack = get_thread_bigIntArrayStack_1KB();
-    } else if(len <= 10000) {
+    } else if (len <= 10000) {
         *completeLen = 10000;
         stack = get_thread_bigIntArrayStack_10KB();
-    } else if(len <= 100000) {
+    } else if (len <= 100000) {
         *completeLen = 100000;
         stack = get_thread_bigIntArrayStack_100KB();
     } else {
@@ -230,7 +230,7 @@ BigIntArrayStack *get_thread_bigIntArrayStack_1KB() {
     if (!stack) {
         stack = (BigIntArrayStack *) create_stack();
         pthread_setspecific(bigIntArrayStack_1KB_stack_key, stack);
-        for(int i = 0; i<MAX_SIZE/3; i++) {
+        for (int i = 0; i < MAX_SIZE / 3; i++) {
             uint64_t *array = malloc(sizeof(uint64_t) * 1010);
             mallocCheck(array);
             stack->array[++(stack->top)] = array;
@@ -246,7 +246,7 @@ BigIntArrayStack *get_thread_bigIntArrayStack_10KB() {
     if (!stack) {
         stack = (BigIntArrayStack *) create_stack();
         pthread_setspecific(bigIntArrayStack_10KB_stack_key, stack);
-        for(int i = 0; i<MAX_SIZE/3; i++) {
+        for (int i = 0; i < MAX_SIZE / 3; i++) {
             uint64_t *array = malloc(sizeof(uint64_t) * 10010);
             mallocCheck(array);
             stack->array[++(stack->top)] = array;
@@ -262,7 +262,7 @@ BigIntArrayStack *get_thread_bigIntArrayStack_100KB() {
     if (!stack) {
         stack = (BigIntArrayStack *) create_stack();
         pthread_setspecific(bigIntArrayStack_100KB_stack_key, stack);
-        for(int i = 0; i<MAX_SIZE/3; i++) {
+        for (int i = 0; i < MAX_SIZE / 3; i++) {
             uint64_t *array = malloc(sizeof(uint64_t) * 100010);
             mallocCheck(array);
             stack->array[++(stack->top)] = array;

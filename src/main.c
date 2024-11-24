@@ -14,6 +14,8 @@ void printHelpMenu();
 
 void printFibonacci(uint64_t n, char radix, char output, char *filename);
 
+void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, char *outputFilename);
+
 const char *DEFAULT_FILENAME = "output.txt";
 
 //TODO make div and to_dec_string parallel, add swap capabilities to these 2
@@ -28,14 +30,17 @@ enum {
     OPT_NUM_CORES,
     OPT_RESULT_FILENAME,
     OPT_DO_SWAP,
-    OPT_SWAP_THRESHOLD
+    OPT_SWAP_THRESHOLD,
+    OPT_CONVERT_NUMBER,
+    OPT_INPUT_FILENAME,
+    OPT_INPUT_RADIX
 };
 
 static struct option long_options[] = {
         {"help",            no_argument,       NULL, 'h'},
-        {"output",          required_argument, NULL, 'o'},
+        {"output-format",   required_argument, NULL, 'o'},
         {"multithread",     no_argument,       NULL, 'm'},
-        {"radix",           required_argument, NULL, 'r'},
+        {"output-radix",    required_argument, NULL, 'r'},
         {"debug",           no_argument,       NULL, 'd'},
         {"benchMark",       no_argument,       NULL, 'b'},
         {"test",            no_argument,       NULL, 't'},
@@ -43,9 +48,12 @@ static struct option long_options[] = {
         {"verbose",         no_argument,       NULL, 'v'},
         {"max-threads",     required_argument, NULL, OPT_MAX_THREADS},
         {"num-cores",       required_argument, NULL, OPT_NUM_CORES},
-        {"result-filename", required_argument, NULL, OPT_RESULT_FILENAME},
+        {"output-filename", required_argument, NULL, OPT_RESULT_FILENAME},
         {"do-swap",         no_argument,       NULL, OPT_DO_SWAP},
         {"swap-threshold",  required_argument, NULL, OPT_SWAP_THRESHOLD},
+        {"convert-number",  no_argument,       NULL, OPT_CONVERT_NUMBER},
+        {"input-filename",  required_argument, NULL, OPT_INPUT_FILENAME},
+        {"input-radix",     required_argument, NULL, OPT_INPUT_RADIX},
         {NULL, 0,                              NULL, 0}
 };
 
@@ -69,7 +77,7 @@ int main(int argc, char *argv[]) {
     }
 
     // default values
-    char radix = 'h';
+    char outputRadix = 'h';
     char output = 't';
     size_t cores = 0; //available cores
     size_t max_threads = 0;
@@ -77,7 +85,11 @@ int main(int argc, char *argv[]) {
     bool do_debug = false;
     bool do_test = false;
     bool do_benchmark = false;
-    char *filename = NULL;
+    char *outputFilename = NULL;
+
+    bool convertNumber = false;
+    char inputRadix = '\0';
+    char *inputFilename = NULL;
 
     int option;
 
@@ -116,9 +128,9 @@ int main(int argc, char *argv[]) {
                     break;
                 case OPT_RESULT_FILENAME: {
                     size_t len = strlen(optarg);
-                    filename = malloc(len + 1);
-                    mallocCheck(filename);
-                    strncpy(filename, optarg, len + 1);
+                    outputFilename = malloc(len + 1);
+                    mallocCheck(outputFilename);
+                    strncpy(outputFilename, optarg, len + 1);
                     break;
                 }
                 case 'r':
@@ -126,7 +138,7 @@ int main(int argc, char *argv[]) {
                         fprintf(stderr, "invalid radix option \"%s\" provided, use -h for usage\n", optarg);
                         exit(EXIT_FAILURE);
                     }
-                    radix = optarg[0];
+                    outputRadix = optarg[0];
                     break;
                 case 'o':
                     if ((optarg[0] != 'f' && optarg[0] != 't' && optarg[0] != 'n') || optarg[1] != '\0') {
@@ -141,6 +153,23 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'n':
                     n = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 0);
+                    break;
+                case OPT_CONVERT_NUMBER:
+                    convertNumber = true;
+                    break;
+                case OPT_INPUT_FILENAME: {
+                    size_t len = strlen(optarg);
+                    inputFilename = malloc(len + 1);
+                    mallocCheck(inputFilename);
+                    strncpy(inputFilename, optarg, len + 1);
+                    break;
+                }
+                case OPT_INPUT_RADIX:
+                    if ((optarg[0] != 'h' && optarg[0] != 'd') || optarg[1] != '\0') {
+                        fprintf(stderr, "invalid radix option \"%s\" provided, use -h for usage\n", optarg);
+                        exit(EXIT_FAILURE);
+                    }
+                    inputRadix = optarg[0];
                     break;
                 default:
                     fprintf(stderr, "Invalid input formatting for fibonacci, use -h for usage\n");
@@ -167,14 +196,14 @@ int main(int argc, char *argv[]) {
         else
             global_config.mulDepth = getMulDepthFromMaxThreads(max_threads);
     }
-    if (filename == NULL) {
+    if (outputFilename == NULL) {
         size_t len = strlen(DEFAULT_FILENAME);
-        filename = malloc(len + 1);
-        mallocCheck(filename);
-        strncpy(filename, DEFAULT_FILENAME, len + 1);
+        outputFilename = malloc(len + 1);
+        mallocCheck(outputFilename);
+        strncpy(outputFilename, DEFAULT_FILENAME, len + 1);
     }
     if (global_config.verbose && output == 'f')
-        printf("Writing result in file: %s\n", filename);
+        printf("Writing result in file: %s\n", outputFilename);
 
     if (do_test) {
         test();
@@ -182,11 +211,21 @@ int main(int argc, char *argv[]) {
         bruteForceDebug();
     } else if (do_benchmark) {
         benchMark();
+    } else if (convertNumber) {
+        if (inputRadix == '\0') {
+            fprintf(stderr, "input-radix required for convert-number\n");
+            exit(EXIT_FAILURE);
+        } else if (inputFilename == NULL) {
+            fprintf(stderr, "input-filename required for convert-number\n");
+            exit(EXIT_FAILURE);
+        }
+        doConvertNumber(inputRadix, inputFilename, outputRadix, outputFilename);
     } else {
-        printFibonacci(n, radix, output, filename);
+        printFibonacci(n, outputRadix, output, outputFilename);
     }
 
-    free(filename);
+    free(outputFilename);
+    free(inputFilename);
     cleanupBigIntLib();
     return EXIT_SUCCESS;
 }
@@ -224,7 +263,7 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename) {
 
         if (output == 'f') {
             // File output
-            char infoStr[1000];
+            char infoStr[200];
             sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
             if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
             if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
@@ -257,6 +296,36 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename) {
                sizeInMB);
     }
     freeBigInt(res);
+}
+
+void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, char *outputFilename) {
+    if (inputRadix == outputRadix) {
+        printf("Doing nothing, input-radix and output-radix are the same\n");
+    }
+    printf("Converting number from %c to %c; Time: %s\n", inputRadix, outputRadix, getCurrentDateTime());
+
+    bigInt *tmp;
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (inputRadix == 'd') {
+        tmp = readBigIntDecFromFile(inputFilename);
+    } else {
+        tmp = readBigIntHexFromFile(inputFilename);
+    }
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    printf("Reading from file %s and converting to bigInt done, took %.2f seconds\n", inputFilename, time);
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (outputRadix == 'd') {
+        writeBigIntDecToFile(tmp, outputFilename);
+    } else {
+        writeBigIntHexToFile(tmp, outputFilename);
+    }
+    freeBigInt(tmp);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    printf("Finished conversion, result in %s, took %.2f seconds\n", outputFilename, time);
 }
 
 void printHelpMenu() {

@@ -30,9 +30,8 @@ bigInt *fibExpFastDoubling(uint64_t n) {
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
             size_t sizeInBytes = (a->end - a->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
-            char* localTime = getCurrentDateTime();
-            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s; Time: %s\n", counter,
-                   iterations, sizeInMB, time, localTime);
+            char *localTime = getCurrentDateTime();
+            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s; Time: %s\n", counter, iterations, sizeInMB, time, localTime);
             free(localTime);
             counter++;
             clock_gettime(CLOCK_MONOTONIC, &start);
@@ -46,18 +45,18 @@ bigInt *fibExpFastDoubling(uint64_t n) {
         bigInt *temp4;
 
         //to swap: b
-        char* filename_b = storeBigIntInSwap(b);
+        char *filename_b = storeBigIntInSwap(b);
         d = mul(a, temp2);
         freeBigInt(temp2);
 
         //to swap: b, d
-        char* filename_d = storeBigIntInSwap(d);
+        char *filename_d = storeBigIntInSwap(d);
         temp3 = mul(a, a);
         freeBigInt(a);
 
 
         //to swap: d, temp3
-        char* filename_temp3 = storeBigIntInSwap(temp3);
+        char *filename_temp3 = storeBigIntInSwap(temp3);
         b = loadBigIntFromSwap(b, filename_b);
         temp4 = mul(b, b);
         freeBigInt(b);

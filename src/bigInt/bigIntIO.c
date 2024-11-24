@@ -97,6 +97,7 @@ bigInt *readBigIntHexFromFile(char *path) {
     char *fileContent = readFile(path);
     if (fileContent == NULL) exit(EXIT_FAILURE);
     bigInt *res = hexStringToBigInt(fileContent);
+    free(fileContent);
     return res;
 }
 
@@ -104,6 +105,7 @@ bigInt *readBigIntDecFromFile(char *path) {
     char *fileContent = readFile(path);
     if (fileContent == NULL) exit(EXIT_FAILURE);
     bigInt *res = decStringToBigInt(fileContent);
+    free(fileContent);
     return res;
 }
 
