@@ -1,8 +1,7 @@
 #ifndef FIBONACCI_BIGINTHIGHERFUNCTIONS_H
+#define FIBONACCI_BIGINTHIGHERFUNCTIONS_H
 
 #include "bigInt.h"
-
-#define FIBONACCI_BIGINTHIGHERFUNCTIONS_H
 
 bigInt *fibExpFastDoubling(uint64_t n);
 

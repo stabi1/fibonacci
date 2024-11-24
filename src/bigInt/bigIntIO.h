@@ -1,8 +1,7 @@
 #ifndef FIBONACCI_BIGINTIO_H
+#define FIBONACCI_BIGINTIO_H
 
 #include "bigInt.h"
-
-#define FIBONACCI_BIGINTIO_H
 
 char *doStoreBigIntInSwap(bigInt *x);
 

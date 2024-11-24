@@ -28,3 +28,7 @@ No cache-> total heap usage: 680,772 allocs, 680,772 frees, 482,708,078 bytes al
 BigIntStruct cache-> total heap usage: 304,186 allocs, 304,186 frees, 467,644,846 bytes allocated
 All cache-> total heap usage: 35,252 allocs, 35,252 frees, 127,921,638 bytes allocated
 
+valgrind ./fib -o n -v -n 20000000
+1k cache -> total heap usage: 161,772 allocs, 161,772 frees, 975,581,332 bytes allocated
+10k cache -> total heap usage: 124,497 allocs, 124,497 frees, 264,087,596 bytes allocated
+100K cache -> total heap usage: 121,847 allocs, 121,847 frees, 38,345,708 bytes allocated

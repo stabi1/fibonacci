@@ -16,14 +16,12 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename);
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-//TODO cache for bigger bigIntArrays
-//TODO fix header files
-//TODO Optimize for memory, maybe add swap capabilities
-//TODO make div and to_dec_string parallel
+//TODO make div and to_dec_string parallel, add swap capabilities to these 2
 //TODO check support for variable starting point of bigIntArray
 //TODO fix makefile
+//TODO fix tests
+//TODO make way more tests
 //TODO docu with comments, readme, help-message
-//TODO Maybe cache for freed bigInts to reduce malloc calls?
 
 enum {
     OPT_MAX_THREADS = 1001,

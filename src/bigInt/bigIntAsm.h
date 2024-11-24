@@ -1,8 +1,7 @@
 #ifndef IMPLEMENTATION_BIGINTASM_H
+#define IMPLEMENTATION_BIGINTASM_H
 
 #include "bigInt.h"
-
-#define IMPLEMENTATION_BIGINTASM_H
 
 bigInt *do_add_asm(bigInt *x, bigInt *y, bigInt *res);
 

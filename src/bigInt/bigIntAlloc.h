@@ -15,7 +15,7 @@ typedef struct {
 typedef struct {
     uint64_t *array[MAX_SIZE]; // Fixed size stack
     int top;                 // Stack pointer (-1 means empty)
-} BigIntArrayStack_2KB;
+} BigIntArrayStack;
 
 int pushBigIntStack(bigInt *x);
 
@@ -27,7 +27,11 @@ int pushBigIntArrayStack(uint64_t *x, size_t len);
 
 BigIntStack *get_thread_BigIntStack();
 
-BigIntArrayStack_2KB *get_thread_bigIntArrayStack_2KB();
+BigIntArrayStack *get_thread_bigIntArrayStack_1KB();
+
+BigIntArrayStack *get_thread_bigIntArrayStack_10KB();
+
+BigIntArrayStack *get_thread_bigIntArrayStack_100KB();
 
 void free_BigIntStack(void *ptr);
 

@@ -1,4 +1,5 @@
 #ifndef IMPLEMENTATION_BETTERBIGINT_H
+#define IMPLEMENTATION_BETTERBIGINT_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -6,8 +7,6 @@
 #include <signal.h>
 
 #include "config.h"
-
-#define IMPLEMENTATION_BETTERBIGINT_H
 
 typedef struct BigIntTag { //The datastructure that represents a large number
     size_t start; // in qWords(64bit)

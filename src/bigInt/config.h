@@ -1,9 +1,8 @@
 #ifndef FIBONACCI_CONFIG_H
+#define FIBONACCI_CONFIG_H
 
 #include <stdbool.h>
 #include <stdlib.h>
-
-#define FIBONACCI_CONFIG_H
 
 typedef struct {
     bool verbose;

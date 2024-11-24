@@ -1,11 +1,10 @@
 #ifndef FIBONACCI_BIGINTMETHODS_H
+#define FIBONACCI_BIGINTMETHODS_H
 
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include "bigInt.h"
-
-#define FIBONACCI_BIGINTMETHODS_H
 
 bigInt *getLowerFrom(bigInt *x, size_t n);
 

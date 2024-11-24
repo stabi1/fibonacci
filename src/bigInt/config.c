@@ -14,7 +14,9 @@ Config global_config = {
 void cleanupBigIntLib() {
     //clear bigIntStructStack
     free_BigIntStack(get_thread_BigIntStack());
-    free_BigIntStack(get_thread_bigIntArrayStack_2KB());
+    free_BigIntStack(get_thread_bigIntArrayStack_1KB());
+    free_BigIntStack(get_thread_bigIntArrayStack_10KB());
+    free_BigIntStack(get_thread_bigIntArrayStack_100KB());
 }
 
 size_t getMulDepthFromMaxThreads(size_t maxThreads) {
