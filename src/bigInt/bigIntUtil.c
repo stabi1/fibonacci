@@ -185,10 +185,11 @@ char *bigIntToDecStringHelper(bigInt *x) {
 }
 
 char *bigIntToDecStringSchoenhage(bigInt *x) {
-    struct schoenhageReturn *ret = bigIntToDecStringSchoenhageLenRet(x, 0, true);
+    struct schoenhageReturn *ret = bigIntToDecStringSchoenhageLenRet(copyBigInt(x), 0, true);
     return ret->res;
 }
 
+// FREES the bigInt that is passed!!!
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning) {
     size_t resMaxLen = calculateDecStringSpace(x);
     char *res = malloc(resMaxLen);
@@ -221,6 +222,7 @@ void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resStrin
                 (*resString)[(*resStringCounter)++] = '-';
             }
         }
+        freeBigInt(x);
         memcpy(*resString + *resStringCounter, s, strlen(s));
         *resStringCounter += strlen(s);
         free(s);
@@ -239,15 +241,14 @@ void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resStrin
     }
 
     bigInt *r = NULL;
-    bigInt *q = divideModSingleThread(x, v, &r);
-    freeBigInt(v);
+    bigInt *q = divideModSingleThread(x, v, &r, true);
+    char *filename_r = storeBigIntInSwap(r);
 
     size_t expectedDigits = 1 << n;
     // Now recursively build the two halves of each number.
     bigIntToDecStringSchoenhageHelper(q, digits - expectedDigits, resString, resStringCounter, beginning ? true : false);
-    freeBigInt(q);
+    r = loadBigIntFromSwap(r, filename_r);
     bigIntToDecStringSchoenhageHelper(r, expectedDigits, resString, resStringCounter, false);
-    freeBigInt(r);
 }
 
 struct schoenhageArgs {
@@ -259,7 +260,7 @@ struct schoenhageArgs {
 
 char *bigIntToDecStringSchoenhageMultithread(bigInt *x) {
     struct schoenhageArgs *args = malloc(sizeof(struct schoenhageArgs));
-    args->x = x;
+    args->x = copyBigInt(x);
     args->digits = 0;
     args->beginning = true;
     args->depth = global_config.convertDepth;
@@ -297,12 +298,11 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     bigInt *r = NULL;
     bigInt *q;
     if (depth == global_config.convertDepth) {
-        q = divideMod(x, v, &r);
+        q = divideModMultiThread(x, v, &r, true);
         if (global_config.verbose) printf("First mul from conversion finished\n");
     } else {
-        q = divideModSingleThread(x, v, &r);
+        q = divideModSingleThread(x, v, &r, true);
     }
-    freeBigInt(v);
 
     size_t expectedDigits = 1 << n;
 
@@ -331,8 +331,6 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     struct schoenhageReturn *res2 = tmp2;
     free(args1);
     free(args2);
-    freeBigInt(q);
-    freeBigInt(r);
 
     char *result = realloc(res1->res, res1->resLen + res2->resLen + 1);
     memcpy(result + res1->resLen, res2->res, res2->resLen);
@@ -373,7 +371,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
     d->bigIntArray[0] = 0x8AC7230489E80000; //10^digitsPerUInt64 = 8AC7230489E80000
     while (!(tmp->end - tmp->start == 1 && tmp->bigIntArray[0] == 0)) {
         bigInt *r = NULL;
-        bigInt *q = divideModSingleThread(tmp, d, &r);
+        bigInt *q = divideModSingleThread(tmp, d, &r, false);
         freeBigInt(tmp);
         digitGroup[numGroups++] = uint64_t_toDecString(r->bigIntArray[0]);
         freeBigInt(r);

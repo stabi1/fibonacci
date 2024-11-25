@@ -17,7 +17,8 @@ def calculate_plot(command: str):
     swap_size = [item[1] for item in data]
     timestamps = [item[2] for item in data]
 
-    print(f"Max memory: {human_readable_size(max(memory_size))}; Max swap: {human_readable_size(max(swap_size))}")
+    summary_string = f"Max memory: {human_readable_size(max(memory_size))}; Max swap: {human_readable_size(max(swap_size))}"
+    print(summary_string)
 
     # Convert timestamps to a more readable format if needed (seconds -> hours:minutes:seconds)
     readable_time = [timestamp for timestamp in timestamps]  # Use as-is or convert if needed
@@ -30,7 +31,7 @@ def calculate_plot(command: str):
     plt.plot(readable_time, swap_size, label="Swap Size (KB)", color="red", marker="x")
 
     plt.title("Memory and Swap Size Over Time")
-    plt.suptitle(f"Command: {' '.join(command)}")
+    plt.suptitle(f"Command: {' '.join(command)}\nSummary: {summary_string}")
     plt.xlabel("Timestamp (seconds)")
     plt.ylabel("Size (KB)")
     plt.legend()

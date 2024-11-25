@@ -11,6 +11,7 @@ typedef struct {
     size_t convertDepth;
     bool swap;
     size_t swapThreshold; // in MB
+    bool deactivateCaches;
 } Config;
 
 extern Config global_config;

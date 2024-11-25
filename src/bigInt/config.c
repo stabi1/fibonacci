@@ -9,7 +9,8 @@ Config global_config = {
         .mulDepth = 0,
         .convertDepth = 0,
         .swap = false,
-        .swapThreshold = 100
+        .swapThreshold = 100,
+        .deactivateCaches = false
 };
 
 void cleanupBigIntLib() {

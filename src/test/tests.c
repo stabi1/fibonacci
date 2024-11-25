@@ -43,16 +43,27 @@ void test() {
 }
 
 void testTmp() {
-    struct timespec start;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    char*rand = randomHex(15001*16);
+    bigInt* a = hexStringToBigInt(rand);
+    free(rand);
+    char* res1 = bigIntToDecString(a);
 
-    bigInt *a = readBigIntDecFromFile("output.txt");
+    global_config.parallel = true;
+    global_config.mulDepth = 1;
+    global_config.convertDepth = 2;
+    global_config.swap = true;
+    global_config.swapThreshold = 1;
+    printf("Second one\n");
+    char *res2 = bigIntToDecString(a);
 
-    struct timespec end;
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-    printf("%lu %lu\n", a->start, a->end);
-    printf("Time in div: %f\n", time);
+    if (strcmp(res1, res2) != 0) {
+        printf("Strings not equal!!!!\n");
+    } else {
+        printf("Strings are equal\n");
+    }
+    free(res1);
+    free(res2);
+    freeBigInt(a);
 }
 
 //segfault for default
@@ -71,8 +82,8 @@ void testDivision() {
     //bigInt* a = hexStringToBigInt(randomHex(30000*16));
     //bigInt* b = hexStringToBigInt(randomHex(7000*16));
 
-    bigInt* a = hexStringToBigInt(randomHex(150001*16));
-    bigInt* b = hexStringToBigInt(randomHex(13502*16));
+    bigInt* a = hexStringToBigInt(randomHex(15001*16));
+    bigInt* b = hexStringToBigInt(randomHex(1302*16));
 
     bigInt *q1;
     bigInt *q2;
@@ -88,7 +99,7 @@ void testDivision() {
 
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    bigInt *res1 = divideModSingleThread(a, b, &q1);
+    bigInt *res1 = divideModSingleThread(a, b, &q1, false);
     struct timespec end;
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
@@ -116,41 +127,6 @@ void testDivision() {
     else printf("Reminder equal\n");
 
     //printBigIntHex(add(multiplyToomCook3(b, res1), q1)); //check
-
-    freeBigInt(a);
-    freeBigInt(b);
-    freeBigInt(q1);
-    freeBigInt(q2);
-    freeBigInt(res1);
-    freeBigInt(res2);
-}
-
-void test_3n2n() {
-    bigInt *a = hexStringToBigInt("F9D02BBFDE1A0FA314FB0C68B24506AC66BFC5DEA6B0A78AEE182AAB079732907B03BFA75EC9EB73BEAC6A4D5A01563E03FA58C146597FD46B8DDB82052D6067D5929B3C1F40A039542E1ABC5C61BAA52E053B4C3643F204EF259D2E98042A948AAC5E884CB3EC7DB925643FD34FDD467E2CC");
-    bigInt *b = hexStringToBigInt("56DC304E875C9D4B3FB2125AE3D0CD3130D6114989517ACA97DAA2485181EB31C07D2C6A5BCC587E048A6D2BEACD6FE206F225C708461B41FDB5AD087C5DC4FCAEEC3A3437A42E51B065D6");
-
-    printBigIntHex(a);
-    printBigIntHex(b);
-
-    printf("TEST: %ld %ld %ld %ld\n", a->end - a->start, b->end - b->start, custom_lzcnt(a->bigIntArray[a->end - 1]),
-           custom_lzcnt(b->bigIntArray[b->end - 1]));
-
-    bigInt *q1;
-    bigInt *q2;
-    bigInt *res1 = divideD4Helper(a, b, &q1);
-    bigInt *res2 = divideD4Helper(a, b, &q2);
-
-    printf("\nResults:\n");
-    printBigIntHex(res1);
-    printBigIntHex(res2);
-    printf("\nRemainders:\n");
-    printBigIntHex(q1);
-    printBigIntHex(q2);
-
-    if(compareBigInt(res1, res2) != 0) printf("RES not equal\n");
-    else printf("RES equal\n");
-    if(compareBigInt(q1, q2) != 0) printf("Reminder not equal\n");
-    else printf("Reminder equal\n");
 
     freeBigInt(a);
     freeBigInt(b);

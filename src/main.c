@@ -35,28 +35,30 @@ enum {
     OPT_SWAP_THRESHOLD,
     OPT_CONVERT_NUMBER,
     OPT_INPUT_FILENAME,
-    OPT_INPUT_RADIX
+    OPT_INPUT_RADIX,
+    OPT_DEACTIVATE_CACHES
 };
 
 static struct option long_options[] = {
-        {"help",            no_argument,       NULL, 'h'},
-        {"output-format",   required_argument, NULL, 'o'},
-        {"multithread",     no_argument,       NULL, 'm'},
-        {"output-radix",    required_argument, NULL, 'r'},
-        {"debug",           no_argument,       NULL, 'd'},
-        {"benchMark",       no_argument,       NULL, 'b'},
-        {"test",            no_argument,       NULL, 't'},
-        {"nth-fibonacci",   required_argument, NULL, 'n'},
-        {"verbose",         no_argument,       NULL, 'v'},
-        {"max-threads",     required_argument, NULL, OPT_MAX_THREADS},
-        {"num-cores",       required_argument, NULL, OPT_NUM_CORES},
-        {"output-filename", required_argument, NULL, OPT_RESULT_FILENAME},
-        {"do-swap",         no_argument,       NULL, OPT_DO_SWAP},
-        {"swap-threshold",  required_argument, NULL, OPT_SWAP_THRESHOLD},
-        {"convert-number",  no_argument,       NULL, OPT_CONVERT_NUMBER},
-        {"input-filename",  required_argument, NULL, OPT_INPUT_FILENAME},
-        {"input-radix",     required_argument, NULL, OPT_INPUT_RADIX},
-        {NULL, 0,                              NULL, 0}
+        {"help",              no_argument,       NULL, 'h'},
+        {"output-format",     required_argument, NULL, 'o'},
+        {"multithread",       no_argument,       NULL, 'm'},
+        {"output-radix",      required_argument, NULL, 'r'},
+        {"debug",             no_argument,       NULL, 'd'},
+        {"benchMark",         no_argument,       NULL, 'b'},
+        {"test",              no_argument,       NULL, 't'},
+        {"nth-fibonacci",     required_argument, NULL, 'n'},
+        {"verbose",           no_argument,       NULL, 'v'},
+        {"max-threads",       required_argument, NULL, OPT_MAX_THREADS},
+        {"num-cores",         required_argument, NULL, OPT_NUM_CORES},
+        {"output-filename",   required_argument, NULL, OPT_RESULT_FILENAME},
+        {"do-swap",           no_argument,       NULL, OPT_DO_SWAP},
+        {"swap-threshold",    required_argument, NULL, OPT_SWAP_THRESHOLD},
+        {"convert-number",    no_argument,       NULL, OPT_CONVERT_NUMBER},
+        {"input-filename",    required_argument, NULL, OPT_INPUT_FILENAME},
+        {"input-radix",       required_argument, NULL, OPT_INPUT_RADIX},
+        {"deactivate-caches", no_argument,       NULL, OPT_DEACTIVATE_CACHES},
+        {NULL, 0,                                NULL, 0}
 };
 
 int main(int argc, char *argv[]) {
@@ -173,6 +175,9 @@ int main(int argc, char *argv[]) {
                     }
                     inputRadix = optarg[0];
                     break;
+                case OPT_DEACTIVATE_CACHES:
+                    global_config.deactivateCaches = true;
+                    break;
                 default:
                     fprintf(stderr, "Invalid input formatting for fibonacci, use -h for usage\n");
                     exit(EXIT_FAILURE);
@@ -184,6 +189,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (global_config.verbose && global_config.deactivateCaches)
+        printf("Caches are deactivated\n");
     if (global_config.verbose && global_config.swap)
         printf("Swapping is activated with threshold: %lu MB\n", global_config.swapThreshold);
 
@@ -307,7 +314,9 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
     if (inputRadix == outputRadix) {
         printf("Doing nothing, input-radix and output-radix are the same\n");
     }
-    printf("Converting number from %c to %c; Time: %s\n", inputRadix, outputRadix, getCurrentDateTime());
+    char *dateTime = getCurrentDateTime();
+    printf("Converting number from %c to %c; Time: %s\n", inputRadix, outputRadix, dateTime);
+    free(dateTime);
 
     bigInt *tmp;
     struct timespec start, end;

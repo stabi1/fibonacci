@@ -12,19 +12,21 @@
 
 bigInt *exactDivideBy3(bigInt *x);
 
-bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler, bool multithread);
+bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler, bool multithread, bool freeArguments);
 
 bigInt *divideD4Helper(bigInt *dividend, bigInt *divisor, bigInt **reminder);
 
 bigInt *divideSingleThread(bigInt *dividend, bigInt *divisor);
 
-bigInt *divideModSingleThread(bigInt *dividend, bigInt *divisor, bigInt **reminder);
+bigInt *divideModSingleThread(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool freeArguments);
+
+bigInt *divideModMultiThread(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool freeArguments);
 
 void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt *reminder);
 
 void divideD4(bigInt *dividend, bigInt *divisor, bigInt *quotient, bigInt *reminder);
 
-bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool multithread);
+bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, bool freeArguments);
 
 bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread);
 
