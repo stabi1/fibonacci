@@ -9,6 +9,7 @@ import subprocess
 
 data: List[Tuple[int, int, float]] = []
 
+SLEEP_TIME = 0.05
 
 def calculate_plot(command: str):
     # Extracting the components from data
@@ -86,17 +87,17 @@ def monitor_process(pid) -> str:
             # Get process details
             with process.oneshot():
                 threads = process.threads()  # Get list of threads
-                thread_ids = [t.id for t in threads]
+                thread_ids = [t.id for t in threads] # List of all thread Ids
                 print(
-                    f"PID: {process.pid} | TID: {thread_ids} | MEM%: {process.memory_percent():.2f}% | RSS: {human_readable_size(process.memory_info().rss // 1024)} | Swap: {human_readable_size(swap_size)} | Command: {process.cmdline()[0]} | Passed time: {timestamp}")
+                    f"PID: {process.pid} | NUM Threads: {len(thread_ids)} | MEM%: {process.memory_percent():.2f}% | RSS: {human_readable_size(process.memory_info().rss // 1024)} | Swap: {human_readable_size(swap_size)} | Command: {process.cmdline()[0]} | Passed time: {timestamp}")
 
             # log data
             data.append((process.memory_info().rss // 1024, int(float(swap_size)), timestamp))
 
-            time.sleep(0.05)
+            time.sleep(SLEEP_TIME)
     except psutil.NoSuchProcess:
         print("Process not found.")
-        data.append((0, 0, data[-1][2] + 1))
+        data.append((0, 0, data[-1][2] + SLEEP_TIME*2))
     except psutil.AccessDenied:
         print("Access denied to process information.")
     except Exception as ex:

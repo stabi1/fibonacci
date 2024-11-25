@@ -8,11 +8,7 @@
 
 size_t NAIVEMUL_FASTER = 100; //Size when naiveMul is faster than karatsuba
 size_t KARATSUBA_FASTER = 400; //Size when karatsuba is faster than toom-cook
-size_t PARALLEL_FASTER = 1000; //Size when toom-cook-multithread is faster than toom-cook
-
-bigInt *mulSingleThread(bigInt *x, bigInt *y);
-
-bigInt *mulParallel(bigInt *x, bigInt *y);
+size_t PARALLEL_MUL_FASTER = 1000; //Size when toom-cook-multithread is faster than toom-cook
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
@@ -74,7 +70,7 @@ bigInt *mulParallelExecute(bigInt *x, bigInt *y) {
         return naiveMul_Asm(x, y);
     } else if (yLen <= KARATSUBA_FASTER) {
         return karatsuba(x, y);
-    } else if (yLen <= PARALLEL_FASTER) {
+    } else if (yLen <= PARALLEL_MUL_FASTER) {
         return multiplyToomCook3(x, y);
     } else {
         return multiplyToomCook3MultiThread(x, y, global_config.mulDepth);

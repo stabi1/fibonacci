@@ -8,6 +8,7 @@ typedef struct {
     bool verbose;
     bool parallel;
     size_t mulDepth;
+    size_t convertDepth;
     bool swap;
     size_t swapThreshold; // in MB
 } Config;
@@ -19,5 +20,9 @@ void cleanupBigIntLib();
 size_t getMulDepthFromMaxThreads(size_t maxThreads);
 
 size_t getMulDepthFromCores(size_t nprocsSet);
+
+size_t getConvertDepthFromMaxThreads(size_t maxThreads);
+
+size_t getConvertDepthFromCores(size_t nprocsSet);;
 
 #endif

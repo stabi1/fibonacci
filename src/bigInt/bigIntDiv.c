@@ -1,6 +1,8 @@
 #include "bigIntDiv.h"
+#include "bigIntMul.h"
 
 size_t D4FASTER = 70;
+size_t PARALLEL_DIV_FASTER = 1000;
 
 //To be used when the number is known to be exactly divisible by 3
 bigInt *exactDivideBy3(bigInt *x) {
@@ -36,19 +38,32 @@ bigInt *exactDivideBy3(bigInt *x) {
 }
 
 bigInt *divide(bigInt *dividend, bigInt *divisor) {
-    bigInt *res = divideHelper(dividend, divisor, NULL, false);
+    bigInt *res = divideHelper(dividend, divisor, NULL, false, global_config.parallel);
     res->negative = dividend->negative ^ divisor->negative;
     return res;
 }
 
 bigInt *divideMod(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
-    bigInt *res = divideHelper(dividend, divisor, reminder, false);
+    bigInt *res = divideHelper(dividend, divisor, reminder, false, global_config.parallel);
     res->negative = dividend->negative ^ divisor->negative;
     (*reminder)->negative = dividend->negative;
     return res;
 }
 
-bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler) {
+bigInt *divideSingleThread(bigInt *dividend, bigInt *divisor) {
+    bigInt *res = divideHelper(dividend, divisor, NULL, false, false);
+    res->negative = dividend->negative ^ divisor->negative;
+    return res;
+}
+
+bigInt *divideModSingleThread(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
+    bigInt *res = divideHelper(dividend, divisor, reminder, false, false);
+    res->negative = dividend->negative ^ divisor->negative;
+    (*reminder)->negative = dividend->negative;
+    return res;
+}
+
+bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler, bool multithread) {
     uint64_t m = dividend->end - dividend->start;
     uint64_t n = divisor->end - divisor->start;
 
@@ -99,13 +114,16 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
         }
         return quotient;
     } else {
+        bool doMultiThread = true;
+        if (n < PARALLEL_DIV_FASTER || !multithread)
+            doMultiThread = false;
         if (reminder == NULL) {
             bigInt *reminderTmp;
-            bigInt *qTmp = divideBurnikelZiegler(dividend, divisor, &reminderTmp);
+            bigInt *qTmp = divideBurnikelZiegler(dividend, divisor, &reminderTmp, doMultiThread);
             freeBigInt(reminderTmp);
             return qTmp;
         } else {
-            return divideBurnikelZiegler(dividend, divisor, reminder);
+            return divideBurnikelZiegler(dividend, divisor, reminder, doMultiThread);
         }
     }
 }
@@ -235,7 +253,7 @@ void divideD4(bigInt *dividend, bigInt *divisor, bigInt *quotient, bigInt *remin
 
 //return A/B
 //adapted from Java Jdk8 (divideBurnikelZiegler, divide2n1n and divide3n2n)
-bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
+bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool multithread) {
     long s = (long) (B->end - B->start); //s
 
     bigInt *quotient = getZeroBigInt();
@@ -270,7 +288,7 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
     bigInt *ri = NULL;
     for (int i = (int) t - 2; i > 0; i--) {
         // step 8a: compute (qi,ri) such that z=b*qi+ri
-        qi = divide2n1n(z, bShifted, &ri);
+        qi = divide2n1n(z, bShifted, &ri, multithread);
 
         // step 8b: z = [ri, a[i-1]]
         zTmp = getBlock(aShifted, i - 1, t, n);   // a[i-1]
@@ -287,7 +305,7 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
 
     }
     // final iteration of step 8: do the loop one more time for i=0 but leave z unchanged
-    qi = divide2n1n(z, bShifted, &ri);
+    qi = divide2n1n(z, bShifted, &ri, multithread);
     freeBigInt(z);
     freeBigInt(bShifted);
     bigInt *qTmp = add(quotient, qi);
@@ -303,12 +321,12 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder) {
 }
 
 //aLen <= 2*bLen
-bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
+bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread) {
     size_t n = B->end - B->start;
 
     // step 1: base case
     if (n % 2 != 0 || n < D4FASTER || isZero(A)) {
-        return divideHelper(A, B, reminder, true);
+        return divideHelper(A, B, reminder, true, multithread);
     }
 
     // step 2: view A as [a1,a2,a3,a4] where each ai is n/2 ints or less
@@ -317,14 +335,14 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
 
     // step 3: q1=aUpper/B, r1=aUpper%B
     bigInt *r1 = NULL;
-    bigInt *q1 = divide3n2n(aUpper, B, &r1);
+    bigInt *q1 = divide3n2n(aUpper, B, &r1, multithread);
     freeBigInt(aUpper);
 
     // step 4: quotient=[r1,aLower]/B, r2=[r1,aLower]%B
     bigInt *aLower2 = shiftAdd(aLower, r1, n / 2);   // this = [r1,this]
     freeBigInt(r1);
     freeBigInt(aLower);
-    bigInt *quotient = divide3n2n(aLower2, B, reminder);
+    bigInt *quotient = divide3n2n(aLower2, B, reminder, multithread);
     freeBigInt(aLower2);
 
     // step 5: let quotient=[q1,quotient] and return r2
@@ -335,9 +353,9 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder) {
 }
 
 //2*aLen<=3*bLen
-bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
+bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread) {
     if (isZero(A)) {
-        return divideHelper(A, B, reminder, true);
+        return divideHelper(A, B, reminder, true, multithread);
     }
 
     size_t n = (B->end - B->start) / 2;   // half the length of b in ints
@@ -354,10 +372,13 @@ bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder) {
     bigInt *quotient;
     if (compareShiftedBigInt(A, B, n) < 0) {
         // step 3a: if a1<b1, let quotient=a12/b1 and r=a12%b1
-        quotient = divide2n1n(a12, b1, &r);
+        quotient = divide2n1n(a12, b1, &r, multithread);
 
         // step 4: d=quotient*b2
-        d = mul(quotient, b2);
+        if (multithread)
+            d = mulParallel(quotient, b2);
+        else
+            d = mulSingleThread(quotient, b2);
     } else {
         // step 3b: if a1>=b1, let quotient=beta^n-1 and r=a12-b1*2^n+b1
         quotient = newBigInt(n);

@@ -16,7 +16,9 @@ char *uint64_t_toDecString(uint64_t x);
 
 char *bigIntToDecStringHelper(bigInt *x);
 
-void bigIntToDecStringSchoenhage(bigInt *x, size_t digits, char **resString, size_t *resStringCounter, size_t *resMaxLen);
+char* bigIntToDecStringSchoenhage(bigInt *x);
+
+char* bigIntToDecStringSchoenhageMultithread(bigInt *x);
 
 char *bigIntToDecStringSmall(bigInt *x);
 

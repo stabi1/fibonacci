@@ -20,6 +20,8 @@ const char *DEFAULT_FILENAME = "output.txt";
 
 //TODO make div and to_dec_string parallel, add swap capabilities to these 2
 //TODO check support for variable starting point of bigIntArray
+//TODO use memcpy in ASM methods
+//TODO check return values form libc functions (THREAD FUNCTIONS)
 //TODO fix makefile
 //TODO fix tests
 //TODO make way more tests
@@ -191,10 +193,13 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Options p and n are mutually exclusive");
             exit(EXIT_FAILURE);
         }
-        if (cores != 0)
+        if (cores != 0) {
             global_config.mulDepth = getMulDepthFromCores(cores);
-        else
+            global_config.convertDepth = getConvertDepthFromCores(cores);
+        } else {
             global_config.mulDepth = getMulDepthFromMaxThreads(max_threads);
+            global_config.convertDepth = getConvertDepthFromMaxThreads(max_threads);
+        }
     }
     if (outputFilename == NULL) {
         size_t len = strlen(DEFAULT_FILENAME);

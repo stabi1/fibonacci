@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include "bigIntMethods.h"
 
+bigInt *mulSingleThread(bigInt *x, bigInt *y);
+
+bigInt *mulParallel(bigInt *x, bigInt *y);
+
 bigInt *karatsuba(bigInt *x, bigInt *y);
 
 bigInt *multiplyToomCook3(bigInt *a, bigInt *b);

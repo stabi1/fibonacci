@@ -7,6 +7,7 @@ Config global_config = {
         .verbose = false,
         .parallel = false,
         .mulDepth = 0,
+        .convertDepth = 0,
         .swap = false,
         .swapThreshold = 100
 };
@@ -61,5 +62,71 @@ size_t getMulDepthFromCores(size_t nprocsSet) {
     } else {
         printf("Number of compute threads that will be created during mul: %d\n", 625);
         return 4;
+    }
+}
+
+size_t getConvertDepthFromMaxThreads(size_t maxThreads) {
+    if (maxThreads == 0) {
+        return getConvertDepthFromCores(0);
+    }
+
+    if (maxThreads < 2) {
+        if (global_config.verbose) printf("Number of convert compute threads that will be created during conversion: %d\n", 1);
+        return 0;
+    } else if (maxThreads < 4) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 2);
+        return 1;
+    } else if (maxThreads < 8) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 4);
+        return 2;
+    } else if (maxThreads < 16) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 8);
+        return 3;
+    }else if (maxThreads < 32) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 16);
+        return 4;
+    }else if (maxThreads < 64) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 32);
+        return 5;
+    }else if (maxThreads < 128) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 64);
+        return 6;
+    }else {
+        printf("Number of compute threads that will be created during conversion: %d\n", 128);
+        return 7;
+    }
+}
+
+size_t getConvertDepthFromCores(size_t nprocsSet) {
+    size_t numberOfCores;
+    if (nprocsSet == 0) {
+        numberOfCores = get_nprocs();
+        if (global_config.verbose) printf("Number of cores detected: %lu\n", numberOfCores);
+    } else {
+        numberOfCores = nprocsSet;
+        if (global_config.verbose) printf("Number of cores set: %lu\n", numberOfCores);
+    }
+
+    if (numberOfCores < 3) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 2);
+        return 1;
+    } else if (numberOfCores < 5) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 4);
+        return 2;
+    } else if (numberOfCores < 9) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 8);
+        return 3;
+    } else if (numberOfCores < 17) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 16);
+        return 4;
+    } else if (numberOfCores < 33) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 32);
+        return 5;
+    } else if (numberOfCores < 65) {
+        if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 64);
+        return 6;
+    } else {
+        printf("Number of compute threads that will be created during conversion: %d\n", 128);
+        return 7;
     }
 }
