@@ -198,6 +198,7 @@ void free_BigIntStack(void *ptr) {
         for (int i = 0; i <= stack->top; ++i) {
             free(stack->array[i]);
         }
+        free(stack->array);
         free(stack);
     }
 }
