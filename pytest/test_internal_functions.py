@@ -7,6 +7,12 @@ import pytest
 from big_int_helper import get_positive_test_number_pairs
 
 
+def test_new_big_int_is_zero():
+    big_int_instance = big_int_lib.newBigInt(1)
+    big_int = big_int_instance.contents
+    assert big_int.bigIntArray[0] == 0
+
+
 @pytest.mark.parametrize("hex_str, length", [
     ("0", 1),
     ("1", 1),

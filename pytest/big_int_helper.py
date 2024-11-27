@@ -44,11 +44,11 @@ def getPartialBigInt(big_int_instance: ctypes.POINTER(BigInt), new_start: int, n
 
 
 def trim_string(s, remove_front, remove_back):
-    return s[remove_front:-remove_back]
+    return s[remove_front:] if remove_back == 0 else s[remove_front:-remove_back]
 
 
-def handler(signum, frame):
-    print("Caught signal, preventing exit")
+def remove_leading_zeros_str(s: str):
+    return s.lstrip('0') or '0'
 
 
 big_int_lib = ctypes.CDLL('./pytest/bigInt.so')
@@ -155,15 +155,17 @@ def get_positive_test_number_pairs() -> List[Tuple[str, str]]:
 
 
 def get_partial_bigInts() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
-    big_int_length = 1000
+    big_int_length = 500
     test_hex_string = random_hex_string(16 * big_int_length)
     bounds = [(0, 1), (1, 2), (1, 20), (50, 61), (200, 400)]
     res_list = []
     for start, end in bounds:
         big_int_instance = big_int_lib.hexStringToBigInt(test_hex_string.encode())
         big_int_partial = getPartialBigInt(big_int_instance, start, end)
-        partial_hex_str = trim_string(test_hex_string, start * 16, (big_int_length - end) * 16)
+        partial_hex_str = remove_leading_zeros_str(trim_string(test_hex_string, (big_int_length - end) * 16, start * 16))  # switched because stings are big endian
         res_list.append((big_int_partial, partial_hex_str))
+        if partial_hex_str == "":
+            print(f"Got you {start} {end}")
     return res_list
 
 

@@ -18,12 +18,10 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-//TODO make div and to_dec_string parallel, add swap capabilities to these 2
 //TODO check support for variable starting point of bigIntArray
 //TODO use memcpy in ASM methods
 //TODO check return values form libc functions (THREAD FUNCTIONS)
 //TODO fix makefile
-//TODO fix tests
 //TODO make way more tests
 //TODO docu with comments, readme, help-message
 
@@ -351,9 +349,9 @@ void printHelpMenu() {
                          "\n"
                          "            e.g.:\n "
                          "                  Calculate 10000000t fibonacci number and write the result in decimal into the file res.txt\n"
-                         "                  ./fib -o f -r d --result-filename res.txt -n 10000000\n"
+                         "                  ./fib -o f -r d --input-filename res.txt -n 10000000\n"
                          "                  Same as before, now with verbose output and swap activated if a bigInt is bigger than 1 MB\n"
-                         "                  ./fib -o f -r d --result-filename res.txt -v --do-swap --swap-threshold 1 -n 10000000 \n"
+                         "                  ./fib -o f -r d --input-filename res.txt -v --do-swap --swap-threshold 1 -n 10000000 \n"
                          "\n"
                          "            The default filename is output.txt | if the file exists, it will be overwritten\n"
                          "\n"
@@ -362,6 +360,6 @@ void printHelpMenu() {
                          "                -t -> test\n"
                          "                -b -> benchMark\n"
                          "                -v -> verbose\n"
-                         "                --result-filename -> set filename for output file\n";
+                         "                --input-filename -> set filename for output file\n";
     printf("%s\n", helpMenuText);
 }
