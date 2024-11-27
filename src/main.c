@@ -18,11 +18,10 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-//TODO check support for variable starting point of bigIntArray
 //TODO use memcpy in ASM methods
 //TODO check return values form libc functions (THREAD FUNCTIONS)
+//TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
 //TODO fix makefile
-//TODO make way more tests
 //TODO docu with comments, readme, help-message
 
 enum {

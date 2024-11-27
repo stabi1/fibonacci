@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import argparse
 import os
+import sys
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 
@@ -9,9 +11,8 @@ import subprocess
 
 data: List[Tuple[int, int, float]] = []
 
-SLEEP_TIME = 0.05
 
-def calculate_plot(command: str):
+def calculate_plot(command: str, output_filename: str):
     # Extracting the components from data
     memory_size = [item[0] for item in data]
     swap_size = [item[1] for item in data]
@@ -38,7 +39,7 @@ def calculate_plot(command: str):
     plt.grid(True)
 
     plt.tight_layout()
-    plt.savefig('memory_usage_plot.png')
+    plt.savefig(output_filename)
     plt.show()
 
 
@@ -67,7 +68,7 @@ def get_swap_storage_size() -> str:
         raise Exception(f"Error retrieving value; stderr: {result.stderr}, stdout: {result.stdout}")
 
 
-def monitor_process(pid) -> str:
+def monitor_process(pid, monitor_interval: int) -> str:
     start_time = time.perf_counter()
     command: str = ""
     try:
@@ -88,17 +89,17 @@ def monitor_process(pid) -> str:
             # Get process details
             with process.oneshot():
                 threads = process.threads()  # Get list of threads
-                thread_ids = [t.id for t in threads] # List of all thread Ids
+                thread_ids = [t.id for t in threads]  # List of all thread Ids
                 print(
                     f"PID: {process.pid} | NUM Threads: {len(thread_ids)} | MEM%: {process.memory_percent():.2f}% | RSS: {human_readable_size(process.memory_info().rss // 1024)} | Swap: {human_readable_size(swap_size)} | Command: {process.cmdline()[0]} | Passed time: {timestamp}")
 
             # log data
             data.append((process.memory_info().rss // 1024, int(float(swap_size)), timestamp))
 
-            time.sleep(SLEEP_TIME)
+            time.sleep(monitor_interval)
     except psutil.NoSuchProcess:
         print("Process not found.")
-        data.append((0, 0, data[-1][2] + SLEEP_TIME*2))
+        data.append((0, 0, data[-1][2] + monitor_interval * 2))
     except psutil.AccessDenied:
         print("Access denied to process information.")
     except Exception as ex:
@@ -106,7 +107,7 @@ def monitor_process(pid) -> str:
     return command
 
 
-def get_PID(command: str) -> str|None:
+def get_PID(command: str) -> str | None:
     pid = None
     for proc in psutil.process_iter(attrs=['pid', 'cmdline']):
         if command in proc.info['cmdline']:
@@ -114,7 +115,8 @@ def get_PID(command: str) -> str|None:
             break
     return pid
 
-if __name__ == '__main__':
+
+def execute_monitoring(monitor_interval: int, chart_filename: str) -> None:
     # Get the PID of the process running './fib'
     command_to_monitor = './fib'
     pid_to_monitor = get_PID(command_to_monitor)
@@ -125,6 +127,20 @@ if __name__ == '__main__':
         pid_to_monitor = get_PID(command_to_monitor)
 
     print(f"Process '{command_to_monitor}' found, monitoring is starting")
-    command_ret = monitor_process(pid_to_monitor)
-    calculate_plot(command_ret)
+    command_ret = monitor_process(pid_to_monitor, monitor_interval)
+    calculate_plot(command_ret, chart_filename)
 
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Monitor process")
+    # Add arguments
+    parser.add_argument('--monitor-interval', type=int, default=0.1, help='The time between measurements', dest='monitor_interval')
+    parser.add_argument('--chart-filename', default='memory_usage_plot.png', type=str, help='Name of the output chart, must be a .png file', dest='chart_filename')
+
+    args = parser.parse_args()
+    if not args.chart_filename.endswith(".png"):
+        print("--chart_filename must be a .png file")
+        sys.exit(1)
+
+    execute_monitoring(args.monitor_interval, args.chart_filename)
+    sys.exit(0)
