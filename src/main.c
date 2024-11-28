@@ -12,7 +12,7 @@
 
 void printHelpMenu();
 
-void printFibonacci(uint64_t n, char radix, char output, char *filename);
+void printFibonacci(uint64_t n, char radix, char output, char *filename, bool infoInOutputFile);
 
 void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, char *outputFilename);
 
@@ -33,29 +33,31 @@ enum {
     OPT_CONVERT_NUMBER,
     OPT_INPUT_FILENAME,
     OPT_INPUT_RADIX,
-    OPT_DEACTIVATE_CACHES
+    OPT_DEACTIVATE_CACHES,
+    OPT_INFO_IN_OUTPUTFILE
 };
 
 static struct option long_options[] = {
-        {"help",              no_argument,       NULL, 'h'},
-        {"output-format",     required_argument, NULL, 'o'},
-        {"multithread",       no_argument,       NULL, 'm'},
-        {"output-radix",      required_argument, NULL, 'r'},
-        {"debug",             no_argument,       NULL, 'd'},
-        {"benchMark",         no_argument,       NULL, 'b'},
-        {"test",              no_argument,       NULL, 't'},
-        {"nth-fibonacci",     required_argument, NULL, 'n'},
-        {"verbose",           no_argument,       NULL, 'v'},
-        {"max-threads",       required_argument, NULL, OPT_MAX_THREADS},
-        {"num-cores",         required_argument, NULL, OPT_NUM_CORES},
-        {"output-filename",   required_argument, NULL, OPT_RESULT_FILENAME},
-        {"do-swap",           no_argument,       NULL, OPT_DO_SWAP},
-        {"swap-threshold",    required_argument, NULL, OPT_SWAP_THRESHOLD},
-        {"convert-number",    no_argument,       NULL, OPT_CONVERT_NUMBER},
-        {"input-filename",    required_argument, NULL, OPT_INPUT_FILENAME},
-        {"input-radix",       required_argument, NULL, OPT_INPUT_RADIX},
-        {"deactivate-caches", no_argument,       NULL, OPT_DEACTIVATE_CACHES},
-        {NULL, 0,                                NULL, 0}
+        {"help",               no_argument,       NULL, 'h'},
+        {"output-format",      required_argument, NULL, 'o'},
+        {"multithread",        no_argument,       NULL, 'm'},
+        {"output-radix",       required_argument, NULL, 'r'},
+        {"debug",              no_argument,       NULL, 'd'},
+        {"benchMark",          no_argument,       NULL, 'b'},
+        {"test",               no_argument,       NULL, 't'},
+        {"nth-fibonacci",      required_argument, NULL, 'n'},
+        {"verbose",            no_argument,       NULL, 'v'},
+        {"max-threads",        required_argument, NULL, OPT_MAX_THREADS},
+        {"num-cores",          required_argument, NULL, OPT_NUM_CORES},
+        {"output-filename",    required_argument, NULL, OPT_RESULT_FILENAME},
+        {"info-in-outputfile", no_argument,       NULL, OPT_INFO_IN_OUTPUTFILE},
+        {"do-swap",            no_argument,       NULL, OPT_DO_SWAP},
+        {"swap-threshold",     required_argument, NULL, OPT_SWAP_THRESHOLD},
+        {"convert-number",     no_argument,       NULL, OPT_CONVERT_NUMBER},
+        {"input-filename",     required_argument, NULL, OPT_INPUT_FILENAME},
+        {"input-radix",        required_argument, NULL, OPT_INPUT_RADIX},
+        {"deactivate-caches",  no_argument,       NULL, OPT_DEACTIVATE_CACHES},
+        {NULL, 0,                                 NULL, 0}
 };
 
 int main(int argc, char *argv[]) {
@@ -87,6 +89,7 @@ int main(int argc, char *argv[]) {
     bool do_test = false;
     bool do_benchmark = false;
     char *outputFilename = NULL;
+    bool infoInOutputFile = false;
 
     bool convertNumber = false;
     char inputRadix = '\0';
@@ -134,6 +137,9 @@ int main(int argc, char *argv[]) {
                     strncpy(outputFilename, optarg, len + 1);
                     break;
                 }
+                case OPT_INFO_IN_OUTPUTFILE:
+                    infoInOutputFile = true;
+                    break;
                 case 'r':
                     if ((optarg[0] != 'h' && optarg[0] != 'd') || optarg[1] != '\0') {
                         fprintf(stderr, "invalid radix option \"%s\" provided, use -h for usage\n", optarg);
@@ -230,7 +236,7 @@ int main(int argc, char *argv[]) {
         }
         doConvertNumber(inputRadix, inputFilename, outputRadix, outputFilename);
     } else {
-        printFibonacci(n, outputRadix, output, outputFilename);
+        printFibonacci(n, outputRadix, output, outputFilename, infoInOutputFile);
     }
 
     free(outputFilename);
@@ -239,7 +245,7 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-void printFibonacci(uint64_t n, char radix, char output, char *filename) {
+void printFibonacci(uint64_t n, char radix, char output, char *filename, bool infoInOutputFile) {
     size_t estimatedSizeInBytes = (size_t) (0.0868 * (double) n + 3.8275);
     double sizeInMBEst = ((double) estimatedSizeInBytes) / 1000000;
     printf("Starting calculation for n=%zu | estimated size in bytes:%zu in MB:%0.2f\n", n, estimatedSizeInBytes,
@@ -272,10 +278,15 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename) {
 
         if (output == 'f') {
             // File output
-            char infoStr[200];
-            sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
-            if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
-            if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
+            if (infoInOutputFile) {
+                char infoStr[200];
+                sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
+                if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
+                if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
+            } else {
+                if (writeFile(filename, resString, false) == -1) exit(EXIT_FAILURE);
+            }
+
             if (global_config.verbose) printf("Result written into file %s\n", filename);
         } else {
             //Terminal output (output == 't')
@@ -348,9 +359,9 @@ void printHelpMenu() {
                          "\n"
                          "            e.g.:\n "
                          "                  Calculate 10000000t fibonacci number and write the result in decimal into the file res.txt\n"
-                         "                  ./fib -o f -r d --input-filename res.txt -n 10000000\n"
+                         "                  ./fib -o f -r d --output-filename res.txt -n 10000000\n"
                          "                  Same as before, now with verbose output and swap activated if a bigInt is bigger than 1 MB\n"
-                         "                  ./fib -o f -r d --input-filename res.txt -v --do-swap --swap-threshold 1 -n 10000000 \n"
+                         "                  ./fib -o f -r d --output-filename res.txt -v --do-swap --swap-threshold 1 -n 10000000 \n"
                          "\n"
                          "            The default filename is output.txt | if the file exists, it will be overwritten\n"
                          "\n"
@@ -359,6 +370,6 @@ void printHelpMenu() {
                          "                -t -> test\n"
                          "                -b -> benchMark\n"
                          "                -v -> verbose\n"
-                         "                --input-filename -> set filename for output file\n";
+                         "                --output-filename -> set filename for output file\n";
     printf("%s\n", helpMenuText);
 }

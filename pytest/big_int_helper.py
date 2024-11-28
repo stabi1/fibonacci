@@ -131,6 +131,7 @@ positive_test_numbers: List[str] = [
     random_hex_string(720 * 16 - 1),
     random_hex_string(1152 * 16 - 6),
     random_hex_string(10000 * 16 - 3),
+    "1" + "0" * 16 * 15 + "0" * 5
 ]
 
 

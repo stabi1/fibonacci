@@ -49,7 +49,8 @@ def test_hexStringToBigInt_and_bigIntToHexString(test_hex_string: str):
     random_dec_string(2000 * 16 + 1),
     random_dec_string(720 * 16 - 1),
     random_dec_string(1152 * 16 - 6),
-    random_dec_string(10000 * 16 - 3)
+    random_dec_string(10000 * 16 - 3),
+    "1" + "0" * 16 * 15 + "0" * 5
 ])
 def test_decStringToBigInt_and_bigIntToDecString(test_dec_string: str):
     big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())

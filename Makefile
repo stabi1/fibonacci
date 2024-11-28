@@ -12,9 +12,11 @@ SOURCE_FILES_C=src/main.c src/util.c src/bigInt/bigIntMul.c src/bigInt/bigIntAll
 SOURCE_FILES_S=src/bigInt/bigIntAsm.S src/bigInt/mulAsm.S
 
 BUILD_ROOT=build
+SWAP_DIR=swap_storage
 
 OUTPUT_FILENAME=fib
-OUTPUT_LIBNAME=pytest/bigInt.so
+OUTPUT_LIBNAME_TEST=pytest/bigInt.so
+OUTPUT_FILENAME_TEST=pytest/fib
 
 all: main
 
@@ -32,7 +34,7 @@ sanitize: $(OUTPUT_FILENAME)
 
 test: TARGET_NAME=test
 test: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(TEST_FLAGS) $(PERFORMANCE_FLAGS)
-test: $(OUTPUT_LIBNAME)
+test: $(OUTPUT_LIBNAME_TEST)
 	pytest
 
 # BUILD_DIR=$(BUILD_ROOT)/$(TARGET_NAME) TODO
@@ -44,9 +46,10 @@ OBJECT_FILES=$(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SOURCE_FILES_C)) \
 $(OUTPUT_FILENAME): $(OBJECT_FILES)
 	$(CC) $(CFLAGS) -o $@ $^ $(LINKER_FLAGS)
 
-# Link the shared library
-$(OUTPUT_LIBNAME): $(OBJECT_FILES)
+# Link the shared library for testing
+$(OUTPUT_LIBNAME_TEST): $(OBJECT_FILES)
 	$(CC) -shared -o $@ $(CFLAGS) $^
+	$(CC) $(CFLAGS) -o $(OUTPUT_FILENAME_TEST) $^ $(LINKER_FLAGS)
 
 # Compile C files
 $(BUILD_DIR)/%.o: src/%.c
@@ -59,6 +62,7 @@ $(BUILD_DIR)/%.o: src/%.S
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 setup:
+	sudo apt install valgrind
 	sudo apt install python3-full python3-pip
 	python3 -m venv ./venv
 	source ./venv/bin/activate
@@ -69,7 +73,9 @@ setup:
 
 clean:
 	rm -f $(OUTPUT_FILENAME)
-	rm -f $(OUTPUT_LIBNAME)
+	rm -f $(OUTPUT_LIBNAME_TEST)
+	rm -f $(OUTPUT_FILENAME_TEST)
 	rm -rf $(BUILD_ROOT)
+	rm -rf $(SWAP_DIR)
 
 .PHONY: all main debug sanitize test clean setup
