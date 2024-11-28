@@ -10,12 +10,14 @@ from big_int_helper import big_int_lib, random_hex_string, random_dec_string, ge
 def test_bigIntToHexString_for_zero():
     big_int_instance = big_int_lib.newBigInt(1)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance)
+    big_int_lib.freeBigInt(big_int_instance)
     assert hex_str.decode() == "0"
 
 
 def test_bigIntToDecString_for_zero():
     big_int_instance = big_int_lib.newBigInt(1)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance)
+    big_int_lib.freeBigInt(big_int_instance)
     assert hex_str.decode() == "0"
 
 
@@ -24,6 +26,7 @@ def test_hexStringToBigInt_and_bigIntToHexString(test_hex_string: str):
     big_int_instance = big_int_lib.hexStringToBigInt(test_hex_string.encode())
     assert big_int_lib.isValidBigInt(big_int_instance)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance)
+    big_int_lib.freeBigInt(big_int_instance)
     assert hex_str.decode() == test_hex_string
 
 
@@ -56,13 +59,15 @@ def test_decStringToBigInt_and_bigIntToDecString(test_dec_string: str):
     big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())
     assert big_int_lib.isValidBigInt(big_int_instance)
     dec_str = big_int_lib.bigIntToDecString(big_int_instance)
+    big_int_lib.freeBigInt(big_int_instance)
     assert dec_str.decode() == test_dec_string
 
     # negative numbers
     test_dec_string = "-" + test_dec_string
-    big_int_instance = big_int_lib.decStringToBigInt(test_dec_string.encode())
-    assert big_int_lib.isValidBigInt(big_int_instance)
-    dec_str = big_int_lib.bigIntToDecString(big_int_instance)
+    big_int_instance_2 = big_int_lib.decStringToBigInt(test_dec_string.encode())
+    assert big_int_lib.isValidBigInt(big_int_instance_2)
+    dec_str = big_int_lib.bigIntToDecString(big_int_instance_2)
+    big_int_lib.freeBigInt(big_int_instance_2)
     assert dec_str.decode() == test_dec_string
 
 

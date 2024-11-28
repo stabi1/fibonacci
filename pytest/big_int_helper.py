@@ -57,6 +57,10 @@ big_int_lib = ctypes.CDLL('./pytest/bigInt.so')
 big_int_lib.newBigInt.argtypes = [ctypes.c_size_t]
 big_int_lib.newBigInt.restype = ctypes.POINTER(BigInt)
 
+# void freeBigInt(bigInt *toDelete);
+big_int_lib.newBigInt.freeBigInt = [ctypes.POINTER(BigInt)]
+big_int_lib.newBigInt.freeBigInt = None
+
 # bool isValidBigInt(bigInt *x);
 big_int_lib.isValidBigInt.argtypes = [ctypes.POINTER(BigInt)]
 big_int_lib.isValidBigInt.restype = ctypes.c_bool

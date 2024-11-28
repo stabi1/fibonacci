@@ -23,19 +23,23 @@ def test_new_big_int_is_zero():
 def test_getOccupiedBlocks_normalBigInt(hex_str: str, length: int):
     big_int_instance = big_int_lib.hexStringToBigInt(hex_str.encode())
     blocks = big_int_lib.getOccupiedBlocks(big_int_instance)
+    big_int_lib.freeBigInt(big_int_instance)
     assert blocks == length
 
 
 def test_getOccupiedBlocks_partialBigInt():
     big_int_instance = big_int_lib.hexStringToBigInt((32 * 16 * "1").encode())
-    big_int_instance = getPartialBigInt(big_int_instance, 3, 6)
-    blocks = big_int_lib.getOccupiedBlocks(big_int_instance)
+    big_int_instance_2 = getPartialBigInt(big_int_instance, 3, 6)
+    blocks = big_int_lib.getOccupiedBlocks(big_int_instance_2)
+    big_int_lib.freeBigInt(big_int_instance)
+    big_int_lib.freeBigInt(big_int_instance_2)
     assert blocks == 3
 
 
 def test_getOccupiedBlocks_onlyZeroBlocks():
     big_int_instance = big_int_lib.newBigInt(10)
     blocks = big_int_lib.getOccupiedBlocks(big_int_instance)
+    big_int_lib.freeBigInt(big_int_instance)
     assert blocks == 1
 
 
@@ -52,10 +56,14 @@ def test_shiftAdd_positive_numbers(hex_string_a: str, hex_string_b: str):
         big_int_instance_res = big_int_lib.shiftAdd(big_int_instance_a, big_int_instance_b, n)
         assert big_int_lib.isValidBigInt(big_int_instance_res)
         hex_str = big_int_lib.bigIntToHexString(big_int_instance_res)
+        big_int_lib.freeBigInt(big_int_instance_res)
 
         python_res = python_a + (python_b << n * 64)
         python_hex_string = hex(python_res).replace("0x", "").upper()
-        assert python_hex_string == hex_str.decode()
+        assert python_hex_string == hex_str.decode(), f"To shift was {n}"
+
+    big_int_lib.freeBigInt(big_int_instance_a)
+    big_int_lib.freeBigInt(big_int_instance_b)
 
 
 @pytest.mark.parametrize("tuple_a, tuple_b", get_partial_bigInts_pairs())
@@ -72,6 +80,7 @@ def test_shiftAdd_partial_bigInts(tuple_a: Tuple[ctypes.POINTER(BigInt), str],
         big_int_instance_res = big_int_lib.shiftAdd(big_int_instance_a, big_int_instance_b, n)
         assert big_int_lib.isValidBigInt(big_int_instance_res)
         hex_str = big_int_lib.bigIntToHexString(big_int_instance_res)
+        big_int_lib.freeBigInt(big_int_instance_res)
 
         python_res = python_a + (python_b << n * 64)
         python_hex_string = hex(python_res).replace("0x", "").upper()

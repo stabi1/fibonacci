@@ -70,6 +70,7 @@ setup:
 	pip install pytest
 	pip install psutil
 	pip install matplotlib
+	pip install pytest-xdist
 
 clean:
 	rm -f $(OUTPUT_FILENAME)

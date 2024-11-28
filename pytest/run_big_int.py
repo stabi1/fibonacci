@@ -6,8 +6,6 @@ from typing import List
 
 import pytest
 
-LOCAL_DIR = Path(__file__).parent
-
 
 def format_args(args: List[str]) -> str:
     args_str = f", program <{str(args[0]).split('/')[-1]}> was called with: "
@@ -18,7 +16,7 @@ def format_args(args: List[str]) -> str:
     return args_str.strip()
 
 
-def run_command_in_valgrind(command: str, timeout: int = 100000):
+def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000):
     valgrind_error = 7
     command = command.strip()
     opt = command.split(' ')
@@ -27,7 +25,7 @@ def run_command_in_valgrind(command: str, timeout: int = 100000):
 
     result_valgrind: subprocess.CompletedProcess | None = None
     try:
-        result_valgrind: subprocess.CompletedProcess = subprocess.run(opt, capture_output=True, cwd=LOCAL_DIR, timeout=timeout)
+        result_valgrind: subprocess.CompletedProcess = subprocess.run(opt, capture_output=True, cwd=path, timeout=timeout)
     except subprocess.TimeoutExpired:
         pytest.skip(f"Valgrind call timed out")
     except Exception as e:

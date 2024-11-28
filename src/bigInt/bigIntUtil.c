@@ -186,7 +186,9 @@ char *bigIntToDecStringHelper(bigInt *x) {
 
 char *bigIntToDecStringSchoenhage(bigInt *x) {
     struct schoenhageReturn *ret = bigIntToDecStringSchoenhageLenRet(copyBigInt(x), 0, true);
-    return ret->res;
+    char*res = ret->res;
+    free(ret);
+    return res;
 }
 
 // FREES the bigInt that is passed!!!

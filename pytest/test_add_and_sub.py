@@ -10,8 +10,12 @@ def test_add_sign_and_different_size_numbers(hex_string_a: str, hex_string_b: st
     big_int_instance_a = big_int_lib.hexStringToBigInt(hex_string_a.encode())
     big_int_instance_b = big_int_lib.hexStringToBigInt(hex_string_b.encode())
     big_int_instance_res = big_int_lib.add(big_int_instance_a, big_int_instance_b)
+    big_int_lib.freeBigInt(big_int_instance_a)
+    big_int_lib.freeBigInt(big_int_instance_b)
+
     assert big_int_lib.isValidBigInt(big_int_instance_res)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance_res)
+    big_int_lib.freeBigInt(big_int_instance_res)
 
     python_a = int(hex_string_a, 16)
     python_b = int(hex_string_b, 16)
@@ -30,6 +34,7 @@ def test_add_partial_bigInts(tuple_a: Tuple[ctypes.POINTER(BigInt), str],
     big_int_instance_res = big_int_lib.add(big_int_instance_a, big_int_instance_b)
     assert big_int_lib.isValidBigInt(big_int_instance_res)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance_res)
+    big_int_lib.freeBigInt(big_int_instance_res)
 
     python_a = int(hex_string_a, 16)
     python_b = int(hex_string_b, 16)
@@ -44,8 +49,11 @@ def test_sub_sign_and_different_size_numbers(hex_string_a: str, hex_string_b: st
     big_int_instance_a = big_int_lib.hexStringToBigInt(hex_string_a.encode())
     big_int_instance_b = big_int_lib.hexStringToBigInt(hex_string_b.encode())
     big_int_instance_res = big_int_lib.sub(big_int_instance_a, big_int_instance_b)
+    big_int_lib.freeBigInt(big_int_instance_a)
+    big_int_lib.freeBigInt(big_int_instance_b)
     assert big_int_lib.isValidBigInt(big_int_instance_res)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance_res)
+    big_int_lib.freeBigInt(big_int_instance_res)
 
     python_a = int(hex_string_a, 16)
     python_b = int(hex_string_b, 16)
@@ -63,6 +71,7 @@ def test_sub_partial_bigInts(tuple_a: Tuple[ctypes.POINTER(BigInt), str],
     big_int_instance_res = big_int_lib.sub(big_int_instance_a, big_int_instance_b)
     assert big_int_lib.isValidBigInt(big_int_instance_res)
     hex_str = big_int_lib.bigIntToHexString(big_int_instance_res)
+    big_int_lib.freeBigInt(big_int_instance_res)
 
     python_a = int(hex_string_a, 16)
     python_b = int(hex_string_b, 16)
