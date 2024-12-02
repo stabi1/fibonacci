@@ -127,13 +127,17 @@ char *uint64tArrayToHexString(uint64_t *array, size_t lenInNibbles, size_t start
     uint8_t *buf = (uint8_t *) array;
 
     long j = (long) lenInNibbles - 1;
-    if (negative) j++;
+    long loopEnd = 1;
+    if (negative) {
+        j++; // start one later to make space for negative sign
+        loopEnd++; // adjust loop end too
+    }
     size_t i = start * 8;
-    for (; j >= 1; i++, j -= 2) {
+    for (; j >= loopEnd; i++, j -= 2) {
         str[j] = hexLookup[buf[i] & 0xF];
         str[j - 1] = hexLookup[buf[i] >> 4];
     }
-    if (j == 0) {
+    if (j == loopEnd - 1) {
         str[j] = hexLookup[buf[i] & 0xF];
     }
 

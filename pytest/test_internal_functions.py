@@ -29,10 +29,9 @@ def test_getOccupiedBlocks_normalBigInt(hex_str: str, length: int):
 
 def test_getOccupiedBlocks_partialBigInt():
     big_int_instance = big_int_lib.hexStringToBigInt((32 * 16 * "1").encode())
-    big_int_instance_2 = getPartialBigInt(big_int_instance, 3, 6)
-    blocks = big_int_lib.getOccupiedBlocks(big_int_instance_2)
+    big_int_instance = getPartialBigInt(big_int_instance, 3, 6)
+    blocks = big_int_lib.getOccupiedBlocks(big_int_instance)
     big_int_lib.freeBigInt(big_int_instance)
-    big_int_lib.freeBigInt(big_int_instance_2)
     assert blocks == 3
 
 

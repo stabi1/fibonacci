@@ -5,7 +5,7 @@ WARNING_FLAGS=-Wall -Wextra
 LINKER_FLAGS=-lm
 DEBUG_FLAGS=-O1 -g -no-pie
 SANITIZER_FLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsanitize=leak
-TEST_FLAGS=-fPIC
+TEST_FLAGS=-fPIC -g
 
 # Source files
 SOURCE_FILES_C=src/main.c src/util.c src/bigInt/bigIntMul.c src/bigInt/bigIntAlloc.c src/bigInt/bigIntDiv.c src/bigInt/bigIntMethods.c src/bigInt/bigIntIO.c src/test/tests.c src/bigInt/bigIntUtil.c src/bigInt/config.c src/bigInt/bigIntHigherFunctions.c src/bigInt/misc.c

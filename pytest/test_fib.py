@@ -35,6 +35,29 @@ def test_fib_correctness(tmp_path: Path, n: int, flags: str):
     assert res_string == python_res_string.upper(), f"Command: {command}"
 
 
+'''def test_fib_correctness_big(tmp_path: Path):
+    n = 10000000
+    flags = "-v --do-swap --swap-threshold 1 -m --max-threads 8"
+    output_file = "out.txt"
+
+    sys.set_int_max_str_digits(2500000)
+
+    src = LOCAL_DIR.joinpath("fib")
+    dest = tmp_path.joinpath("fib")
+    shutil.copy(src, dest)
+    command = f"./fib -o f -r d --output-filename {output_file} -n {n} {flags}"
+    run_command_in_valgrind(command, tmp_path)
+
+    with open(tmp_path.joinpath(output_file), 'r') as f:
+        res_string = f.read()
+    tmp_path.joinpath(output_file).unlink()
+
+    python_res_string = str(reference_implementation(n))
+
+    assert res_string == python_res_string.upper(), f"Command: {command}"
+'''
+
+
 def reference_implementation(n: int) -> int:
     if n < 0:
         raise ValueError("n must be greater than 0")

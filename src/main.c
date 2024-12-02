@@ -20,6 +20,7 @@ const char *DEFAULT_FILENAME = "output.txt";
 
 //TODO use memcpy in ASM methods
 //TODO check return values form libc functions (THREAD FUNCTIONS)
+//TODO run more tests in valgrind
 //TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
 //TODO fix makefile
 //TODO docu with comments, readme, help-message
