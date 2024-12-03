@@ -12,7 +12,7 @@ import subprocess
 data: List[Tuple[int, int, float]] = []
 
 
-def calculate_plot(command: str, output_filename: str):
+def calculate_plot(command: str, output_filename: str, show_plot: bool):
     # Extracting the components from data
     memory_size = [item[0] for item in data]
     swap_size = [item[1] for item in data]
@@ -40,7 +40,8 @@ def calculate_plot(command: str, output_filename: str):
 
     plt.tight_layout()
     plt.savefig(output_filename)
-    plt.show()
+    if show_plot:
+        plt.show()
 
 
 def human_readable_size(kb):
@@ -116,7 +117,7 @@ def get_PID(command: str) -> str | None:
     return pid
 
 
-def execute_monitoring(monitor_interval: int, chart_filename: str) -> None:
+def execute_monitoring(monitor_interval: int, chart_filename: str, show_plot) -> None:
     # Get the PID of the process running './fib'
     command_to_monitor = './fib'
     pid_to_monitor = get_PID(command_to_monitor)
@@ -128,7 +129,7 @@ def execute_monitoring(monitor_interval: int, chart_filename: str) -> None:
 
     print(f"Process '{command_to_monitor}' found, monitoring is starting")
     command_ret = monitor_process(pid_to_monitor, monitor_interval)
-    calculate_plot(command_ret, chart_filename)
+    calculate_plot(command_ret, chart_filename, show_plot)
 
 
 if __name__ == '__main__':
@@ -136,11 +137,12 @@ if __name__ == '__main__':
     # Add arguments
     parser.add_argument('--monitor-interval', type=int, default=0.1, help='The time between measurements', dest='monitor_interval')
     parser.add_argument('--chart-filename', default='memory_usage_plot.png', type=str, help='Name of the output chart, must be a .png file', dest='chart_filename')
+    parser.add_argument('--show-plot', action='store_true', help='If set show the created plot', dest='show_plot')
 
     args = parser.parse_args()
     if not args.chart_filename.endswith(".png"):
         print("--chart_filename must be a .png file")
         sys.exit(1)
 
-    execute_monitoring(args.monitor_interval, args.chart_filename)
+    execute_monitoring(args.monitor_interval, args.chart_filename, args.show_plot)
     sys.exit(0)
