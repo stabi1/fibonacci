@@ -278,6 +278,7 @@ bigInt *decStringToBigInt(const char *decStr) {
         uint64_t *tmp = realloc(res->bigIntArray, newLen * sizeof(uint64_t));
         mallocCheck(tmp);
         res->bigIntArray = tmp;
+        res->completeLength = res->end - res->start;
     }
     return res;
 }

@@ -16,7 +16,7 @@ pthread_once_t bigIntArrayStack_10KB_stack_key_once = PTHREAD_ONCE_INIT;
 pthread_key_t bigIntArrayStack_100KB_stack_key;
 pthread_once_t bigIntArrayStack_100KB_stack_key_once = PTHREAD_ONCE_INIT;
 
-BigIntStack *create_stack();
+BigIntStack *create_stack(size_t size);
 
 bigInt *allocBigIntStruct();
 

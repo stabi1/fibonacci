@@ -3,8 +3,7 @@ from typing import Tuple
 
 import pytest
 
-from big_int_helper import big_int_lib, random_hex_string, random_dec_string, getPartialBigInt, trim_string, \
-    get_all_test_numbers, get_partial_bigInts, BigInt
+from big_int_helper import big_int_lib, random_dec_string, all_test_numbers, partial_bigInts, BigInt
 
 
 def test_bigIntToHexString_for_zero():
@@ -21,7 +20,7 @@ def test_bigIntToDecString_for_zero():
     assert hex_str.decode() == "0"
 
 
-@pytest.mark.parametrize("test_hex_string", get_all_test_numbers())
+@pytest.mark.parametrize("test_hex_string", all_test_numbers)
 def test_hexStringToBigInt_and_bigIntToHexString(test_hex_string: str):
     big_int_instance = big_int_lib.hexStringToBigInt(test_hex_string.encode())
     assert big_int_lib.isValidBigInt(big_int_instance)
@@ -71,14 +70,14 @@ def test_decStringToBigInt_and_bigIntToDecString(test_dec_string: str):
     assert dec_str.decode() == test_dec_string
 
 
-@pytest.mark.parametrize("tuple_a", get_partial_bigInts())
+@pytest.mark.parametrize("tuple_a", partial_bigInts)
 def test_partial_bigInt_hexStringToBigInt(tuple_a: Tuple[ctypes.POINTER(BigInt), str]):
     big_int_instance_a, hex_string_a = tuple_a
     hex_str = big_int_lib.bigIntToHexString(big_int_instance_a)
     assert hex_str.decode() == hex_string_a
 
 
-@pytest.mark.parametrize("tuple_a", get_partial_bigInts())
+@pytest.mark.parametrize("tuple_a", partial_bigInts)
 def test_partial_bigInt_with_decStringToBigInt(tuple_a: Tuple[ctypes.POINTER(BigInt), str]):
     big_int_instance_a, hex_string_a = tuple_a
     dec_str = big_int_lib.bigIntToDecString(big_int_instance_a)

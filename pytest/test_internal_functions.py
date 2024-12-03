@@ -1,10 +1,8 @@
 import ctypes
 from typing import Tuple
-
-from big_int_helper import big_int_lib, getPartialBigInt, get_partial_bigInts_pairs, BigInt, bigInt_to_python_hex_string
 import pytest
 
-from big_int_helper import get_positive_test_number_pairs
+from big_int_helper import big_int_lib, getPartialBigInt, partial_bigInts_pairs, BigInt, bigInt_to_python_hex_string, positive_test_number_pairs
 
 
 def test_new_big_int_is_zero():
@@ -42,7 +40,7 @@ def test_getOccupiedBlocks_onlyZeroBlocks():
     assert blocks == 1
 
 
-@pytest.mark.parametrize("hex_string_a, hex_string_b", get_positive_test_number_pairs())
+@pytest.mark.parametrize("hex_string_a, hex_string_b", positive_test_number_pairs)
 def test_shiftAdd_positive_numbers(hex_string_a: str, hex_string_b: str):
     len_a = len(hex_string_a) // 16 + 1
     len_b = len(hex_string_b) // 16 + 1
@@ -65,7 +63,7 @@ def test_shiftAdd_positive_numbers(hex_string_a: str, hex_string_b: str):
     big_int_lib.freeBigInt(big_int_instance_b)
 
 
-@pytest.mark.parametrize("tuple_a, tuple_b", get_partial_bigInts_pairs())
+@pytest.mark.parametrize("tuple_a, tuple_b", partial_bigInts_pairs)
 def test_shiftAdd_partial_bigInts(tuple_a: Tuple[ctypes.POINTER(BigInt), str],
                                   tuple_b: Tuple[ctypes.POINTER(BigInt), str]):
     big_int_instance_a, hex_string_a = tuple_a

@@ -111,7 +111,7 @@ def bigInt_to_python_hex_string(big_int_instance: ctypes.POINTER(BigInt)) -> str
 
 
 zero = ["0"]
-positive_test_numbers: List[str] = [
+positive_test_numbers_no_zero: List[str] = [
     "1",
     random_hex_string(1),
     random_hex_string(2),
@@ -139,27 +139,17 @@ positive_test_numbers: List[str] = [
 ]
 
 
-def get_positive_test_numbers() -> List[str]:
-    return positive_test_numbers + zero
+positive_test_numbers = positive_test_numbers_no_zero + zero
 
+negative_test_numbers = ["-" + s for s in positive_test_numbers_no_zero]
 
-def get_negative_test_numbers() -> List[str]:
-    return ["-" + s for s in positive_test_numbers]
+all_test_numbers = positive_test_numbers + negative_test_numbers
 
+all_test_number_pairs = [(a, b) for a in all_test_numbers for b in all_test_numbers]
 
-def get_all_test_numbers() -> List[str]:
-    return get_positive_test_numbers() + get_negative_test_numbers()
+positive_test_number_pairs = [(a, b) for a in positive_test_numbers for b in positive_test_numbers]
 
-
-def get_all_test_number_pairs() -> List[Tuple[str, str]]:
-    return [(a, b) for a in get_all_test_numbers() for b in get_all_test_numbers()]
-
-
-def get_positive_test_number_pairs() -> List[Tuple[str, str]]:
-    return [(a, b) for a in get_positive_test_numbers() for b in get_positive_test_numbers()]
-
-
-def get_partial_bigInts() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
+def create_partial_bigInts() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
     big_int_length = 500
     test_hex_string = random_hex_string(16 * big_int_length)
     bounds = [(0, 1), (1, 2), (1, 20), (50, 61), (200, 400)]
@@ -173,6 +163,6 @@ def get_partial_bigInts() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
             print(f"Got you {start} {end}")
     return res_list
 
+partial_bigInts = create_partial_bigInts()
 
-def get_partial_bigInts_pairs() -> List[Tuple[Tuple[ctypes.POINTER(BigInt), str], Tuple[ctypes.POINTER(BigInt), str]]]:
-    return [(a, b) for a in get_partial_bigInts() for b in get_partial_bigInts()]
+partial_bigInts_pairs = [(a, b) for a in partial_bigInts for b in partial_bigInts]
