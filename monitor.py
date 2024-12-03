@@ -69,7 +69,7 @@ def get_swap_storage_size() -> str:
         raise Exception(f"Error retrieving value; stderr: {result.stderr}, stdout: {result.stdout}")
 
 
-def monitor_process(pid, monitor_interval: int) -> str:
+def monitor_process(pid, monitor_interval: float) -> str:
     start_time = time.perf_counter()
     command: str = ""
     try:
@@ -117,7 +117,7 @@ def get_PID(command: str) -> str | None:
     return pid
 
 
-def execute_monitoring(monitor_interval: int, chart_filename: str, show_plot) -> None:
+def execute_monitoring(monitor_interval: float, chart_filename: str, show_plot) -> None:
     # Get the PID of the process running './fib'
     command_to_monitor = './fib'
     pid_to_monitor = get_PID(command_to_monitor)
@@ -135,7 +135,7 @@ def execute_monitoring(monitor_interval: int, chart_filename: str, show_plot) ->
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Monitor process")
     # Add arguments
-    parser.add_argument('--monitor-interval', type=int, default=0.1, help='The time between measurements', dest='monitor_interval')
+    parser.add_argument('--monitor-interval', type=float, default=0.1, help='The time between measurements in seconds', dest='monitor_interval')
     parser.add_argument('--chart-filename', default='memory_usage_plot.png', type=str, help='Name of the output chart, must be a .png file', dest='chart_filename')
     parser.add_argument('--show-plot', action='store_true', help='If set show the created plot', dest='show_plot')
 
