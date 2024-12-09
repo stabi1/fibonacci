@@ -3,6 +3,12 @@
 
 #include "bigInt.h"
 
+
+extern const char *NOT_STORED;
+extern const char *FILE_ENDING;
+extern const char *SWAP_DIR;
+
+
 char *doStoreBigIntInSwap(bigInt *x);
 
 bigInt *doLoadBigIntFromSwap(char *filename);

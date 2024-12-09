@@ -19,7 +19,8 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 const char *DEFAULT_FILENAME = "output.txt";
 
 //TODO use memcpy in ASM methods
-//TODO check return values form libc functions (THREAD FUNCTIONS)
+//TODO check return values form libc functions (THREAD FUNCTIONS, time measure)
+//TODO make everything const that can be const
 //TODO run more tests in valgrind
 //TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
 //TODO fix makefile

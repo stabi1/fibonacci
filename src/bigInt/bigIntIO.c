@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <stdatomic.h>
 #include "config.h"
-#include "bigIntAlloc.h"
 
 const char *NOT_STORED = "NOT_STORED";
 const char *FILE_ENDING = ".bigint";
@@ -53,6 +52,7 @@ char *getFilename() {
         size_t prefixLen = strlen(file_prefix);
         size_t pathLen = strlen(SWAP_DIR);
         filename = malloc(pathLen + prefixLen + endingLen + 1);
+        mallocCheck(filename);
         strncpy(filename, SWAP_DIR, pathLen);
         strncpy(filename + pathLen, file_prefix, prefixLen);
         strncpy(filename + pathLen + prefixLen, FILE_ENDING, endingLen);
@@ -113,9 +113,11 @@ inline __attribute__((always_inline)) char *storeBigIntInSwap(bigInt *x) {
     if (!global_config.swap || !x->arrayOwner || getLen(x) * 8 < global_config.swapThreshold * 1000000) {
         size_t l = strlen(NOT_STORED);
         char *res = malloc(l + 1);
+        mallocCheck(res);
         strncpy(res, NOT_STORED, l + 1);
         return res;
     }
+    printf("Swaping: \n");
     return doStoreBigIntInSwap(x);
 }
 

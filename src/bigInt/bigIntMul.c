@@ -5,6 +5,7 @@
 #include "bigIntAsm.h"
 #include "bigIntDiv.h"
 #include "config.h"
+#include "bigIntIO.h"
 
 size_t NAIVEMUL_FASTER = 100; //Size when naiveMul is faster than karatsuba
 size_t KARATSUBA_FASTER = 400; //Size when karatsuba is faster than toom-cook
@@ -454,6 +455,14 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
 
     struct toomCookReturn *returnStruct = malloc(sizeof(struct toomCookReturn));
     returnStruct->res = result;
-    returnStruct->res_filename = storeBigIntInSwap(result);
+    if (depth == global_config.mulDepth) {
+        size_t l = strlen(NOT_STORED);
+        char *res = malloc(l + 1);
+        mallocCheck(res);
+        strncpy(res, NOT_STORED, l + 1);
+        returnStruct->res_filename = res;
+    } else {
+        returnStruct->res_filename = storeBigIntInSwap(result);
+    }
     return (void *) returnStruct;
 }
