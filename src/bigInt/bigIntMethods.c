@@ -191,8 +191,8 @@ char *bigIntToHexString(bigInt *x) {
 }
 
 //fills the char array with the dec presentation of the bigInt
-char *bigIntToDecString(bigInt *x) {
-    return bigIntToDecStringHelper(x);
+char *bigIntToDecString(bigInt *x, bool doFree) {
+    return bigIntToDecStringHelper(x, doFree);
 }
 
 //returns the bigInt of the HexString, hex is being freed

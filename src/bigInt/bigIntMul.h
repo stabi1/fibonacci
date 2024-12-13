@@ -6,7 +6,7 @@
 
 bigInt *mulSingleThread(bigInt *x, bigInt *y);
 
-bigInt *mulParallel(bigInt *x, bigInt *y);
+bigInt *mulParallel(bigInt *x, bigInt *y, size_t depth);
 
 bigInt *karatsuba(bigInt *x, bigInt *y);
 

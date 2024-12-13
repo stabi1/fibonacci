@@ -14,7 +14,7 @@ void decStringToBigIntHelper(uint64_t *array, size_t arrayLen, const char *decSt
 
 char *uint64_t_toDecString(uint64_t x);
 
-char *bigIntToDecStringHelper(bigInt *x);
+char *bigIntToDecStringHelper(bigInt *x, bool doFree);
 
 char* bigIntToDecStringSchoenhage(bigInt *x);
 

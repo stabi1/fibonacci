@@ -6,6 +6,7 @@
 #include <pthread.h>
 
 #include "bigIntDiv.h"
+#include "bigIntMul.h"
 
 const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
@@ -181,16 +182,17 @@ size_t calculateDecStringSpace(bigInt *x) {
     return resMaxLen;
 }
 
-char *bigIntToDecStringHelper(bigInt *x) {
+char *bigIntToDecStringHelper(bigInt *x, bool doFree) {
+    bigInt *convertX = doFree ? x : copyBigInt(x);
     if (global_config.parallel)
-        return bigIntToDecStringSchoenhageMultithread(x);
+        return bigIntToDecStringSchoenhageMultithread(convertX);
     else
-        return bigIntToDecStringSchoenhage(x);
+        return bigIntToDecStringSchoenhage(convertX);
 }
 
 char *bigIntToDecStringSchoenhage(bigInt *x) {
-    struct schoenhageReturn *ret = bigIntToDecStringSchoenhageLenRet(copyBigInt(x), 0, true);
-    char*res = ret->res;
+    struct schoenhageReturn *ret = bigIntToDecStringSchoenhageLenRet(x, 0, true);
+    char *res = ret->res;
     free(ret);
     return res;
 }
@@ -241,7 +243,7 @@ void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resStrin
     bigInt *v = newBigInt(1);
     v->bigIntArray[v->start] = 10;
     for (size_t i = 0; i < n; i++) {
-        bigInt *vNew = mul(v, v);
+        bigInt *vNew = mulSingleThread(v, v);
         freeBigInt(v);
         v = vNew;
     }
@@ -266,11 +268,11 @@ struct schoenhageArgs {
 
 char *bigIntToDecStringSchoenhageMultithread(bigInt *x) {
     struct schoenhageArgs *args = malloc(sizeof(struct schoenhageArgs));
-    args->x = copyBigInt(x);
+    mallocCheck(args);
+    args->x = x;
     args->digits = 0;
     args->beginning = true;
     args->depth = global_config.convertDepth;
-    mallocCheck(args);
     struct schoenhageReturn *res = bigIntToDecStringSchoenhageMultithreadHelper(args);
     free(args);
     char *ret = res->res;
@@ -285,6 +287,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     size_t depth = ((struct schoenhageArgs *) input)->depth;
 
     size_t xLen = getLen(x);
+    if (global_config.verbose) printf("Convert-Depth: %lu\n", depth);
     if (depth == 0 || xLen < DEC_STRING_SMALL_FASTER) {
         struct schoenhageReturn *res = bigIntToDecStringSchoenhageLenRet(x, digits, beginning);
         return res;
@@ -296,18 +299,28 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     bigInt *v = newBigInt(1);
     v->bigIntArray[v->start] = 10;
     for (size_t i = 0; i < n; i++) {
-        bigInt *vNew = mul(v, v);
+        bigInt *vNew;
+        if (depth == global_config.convertDepth) {
+            vNew = mulParallel(v, v, global_config.mulDepth);
+        } else {
+            size_t parallelMuls = 1 << (global_config.convertDepth - depth);
+            size_t mulDepth = calcMulDepthForParallelMuls(parallelMuls);
+            vNew = mulParallel(v, v, mulDepth);
+        }
         freeBigInt(v);
         v = vNew;
     }
+    if (global_config.verbose && depth == global_config.convertDepth) printf("First muls from conversion finished\n");
 
     bigInt *r = NULL;
     bigInt *q;
     if (depth == global_config.convertDepth) {
-        q = divideModMultiThread(x, v, &r, true);
-        if (global_config.verbose) printf("First mul from conversion finished\n");
+        q = divideModMultiThread(x, v, &r, global_config.mulDepth, true);
+        if (global_config.verbose) printf("First div from conversion finished\n");
     } else {
-        q = divideModSingleThread(x, v, &r, true);
+        size_t parallelMuls = 1 << (global_config.convertDepth - depth);
+        size_t mulDepth = calcMulDepthForParallelMuls(parallelMuls);
+        q = divideModMultiThread(x, v, &r, mulDepth, true);
     }
 
     size_t expectedDigits = 1 << n;
@@ -347,6 +360,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     ret->resLen = res1->resLen + res2->resLen;
     free(res1);
     free(res2);
+    printf("Thread with Depth: %lu finished\n", depth);
     return ret;
 }
 

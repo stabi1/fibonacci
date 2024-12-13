@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
                     exit(EXIT_FAILURE);
             }
         } else {
-            fprintf(stderr, "No non option argument expected,  use -h for usage");
+            fprintf(stderr, "No non option argument expected, got \"%s\" ;  use -h for usage\n", argv[optind]);
             optind++;
             exit(EXIT_FAILURE);
         }
@@ -206,9 +206,11 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
         if (cores != 0) {
+            global_config.maxThreads = cores;
             global_config.mulDepth = getMulDepthFromCores(cores);
             global_config.convertDepth = getConvertDepthFromCores(cores);
         } else {
+            global_config.maxThreads = max_threads;
             global_config.mulDepth = getMulDepthFromMaxThreads(max_threads);
             global_config.convertDepth = getConvertDepthFromMaxThreads(max_threads);
         }
@@ -270,11 +272,12 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename, bool in
         char *resString;
         if (radix == 'd') {
             if (global_config.verbose) printf("Starting conversion to dec\n");
-            resString = bigIntToDecString(res);
+            resString = bigIntToDecString(res, true);
             strSizeInBytes = strlen(resString);
         } else {
             if (global_config.verbose) printf("Starting conversion to hex\n");
             resString = bigIntToHexString(res);
+            freeBigInt(res);
             strSizeInBytes = strlen(resString);
         }
 
@@ -291,7 +294,7 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename, bool in
 
             if (global_config.verbose) printf("Result written into file %s\n", filename);
         } else {
-            //Terminal output (output == 't')
+            // Terminal output: output == 't'
             printf("Result: %s\n", resString);
         }
 
@@ -317,7 +320,6 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename, bool in
         printf("Time to calculate: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
                sizeInMB);
     }
-    freeBigInt(res);
 }
 
 void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, char *outputFilename) {
@@ -342,11 +344,11 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     if (outputRadix == 'd') {
-        writeBigIntDecToFile(tmp, outputFilename);
+        writeBigIntDecToFile(tmp, outputFilename, true);
     } else {
         writeBigIntHexToFile(tmp, outputFilename);
+        freeBigInt(tmp);
     }
-    freeBigInt(tmp);
     clock_gettime(CLOCK_MONOTONIC, &end);
     time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
     printf("Finished conversion, result in %s, took %.2f seconds\n", outputFilename, time);

@@ -76,7 +76,7 @@ void printBigIntHex(bigInt *x) {
 
 //prints bigInt in Dec
 void printBigIntDec(bigInt *x) {
-    char *tmp = bigIntToDecString(x);
+    char *tmp = bigIntToDecString(x, false);
     printf("%s\n", tmp);
     free(tmp);
 }
@@ -87,8 +87,8 @@ void writeBigIntHexToFile(bigInt *x, char *path) {
     free(tmp);
 }
 
-void writeBigIntDecToFile(bigInt *x, char *path) {
-    char *tmp = bigIntToDecString(x);
+void writeBigIntDecToFile(bigInt *x, char *path, bool doFree) {
+    char *tmp = bigIntToDecString(x, doFree);
     writeFile(path, tmp, false);
     free(tmp);
 }
@@ -117,7 +117,6 @@ inline __attribute__((always_inline)) char *storeBigIntInSwap(bigInt *x) {
         strncpy(res, NOT_STORED, l + 1);
         return res;
     }
-    printf("Swaping: \n");
     return doStoreBigIntInSwap(x);
 }
 

@@ -46,7 +46,7 @@ void testTmp() {
     char*rand = randomHex(15001*16);
     bigInt* a = hexStringToBigInt(rand);
     free(rand);
-    char* res1 = bigIntToDecString(a);
+    char* res1 = bigIntToDecString(a, false);
 
     global_config.parallel = true;
     global_config.mulDepth = 1;
@@ -54,7 +54,7 @@ void testTmp() {
     global_config.swap = true;
     global_config.swapThreshold = 1;
     printf("Second one\n");
-    char *res2 = bigIntToDecString(a);
+    char *res2 = bigIntToDecString(a, false);
 
     if (strcmp(res1, res2) != 0) {
         printf("Strings not equal!!!!\n");
@@ -249,8 +249,8 @@ void bruteForceDebug() {
     }
     if (compareBigInt(res, res2) != 0) {
         printf("Failed at 1 for single-thread\n");
-        printf("%s\n", bigIntToDecString(res));
-        printf("%s\n", bigIntToDecString(res2));
+        printf("%s\n", bigIntToDecString(res, false));
+        printf("%s\n", bigIntToDecString(res2, false));
         freeBigInt(res);
         freeBigInt(res2);
         if (multiThread) {
@@ -288,7 +288,7 @@ void bruteForceDebug() {
             fibMinus1 = fib;
             res2 = fibExpFastDoubling(i + 1);
             if (print) {
-                char *resString = bigIntToDecString(res2);
+                char *resString = bigIntToDecString(res2, false);
                 printf("%s\n", resString);
                 free(resString);
             }

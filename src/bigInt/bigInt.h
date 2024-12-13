@@ -36,7 +36,7 @@ void printBigIntDec(bigInt *x);
 
 void writeBigIntHexToFile(bigInt *x, char *path);
 
-void writeBigIntDecToFile(bigInt *x, char *path);
+void writeBigIntDecToFile(bigInt *x, char *path, bool doFree);
 
 bigInt *readBigIntHexFromFile(char *path);
 
@@ -68,7 +68,7 @@ bigInt *hexStringToBigInt(const char *hex);
 
 bigInt *decStringToBigInt(const char *dec);
 
-char *bigIntToDecString(bigInt *x);
+char *bigIntToDecString(bigInt *x, bool doFree);
 
 char *bigIntToHexString(bigInt *x);
 

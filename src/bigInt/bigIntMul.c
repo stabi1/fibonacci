@@ -15,11 +15,11 @@ void *multiplyToomCook3MultiThreadHelper(void *input);
 
 bigInt *mulExecute(bigInt *x, bigInt *y);
 
-bigInt *mulParallelExecute(bigInt *x, bigInt *y);
+bigInt *mulParallelExecute(bigInt *x, bigInt *y, size_t depth);
 
 bigInt *mul(bigInt *x, bigInt *y) {
     if (global_config.parallel)
-        return mulParallel(x, y);
+        return mulParallel(x, y, global_config.mulDepth);
     else
         return mulSingleThread(x, y);
 }
@@ -35,12 +35,14 @@ bigInt *mulSingleThread(bigInt *x, bigInt *y) {
     return res;
 }
 
-bigInt *mulParallel(bigInt *x, bigInt *y) {
+bigInt *mulParallel(bigInt *x, bigInt *y, size_t depth) {
+    if (depth == 0) return mulSingleThread(x, y);
+
     bigInt *res;
     if (getLen(x) < getLen(y)) {
-        res = mulParallelExecute(y, x);
+        res = mulParallelExecute(y, x, depth);
     } else {
-        res = mulParallelExecute(x, y);
+        res = mulParallelExecute(x, y, depth);
     }
     res->negative = x->negative ^ y->negative;
     return res;
@@ -61,7 +63,7 @@ bigInt *mulExecute(bigInt *x, bigInt *y) {
     }
 }
 
-bigInt *mulParallelExecute(bigInt *x, bigInt *y) {
+bigInt *mulParallelExecute(bigInt *x, bigInt *y, size_t depth) {
     if (isZero(x) || isZero(y)) {
         return getZeroBigInt();
     }
@@ -74,7 +76,7 @@ bigInt *mulParallelExecute(bigInt *x, bigInt *y) {
     } else if (yLen <= PARALLEL_MUL_FASTER) {
         return multiplyToomCook3(x, y);
     } else {
-        return multiplyToomCook3MultiThread(x, y, global_config.mulDepth);
+        return multiplyToomCook3MultiThread(x, y, depth);
     }
 }
 

@@ -10,7 +10,8 @@ Config global_config = {
         .convertDepth = 0,
         .swap = false,
         .swapThreshold = 100,
-        .deactivateCaches = false
+        .deactivateCaches = false,
+        .maxThreads = 1
 };
 
 void cleanupBigIntLib() {
@@ -20,6 +21,31 @@ void cleanupBigIntLib() {
     free_BigIntStack(get_thread_bigIntArrayStack_10KB());
     free_BigIntStack(get_thread_bigIntArrayStack_100KB());
 }
+
+size_t getNumOfThreadsFromDepthMul(size_t mulDepth) {
+    switch (mulDepth) {
+        case 0:
+            return 1;
+        case 1:
+            return 5;
+        case 2:
+            return 25;
+        default:
+            return 125;
+    }
+}
+
+
+size_t calcMulDepthForParallelMuls(size_t numMuls) {
+    size_t resDepth = 0;
+    while (true) {
+        if (numMuls * getNumOfThreadsFromDepthMul(resDepth) > global_config.maxThreads)
+            break;
+        resDepth++;
+    }
+    return resDepth == 0 ? 0 : resDepth - 1;
+}
+
 
 size_t getMulDepthFromMaxThreads(size_t maxThreads) {
     if (maxThreads == 0) {
@@ -83,16 +109,16 @@ size_t getConvertDepthFromMaxThreads(size_t maxThreads) {
     } else if (maxThreads < 16) {
         if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 8);
         return 3;
-    }else if (maxThreads < 32) {
+    } else if (maxThreads < 32) {
         if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 16);
         return 4;
-    }else if (maxThreads < 64) {
+    } else if (maxThreads < 64) {
         if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 32);
         return 5;
-    }else if (maxThreads < 128) {
+    } else if (maxThreads < 128) {
         if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 64);
         return 6;
-    }else {
+    } else {
         printf("Number of compute threads that will be created during conversion: %d\n", 128);
         return 7;
     }

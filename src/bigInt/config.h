@@ -12,6 +12,7 @@ typedef struct {
     bool swap;
     size_t swapThreshold; // in MB
     bool deactivateCaches;
+    size_t maxThreads;
 } Config;
 
 extern Config global_config;
@@ -24,6 +25,8 @@ size_t getMulDepthFromCores(size_t nprocsSet);
 
 size_t getConvertDepthFromMaxThreads(size_t maxThreads);
 
-size_t getConvertDepthFromCores(size_t nprocsSet);;
+size_t getConvertDepthFromCores(size_t nprocsSet);
+
+size_t calcMulDepthForParallelMuls(size_t numMuls);
 
 #endif

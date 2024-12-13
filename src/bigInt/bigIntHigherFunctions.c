@@ -47,11 +47,19 @@ bigInt *fibExpFastDoubling(uint64_t n) {
         //to swap: b
         char *filename_b = storeBigIntInSwap(b);
         d = mul(a, temp2);
+        if (global_config.verbose) {
+            printf("First mul done");
+            fflush(stdout);
+        }
         freeBigInt(temp2);
 
         //to swap: b, d
         char *filename_d = storeBigIntInSwap(d);
         temp3 = mul(a, a);
+        if (global_config.verbose) {
+            printf("; Second mul done");
+            fflush(stdout);
+        }
         freeBigInt(a);
 
 
@@ -59,6 +67,10 @@ bigInt *fibExpFastDoubling(uint64_t n) {
         char *filename_temp3 = storeBigIntInSwap(temp3);
         b = loadBigIntFromSwap(b, filename_b);
         temp4 = mul(b, b);
+        if (global_config.verbose) {
+            printf("; Third mul done\n");
+            fflush(stdout);
+        }
         freeBigInt(b);
         temp3 = loadBigIntFromSwap(temp3, filename_temp3);
 
