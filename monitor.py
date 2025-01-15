@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 import traceback
+from time import sleep
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 
@@ -10,7 +11,7 @@ import psutil
 import time
 import subprocess
 
-data: List[Tuple[int, int, float]] = [[0, 0, 0]]
+data: List[Tuple[int, int, float]] = [(0, 0, 0)]
 
 
 def calculate_plot(command: str, output_filename: str, show_plot: bool):
@@ -74,7 +75,10 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool) -> str:
     command: str = ""
     try:
         process = psutil.Process(pid)
-        command = process.cmdline()
+        command = process.cmdline()[0]
+        skipped = False
+        last_datapoint = (0, 0, 0)
+
         while True:
             # Get the size of the swap_storage folder
             try:
@@ -94,56 +98,80 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool) -> str:
                 print(
                     f"PID: {process.pid} | NUM Threads: {len(thread_ids)} | MEM%: {process.memory_percent():.2f}% | RSS: {human_readable_size(process.memory_info().rss // 1024)} | Swap: {human_readable_size(swap_size)} | Command: {process.cmdline()[0]} | Log entries: {len(data)} | Passed time: {timestamp}")
 
-            # log data
+            # log data, make long horizontal line for skipped data points
             last_entry = data[-1]
             if not compress_values or not (
-                    abs(last_entry[0] - process.memory_info().rss // 1024) <= 0.01 * last_entry[0] and abs(last_entry[1] - int(float(swap_size))) <= 0.01 * last_entry[1]):
+                    abs(last_entry[0] - process.memory_info().rss // 1024) <= 0.01 * last_entry[0] and abs(
+                last_entry[1] - int(float(swap_size))) <= 0.01 * last_entry[1]):
+                if skipped:
+                    data.append(last_datapoint)
+                    skipped = False
                 data.append((process.memory_info().rss // 1024, int(float(swap_size)), timestamp))
+            else:
+                skipped = True
+                last_datapoint = (process.memory_info().rss // 1024, int(float(swap_size)), timestamp)
 
             time.sleep(monitor_interval)
     except psutil.NoSuchProcess:
         print("Process not found.")
-        data.append((0, 0, data[-1][2] + monitor_interval * 2))
+        return "Continue"
     except psutil.AccessDenied:
         print("Access denied to process information.")
     except Exception as ex:
         print(f"Exception occurred, terminating monitoring: {str(ex)}")
         traceback.print_exc()
-        data.append((0, 0, data[-1][2] + monitor_interval * 2))
     return command
 
 
-def get_PID(command: str) -> str | None:
+def get_pid(command: str) -> str | None:
     pid = None
-    for proc in psutil.process_iter(attrs=['pid', 'cmdline']):
-        if command in proc.info['cmdline']:
-            pid = proc.info['pid']
-            break
-    return pid
+    for i in range(0, 20):
+        for proc in psutil.process_iter(attrs=['pid', 'cmdline']):
+            if command in proc.info['cmdline']:
+                pid = proc.info['pid']
+                break
+        if pid is not None:
+            return pid
+        sleep(0.5)
+    return None
 
 
 def execute_monitoring(monitor_interval: float, chart_filename: str, show_plot, compress_values: bool) -> None:
     # Get the PID of the process running './fib'
     command_to_monitor = './fib'
-    pid_to_monitor = get_PID(command_to_monitor)
+
+    pid_to_monitor = get_pid(command_to_monitor)
     if pid_to_monitor is None:
-        print(f"Process '{command_to_monitor}' not found, looping until found")
-
-    while pid_to_monitor is None:
-        pid_to_monitor = get_PID(command_to_monitor)
-
+        print("PID could not be found, terminating")
+        return
     print(f"Process '{command_to_monitor}' found, monitoring is starting")
-    command_ret = monitor_process(pid_to_monitor, monitor_interval, compress_values)
+
+    while True:
+        command_ret = monitor_process(pid_to_monitor, monitor_interval, compress_values)
+        if command_ret != "Continue":
+            break
+        print("Trying to find new PID")
+        pid_to_monitor = get_pid(command_to_monitor)
+        if pid_to_monitor is None:
+            print("PID could not be found, terminating")
+            return
+        print(f"Process '{command_to_monitor}' found again, monitoring resuming")
+
+    data.append((0, 0, data[-1][2] + monitor_interval * 2))
     calculate_plot(command_ret, chart_filename, show_plot)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Monitor process")
     # Add arguments
-    parser.add_argument('--monitor-interval', type=float, default=0.1, help='The time between measurements in seconds', dest='monitor_interval')
-    parser.add_argument('--chart-filename', default='memory_usage_plot.png', type=str, help='Name of the output chart, must be a .png file', dest='chart_filename')
+    parser.add_argument('--monitor-interval', type=float, default=0.1, help='The time between measurements in seconds',
+                        dest='monitor_interval')
+    parser.add_argument('--chart-filename', default='memory_usage_plot.png', type=str,
+                        help='Name of the output chart, must be a .png file', dest='chart_filename')
     parser.add_argument('--show-plot', action='store_true', help='If set show the created plot', dest='show_plot')
-    parser.add_argument('--compress-values', action='store_true', help='Does not collect value if it is less than 1% difference to the previous value', dest='compress_values')
+    parser.add_argument('--compress-values', action='store_true',
+                        help='Does not collect value if it is less than 1% difference to the previous value',
+                        dest='compress_values')
 
     args = parser.parse_args()
     if not args.chart_filename.endswith(".png"):
