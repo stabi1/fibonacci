@@ -19,7 +19,7 @@ def format_args(args: List[str]) -> str:
 def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000):
     valgrind_error = 7
     command = command.strip()
-    opt = command.split(' ')
+    opt = str(command).split(' ')
 
     opt = ["valgrind", "--leak-check=full", f"--error-exitcode={valgrind_error}"] + opt
 

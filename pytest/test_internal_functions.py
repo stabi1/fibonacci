@@ -2,7 +2,7 @@ import ctypes
 from typing import Tuple
 import pytest
 
-from big_int_helper import big_int_lib, getPartialBigInt, partial_bigInts_pairs, BigInt, bigInt_to_python_hex_string, positive_test_number_pairs
+from big_int_helper import big_int_lib, get_partial_bigint, partial_bigInts_pairs, BigInt, bigint_to_python_hex_string, positive_test_number_pairs
 
 
 def test_new_big_int_is_zero():
@@ -27,7 +27,7 @@ def test_getOccupiedBlocks_normalBigInt(hex_str: str, length: int):
 
 def test_getOccupiedBlocks_partialBigInt():
     big_int_instance = big_int_lib.hexStringToBigInt((32 * 16 * "1").encode())
-    big_int_instance = getPartialBigInt(big_int_instance, 3, 6)
+    big_int_instance = get_partial_bigint(big_int_instance, 3, 6)
     blocks = big_int_lib.getOccupiedBlocks(big_int_instance)
     big_int_lib.freeBigInt(big_int_instance)
     assert blocks == 3
@@ -81,4 +81,4 @@ def test_shiftAdd_partial_bigInts(tuple_a: Tuple[ctypes.POINTER(BigInt), str],
 
         python_res = python_a + (python_b << n * 64)
         python_hex_string = hex(python_res).replace("0x", "").upper()
-        assert python_hex_string == hex_str.decode(), f"{bigInt_to_python_hex_string(big_int_instance_a)} {bigInt_to_python_hex_string(big_int_instance_b)} toShift was {n}"
+        assert python_hex_string == hex_str.decode(), f"{bigint_to_python_hex_string(big_int_instance_a)} {bigint_to_python_hex_string(big_int_instance_b)} toShift was {n}"

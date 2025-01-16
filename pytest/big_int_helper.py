@@ -1,9 +1,15 @@
 import ctypes
 import random
+from pathlib import Path
 from typing import List, Tuple
 
 random.seed(42)
 
+command_list = ["", "--do-swap --swap-threshold 0", "--deactivate-caches", "-m --max-threads 8", "-m --max-threads 10"]
+command_list_non_multithread = ["", "--do-swap --swap-threshold 0", "--deactivate-caches"]
+
+
+FIB_DIR = Path(__file__).parent
 
 class BigInt(ctypes.Structure):
     _fields_ = [
@@ -31,7 +37,7 @@ def random_dec_string(length: int) -> str:
     return hex_string
 
 
-def getPartialBigInt(big_int_instance: ctypes.POINTER(BigInt), new_start: int, new_end: int) -> ctypes.POINTER(BigInt):
+def get_partial_bigint(big_int_instance: ctypes.POINTER(BigInt), new_start: int, new_end: int) -> ctypes.POINTER(BigInt):
     big_int = big_int_instance.contents
     old_start = big_int.start
     old_end = big_int.end
@@ -105,7 +111,7 @@ tmp_hex = random_hex_string(500 * 16)
 tmp_hex_near = tmp_hex[:-2] + "00"
 
 
-def bigInt_to_python_hex_string(big_int_instance: ctypes.POINTER(BigInt)) -> str:
+def bigint_to_python_hex_string(big_int_instance: ctypes.POINTER(BigInt)) -> str:
     hex_str = big_int_lib.bigIntToHexString(big_int_instance)
     return hex_str.decode()
 
@@ -138,7 +144,6 @@ positive_test_numbers_no_zero: List[str] = [
     "1" + "0" * 16 * 15 + "0" * 5
 ]
 
-
 positive_test_numbers = positive_test_numbers_no_zero + zero
 
 negative_test_numbers = ["-" + s for s in positive_test_numbers_no_zero]
@@ -149,20 +154,22 @@ all_test_number_pairs = [(a, b) for a in all_test_numbers for b in all_test_numb
 
 positive_test_number_pairs = [(a, b) for a in positive_test_numbers for b in positive_test_numbers]
 
-def create_partial_bigInts() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
+
+def create_partial_bigints() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
     big_int_length = 500
     test_hex_string = random_hex_string(16 * big_int_length)
     bounds = [(0, 1), (1, 2), (1, 20), (50, 61), (200, 400)]
     res_list = []
     for start, end in bounds:
         big_int_instance = big_int_lib.hexStringToBigInt(test_hex_string.encode())
-        big_int_partial = getPartialBigInt(big_int_instance, start, end)
+        big_int_partial = get_partial_bigint(big_int_instance, start, end)
         partial_hex_str = remove_leading_zeros_str(trim_string(test_hex_string, (big_int_length - end) * 16, start * 16))  # switched because stings are big endian
         res_list.append((big_int_partial, partial_hex_str))
         if partial_hex_str == "":
             print(f"Got you {start} {end}")
     return res_list
 
-partial_bigInts = create_partial_bigInts()
+
+partial_bigInts = create_partial_bigints()
 
 partial_bigInts_pairs = [(a, b) for a in partial_bigInts for b in partial_bigInts]

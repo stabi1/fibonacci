@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <float.h>
-#include "../bigInt/config.h"
 #include "../bigInt/bigIntUtil.h"
 #include "../bigInt/bigIntDiv.h"
 #include "../bigInt/bigIntHigherFunctions.h"
@@ -15,16 +14,14 @@ void testDivision();
 
 void testTmp();
 
-void test_3n2n();
-
-void test() {
-    /*char *s = "-9698221053161177687290477425859177932382231164913342457988942565290603202032650977539673794871485524578715841560821371184254768182683230358929880858382521293289634064686775240148439910622723626693351342619237245018481973741897215406417692743811995376601444856451017397396417899698609191911359966057798066039205146074555347057423885652715598354116597263475575225013948848826913119642585626149915370382407333373204309776889362896964546553585125389218785193583749079779612087805721514940976263748453986289509059119186233922071511696667252145264712463351571840908051208005640995123972835129592728270908144152982173929578671815352373605079181589988683452734666617071587964740803149982508004635806882850317235137399006314035263560229394694346066643749060723111271285246484494116318732807711306211369572790833509025425730662481323570713984822850116880925502130609069130981079649673794577278532426425064207683625366677767555628333393957865436271874960335826862703692492693265732759980111000515532341595977524";
+void customTest() {
+    char *s = "-7879728336815204864708405324323";
     printf("%s\n", s);
-    bigInt* a = decStringToBigInt(s);
+    bigInt *a = decStringToBigInt(s);
     printBigIntDec(a);
-    freeBigInt(a);*/
+    freeBigInt(a);
 
-    testDivision();
+    //testDivision();
 
     //test_3n2n();
     //testTmp();
@@ -43,10 +40,10 @@ void test() {
 }
 
 void testTmp() {
-    char*rand = randomHex(15001*16);
-    bigInt* a = hexStringToBigInt(rand);
+    char *rand = randomHex(15001 * 16);
+    bigInt *a = hexStringToBigInt(rand);
     free(rand);
-    char* res1 = bigIntToDecString(a, false);
+    char *res1 = bigIntToDecString(a, false);
 
     global_config.parallel = true;
     global_config.mulDepth = 1;
@@ -74,7 +71,7 @@ void testDivision() {
     //bigInt* a = hexStringToBigInt(randomHex(480));//1600
     //bigInt *a = hexStringToBigInt("0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
     //bigInt *a = hexStringToBigInt("0EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-   // bigInt *b = hexStringToBigInt(randomHex(320));//800
+    // bigInt *b = hexStringToBigInt(randomHex(320));//800
     //bigInt* a = hexStringToBigInt("60AFFA1E64881027A5DFE87D0CF4C95C5A26F03C11261EDC1869940DB6F4AABB14399A3F971C6DE320F446838C54E7886E76355B9BEB41AFBF0AA77EE04C62E83D14403A961E6E2A4EAD428945EF8BD15F8CD243DDE45620C2CAA0EE405315E24C105DF5FF7AA1946D64BA41C08FFDD5FB117300");
     //bigInt* b = hexStringToBigInt("11F4E298E5F5C0EAD06AA4EE91C9BE5CE51C7B55F29D367E6E91381A9C25A808D252DA6ACE604FEBC9AE1AA96CD14F801F2D99647E4AC548D16CA142E3230C50B7C312770C3D165C7C93DD4BE");
 
@@ -82,8 +79,8 @@ void testDivision() {
     //bigInt* a = hexStringToBigInt(randomHex(30000*16));
     //bigInt* b = hexStringToBigInt(randomHex(7000*16));
 
-    bigInt* a = hexStringToBigInt(randomHex(15001*16));
-    bigInt* b = hexStringToBigInt(randomHex(1302*16));
+    bigInt *a = hexStringToBigInt(randomHex(15001 * 16));
+    bigInt *b = hexStringToBigInt(randomHex(1302 * 16));
 
     bigInt *q1;
     bigInt *q2;
@@ -121,9 +118,9 @@ void testDivision() {
     printBigIntHex(q1);
     printBigIntHex(q2);*/
 
-    if(compareBigInt(res1, res2) != 0) printf("RES not equal\n");
+    if (compareBigInt(res1, res2) != 0) printf("RES not equal\n");
     else printf("RES equal\n");
-    if(compareBigInt(q1, q2) != 0) printf("Reminder not equal\n");
+    if (compareBigInt(q1, q2) != 0) printf("Reminder not equal\n");
     else printf("Reminder equal\n");
 
     //printBigIntHex(add(multiplyToomCook3(b, res1), q1)); //check
@@ -169,8 +166,8 @@ void findBestValues() {
 void benchMark() {
     size_t n = 500; //iterations
 
-    bigInt *test1 = hexStringToBigInt(randomHex(1000*16));
-    bigInt *test2 = hexStringToBigInt(randomHex(1000*16));
+    bigInt *test1 = hexStringToBigInt(randomHex(1000 * 16));
+    bigInt *test2 = hexStringToBigInt(randomHex(1000 * 16));
 
     //code1
     struct timespec start;
@@ -203,7 +200,6 @@ void benchMark() {
 void bruteForceDebug() {
     bool multiThread = global_config.parallel;
     global_config.parallel = false;
-    bool print = false;
     if (multiThread) {
         printf("Bruteforce debug for multi-thread and single-thread\n");
     } else {
@@ -219,7 +215,7 @@ void bruteForceDebug() {
         res3 = fibExpFastDoubling(0);
         global_config.parallel = false;
     }
-    if (compareBigInt(res, res2)  != 0) {
+    if (compareBigInt(res, res2) != 0) {
         printf("Failed at 0 for single-thread\n");
         freeBigInt(res);
         freeBigInt(res2);
@@ -287,11 +283,6 @@ void bruteForceDebug() {
             fibMinus2 = fibMinus1;
             fibMinus1 = fib;
             res2 = fibExpFastDoubling(i + 1);
-            if (print) {
-                char *resString = bigIntToDecString(res2, false);
-                printf("%s\n", resString);
-                free(resString);
-            }
             if (compareBigInt(fibMinus1, res2) != 0) {
                 printf("Failed at %lu for single-thread\n", i + 1);
 

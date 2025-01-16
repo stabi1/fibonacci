@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "../bigInt/bigInt.h"
 
-void test();
+void customTest();
 
 void findBestValues();
 

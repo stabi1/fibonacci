@@ -70,9 +70,10 @@ def get_swap_storage_size() -> str:
         raise Exception(f"Error retrieving value; stderr: {result.stderr}, stdout: {result.stdout}")
 
 
-def monitor_process(pid, monitor_interval: float, compress_values: bool) -> str:
-    start_time = time.perf_counter()
+def monitor_process(pid, monitor_interval: float, compress_values: bool, start_time=None) -> Tuple[str, float]:
     command: str = ""
+    if start_time is None:
+        start_time = time.perf_counter()
     try:
         process = psutil.Process(pid)
         command = process.cmdline()[0]
@@ -96,7 +97,8 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool) -> str:
                 threads = process.threads()  # Get list of threads
                 thread_ids = [t.id for t in threads]  # List of all thread Ids
                 print(
-                    f"PID: {process.pid} | NUM Threads: {len(thread_ids)} | MEM%: {process.memory_percent():.2f}% | RSS: {human_readable_size(process.memory_info().rss // 1024)} | Swap: {human_readable_size(swap_size)} | Command: {process.cmdline()[0]} | Log entries: {len(data)} | Passed time: {timestamp}")
+                    f"PID: {process.pid} | NUM Threads: {len(thread_ids)} | MEM%: {process.memory_percent():.2f}% | RSS: {human_readable_size(process.memory_info().rss // 1024)} |"
+                    f"Swap: {human_readable_size(swap_size)} | Command: {process.cmdline()[0]} | Log entries: {len(data)} | Passed time: {timestamp}")
 
             # log data, make long horizontal line for skipped data points
             last_entry = data[-1]
@@ -114,13 +116,13 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool) -> str:
             time.sleep(monitor_interval)
     except psutil.NoSuchProcess:
         print("Process not found.")
-        return "Continue"
+        return "Continue", start_time
     except psutil.AccessDenied:
         print("Access denied to process information.")
     except Exception as ex:
         print(f"Exception occurred, terminating monitoring: {str(ex)}")
         traceback.print_exc()
-    return command
+    return command, 0
 
 
 def get_pid(command: str) -> str | None:
@@ -140,22 +142,24 @@ def execute_monitoring(monitor_interval: float, chart_filename: str, show_plot, 
     # Get the PID of the process running './fib'
     command_to_monitor = './fib'
 
+    print("Searching for PID")
     pid_to_monitor = get_pid(command_to_monitor)
     if pid_to_monitor is None:
         print("PID could not be found, terminating")
         return
     print(f"Process '{command_to_monitor}' found, monitoring is starting")
+    command_ret, start_time = monitor_process(pid_to_monitor, monitor_interval, compress_values)
 
     while True:
-        command_ret = monitor_process(pid_to_monitor, monitor_interval, compress_values)
         if command_ret != "Continue":
             break
         print("Trying to find new PID")
         pid_to_monitor = get_pid(command_to_monitor)
         if pid_to_monitor is None:
             print("PID could not be found, terminating")
-            return
+            break
         print(f"Process '{command_to_monitor}' found again, monitoring resuming")
+        command_ret, start_time = monitor_process(pid_to_monitor, monitor_interval, compress_values, start_time=start_time)
 
     data.append((0, 0, data[-1][2] + monitor_interval * 2))
     calculate_plot(command_ret, chart_filename, show_plot)

@@ -7,6 +7,7 @@
 #include <signal.h>
 
 #include "test/tests.h"
+#include "test/parseTestArgs.h"
 #include "bigInt/bigInt.h"
 #include "util.h"
 
@@ -18,11 +19,12 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-//TODO use memcpy in ASM methods
+
 //TODO check return values form libc functions (THREAD FUNCTIONS, time measure)
 //TODO make everything const that can be const
 //TODO run more tests in valgrind
 //TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
+//TODO use memcpy in ASM methods
 //TODO fix makefile
 //TODO docu with comments, readme, help-message
 
@@ -46,7 +48,7 @@ static struct option long_options[] = {
         {"output-radix",       required_argument, NULL, 'r'},
         {"debug",              no_argument,       NULL, 'd'},
         {"benchMark",          no_argument,       NULL, 'b'},
-        {"test",               no_argument,       NULL, 't'},
+        {"test",               required_argument, NULL, 't'},
         {"nth-fibonacci",      required_argument, NULL, 'n'},
         {"verbose",            no_argument,       NULL, 'v'},
         {"max-threads",        required_argument, NULL, OPT_MAX_THREADS},
@@ -96,11 +98,12 @@ int main(int argc, char *argv[]) {
     bool convertNumber = false;
     char inputRadix = '\0';
     char *inputFilename = NULL;
+    char *testArgs = NULL;
 
     int option;
 
     while (optind < argc) {
-        if ((option = getopt_long(argc, argv, "+hbtmvdr:o:n:", long_options, NULL)) != -1) {
+        if ((option = getopt_long(argc, argv, "+hbt:mvdr:o:n:", long_options, NULL)) != -1) {
             switch (option) {
                 case 'h':
                     printHelpMenu();
@@ -110,6 +113,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case 't':
                     do_test = true;
+                    testArgs = optarg;
                     break;
                 case 'b':
                     do_benchmark = true;
@@ -121,16 +125,16 @@ int main(int argc, char *argv[]) {
                     global_config.verbose = true;
                     break;
                 case OPT_NUM_CORES:
-                    cores = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
+                    cores = parseUINT64(optarg, UINT64_MAX, 1);
                     break;
                 case OPT_MAX_THREADS:
-                    max_threads = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 1);
+                    max_threads = parseUINT64(optarg, UINT64_MAX, 1);
                     break;
                 case OPT_DO_SWAP:
                     global_config.swap = true;
                     break;
                 case OPT_SWAP_THRESHOLD:
-                    global_config.swapThreshold = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 0);
+                    global_config.swapThreshold = parseUINT64(optarg, UINT64_MAX, 0);
                     break;
                 case OPT_RESULT_FILENAME: {
                     size_t len = strlen(optarg);
@@ -161,7 +165,7 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 case 'n':
-                    n = parseUINT64(optarg, 0xFFFFFFFFFFFFFFFF, 0);
+                    n = parseUINT64(optarg, UINT64_MAX, 0);
                     break;
                 case OPT_CONVERT_NUMBER:
                     convertNumber = true;
@@ -225,7 +229,8 @@ int main(int argc, char *argv[]) {
         printf("Writing result in file: %s\n", outputFilename);
 
     if (do_test) {
-        test();
+        printf("Running Tests, ignoring set input/output filename\n");
+        selectTest(testArgs);
     } else if (do_debug) {
         bruteForceDebug();
     } else if (do_benchmark) {
@@ -324,7 +329,7 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename, bool in
 
 void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, char *outputFilename) {
     if (inputRadix == outputRadix) {
-        printf("Doing nothing, input-radix and output-radix are the same\n");
+        printf("WARNING: Input-radix and output-radix are the same\n");
     }
     char *dateTime = getCurrentDateTime();
     printf("Converting number from %c to %c; Time: %s\n", inputRadix, outputRadix, dateTime);
