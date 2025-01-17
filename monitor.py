@@ -174,7 +174,7 @@ if __name__ == '__main__':
                         help='Name of the output chart, must be a .png file', dest='chart_filename')
     parser.add_argument('--show-plot', action='store_true', help='If set show the created plot', dest='show_plot')
     parser.add_argument('--compress-values', action='store_true',
-                        help='Does not collect value if it is less than 1% difference to the previous value',
+                        help='Does not collect value if it is less than 1 percent difference to the previous value',
                         dest='compress_values')
 
     args = parser.parse_args()
