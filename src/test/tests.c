@@ -21,9 +21,6 @@ void customTest() {
     printBigIntDec(a);
     freeBigInt(a);
 
-    //testDivision();
-
-    //test_3n2n();
     //testTmp();
 
     //findBestValues();
@@ -63,76 +60,6 @@ void testTmp() {
     freeBigInt(a);
 }
 
-//segfault for default
-//bigInt* a = hexStringToBigInt(randomHex(2000));//1600
-//bigInt* b = hexStringToBigInt(randomHex(430));//800
-
-void testDivision() {
-    //bigInt* a = hexStringToBigInt(randomHex(480));//1600
-    //bigInt *a = hexStringToBigInt("0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-    //bigInt *a = hexStringToBigInt("0EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-    // bigInt *b = hexStringToBigInt(randomHex(320));//800
-    //bigInt* a = hexStringToBigInt("60AFFA1E64881027A5DFE87D0CF4C95C5A26F03C11261EDC1869940DB6F4AABB14399A3F971C6DE320F446838C54E7886E76355B9BEB41AFBF0AA77EE04C62E83D14403A961E6E2A4EAD428945EF8BD15F8CD243DDE45620C2CAA0EE405315E24C105DF5FF7AA1946D64BA41C08FFDD5FB117300");
-    //bigInt* b = hexStringToBigInt("11F4E298E5F5C0EAD06AA4EE91C9BE5CE51C7B55F29D367E6E91381A9C25A808D252DA6ACE604FEBC9AE1AA96CD14F801F2D99647E4AC548D16CA142E3230C50B7C312770C3D165C7C93DD4BE");
-
-    //Working for div
-    //bigInt* a = hexStringToBigInt(randomHex(30000*16));
-    //bigInt* b = hexStringToBigInt(randomHex(7000*16));
-
-    bigInt *a = hexStringToBigInt(randomHex(15001 * 16));
-    bigInt *b = hexStringToBigInt(randomHex(1302 * 16));
-
-    bigInt *q1;
-    bigInt *q2;
-
-    //printBigIntHex(a);
-    //printBigIntHex(b);
-    printf("\n");
-    printf("TEST: %ld %ld %ld %ld\n", a->end - a->start, b->end - b->start, custom_lzcnt(a->bigIntArray[a->end - 1]),
-           custom_lzcnt(b->bigIntArray[b->end - 1]));
-
-    printf("Begin of calculation!!!\n\n\n");
-
-
-    struct timespec start;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    bigInt *res1 = divideModSingleThread(a, b, &q1, false);
-    struct timespec end;
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-    printf("Time in div: %f\n", time);
-
-
-    struct timespec start2;
-    clock_gettime(CLOCK_MONOTONIC, &start2);
-    bigInt *res2 = divideMod(a, b, &q2);
-    struct timespec end2;
-    clock_gettime(CLOCK_MONOTONIC, &end2);
-    double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
-    printf("Time in div: %f\n", time2);
-
-    /*printf("\nResults:\n");
-    printBigIntHex(res1);
-    printBigIntHex(res2);
-    printf("\n");
-    printBigIntHex(q1);
-    printBigIntHex(q2);*/
-
-    if (compareBigInt(res1, res2) != 0) printf("RES not equal\n");
-    else printf("RES equal\n");
-    if (compareBigInt(q1, q2) != 0) printf("Reminder not equal\n");
-    else printf("Reminder equal\n");
-
-    //printBigIntHex(add(multiplyToomCook3(b, res1), q1)); //check
-
-    freeBigInt(a);
-    freeBigInt(b);
-    freeBigInt(q1);
-    freeBigInt(q2);
-    freeBigInt(res1);
-    freeBigInt(res2);
-}
-
 void findBestValues() {
     size_t nFast;
     size_t kFast;
@@ -145,12 +72,12 @@ void findBestValues() {
             //naiveMulFaster = n;
             //karatsubaFaster = k;
             struct timespec start;
-            clock_gettime(CLOCK_MONOTONIC, &start);
+            if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
 
             bigInt *res = fibExpFastDoubling(fibN);
 
             struct timespec end;
-            clock_gettime(CLOCK_MONOTONIC, &end);
+            if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
             if (time < bestTime) {
                 bestTime = time;
@@ -171,25 +98,25 @@ void benchMark() {
 
     //code1
     struct timespec start;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
     for (size_t i = 0; i < n; i++) {
         bigInt *res1 = mul(test1, test2);
         freeBigInt(res1);
     }
     struct timespec end;
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
     double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
     printf("Time in code 1: %f\n", time);
 
     //code2
     struct timespec start2;
-    clock_gettime(CLOCK_MONOTONIC, &start2);
+    if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
     for (size_t i = 0; i < n; i++) {
         bigInt *res2 = mulParallel(test1, test2, 1);
         freeBigInt(res2);
     }
     struct timespec end2;
-    clock_gettime(CLOCK_MONOTONIC, &end2);
+    if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
     double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
     printf("Time in code 2: %f\n", time2);
 

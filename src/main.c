@@ -259,18 +259,18 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename, bool in
            sizeInMBEst);
 
     struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
 
     bigInt *res = fibonacci(n);
 
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
     double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
 
     size_t sizeInBytes = (res->end - res->start) * 8;
 
     if (output == 't' || output == 'f') {
         struct timespec start2;
-        clock_gettime(CLOCK_MONOTONIC, &start2);
+        if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
         size_t strSizeInBytes;
         char *resString;
         if (radix == 'd') {
@@ -302,7 +302,7 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename, bool in
         }
 
         struct timespec end2;
-        clock_gettime(CLOCK_MONOTONIC, &end2);
+        if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
         double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
 
         double sizeInKB = ((double) sizeInBytes) / 1000;
@@ -335,24 +335,24 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 
     bigInt *tmp;
     struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
     if (inputRadix == 'd') {
         tmp = readBigIntDecFromFile(inputFilename);
     } else {
         tmp = readBigIntHexFromFile(inputFilename);
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    if( clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
     double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
     printf("Reading from file %s and converting to bigInt done, took %.2f seconds\n", inputFilename, time);
 
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
     if (outputRadix == 'd') {
         writeBigIntDecToFile(tmp, outputFilename, true);
     } else {
         writeBigIntHexToFile(tmp, outputFilename);
         freeBigInt(tmp);
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
+    if (clock_gettime(CLOCK_MONOTONIC, &end)  == -1) perror("Error measuring time!");
     time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
     printf("Finished conversion, result in %s, took %.2f seconds\n", outputFilename, time);
 }

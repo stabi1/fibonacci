@@ -21,20 +21,21 @@ bigInt *fibExpFastDoubling(uint64_t n) {
     struct timespec start, end;
     if (global_config.verbose) {
         printf("\n");
-        clock_gettime(CLOCK_MONOTONIC, &start);
+        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
     }
 
     for (; nBinary != 0; nBinary >>= 1) {
         if (global_config.verbose) {
-            clock_gettime(CLOCK_MONOTONIC, &end);
+            if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
             double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
             size_t sizeInBytes = (a->end - a->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
             char *localTime = getCurrentDateTime();
-            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s; Time: %s\n", counter, iterations, sizeInMB, time, localTime);
+            printf("Iteration ongoing %d/%lu; Current size: %f MB; Time needed for previous iteration: %f s; Time: %s\n",
+                   counter, iterations, sizeInMB, time, localTime);
             free(localTime);
             counter++;
-            clock_gettime(CLOCK_MONOTONIC, &start);
+            if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
         }
         bigInt *temp1 = shiftLeft(b, 1);
         bigInt *temp2 = sub(temp1, a);
@@ -93,7 +94,7 @@ bigInt *fibExpFastDoubling(uint64_t n) {
     freeBigInt(b);
 
     if (global_config.verbose) {
-        clock_gettime(CLOCK_MONOTONIC, &end);
+        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
         double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
         printf("Time needed for last Iteration: %fs\n\n", time);
     }

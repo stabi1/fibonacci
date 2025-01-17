@@ -352,8 +352,6 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool mult
     freeBigInt(ri);
     freeBigInt(aShifted);
 
-
-
     return quotient;
 }
 

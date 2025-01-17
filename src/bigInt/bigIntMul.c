@@ -267,6 +267,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     if (depth == 0) {
         bigInt *result = mulSingleThread(a, b);
         struct toomCookReturn *ret = malloc(sizeof(struct toomCookReturn));
+        mallocCheck(ret);
         ret->res = result;
         ret->res_filename = storeBigIntInSwap(result);
         return (void *) ret;
@@ -321,7 +322,10 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     argsMul1->a = a0;
     argsMul1->b = b0;
     argsMul1->depth = depth - 1;
-    pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul1);
+    if (pthread_create(&thread_idMul1, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul1) != 0) {
+        perror("Error creating thread!");
+        exit(EXIT_FAILURE);
+    }
 
     bigInt *da1 = add(a2, a0);
     bigInt *db1 = add(b2, b0);
@@ -332,7 +336,10 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     argsMul2->a = temp1;
     argsMul2->b = temp2;
     argsMul2->depth = depth - 1;
-    pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul2);
+    if (pthread_create(&thread_idMul2, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul2) != 0) {
+        perror("Error creating thread!");
+        exit(EXIT_FAILURE);
+    }
 
     bigInt *da2 = add(da1, a1);
     freeBigInt(da1);
@@ -345,7 +352,10 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     argsMul3->a = da2;
     argsMul3->b = db2;
     argsMul3->depth = depth - 1;
-    pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul3);
+    if (pthread_create(&thread_idMul3, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul3) != 0) {
+        perror("Error creating thread!");
+        exit(EXIT_FAILURE);
+    }
 
     bigInt *temp3 = add(da2, a2);
 
@@ -364,43 +374,64 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     argsMul4->a = temp5;
     argsMul4->b = temp8;
     argsMul4->depth = depth - 1;
-    pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul4);
+    if (pthread_create(&thread_idMul4, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul4) != 0) {
+        perror("Error creating thread!");
+        exit(EXIT_FAILURE);
+    }
 
     bigInt *vInf;
     argsMul5->a = a2;
     argsMul5->b = b2;
     argsMul5->depth = depth - 1;
-    pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5);
+    if (pthread_create(&thread_idMul5, NULL, multiplyToomCook3MultiThreadHelper, (void *) argsMul5) != 0) {
+        perror("Error creating thread!");
+        exit(EXIT_FAILURE);
+    }
 
     //join Threads
     void *temp;
-    pthread_join(thread_idMul1, &temp);
+    if (pthread_join(thread_idMul1, &temp) != 0) {
+        perror("Error joining thread!");
+        exit(EXIT_FAILURE);
+    }
     struct toomCookReturn *ret_v0 = temp;
     freeBigInt(a0);
     freeBigInt(b0);
 
-    pthread_join(thread_idMul2, &temp);
+    if (pthread_join(thread_idMul2, &temp) != 0) {
+        perror("Error joining thread!");
+        exit(EXIT_FAILURE);
+    }
     struct toomCookReturn *ret = temp;
     vm1 = loadBigIntFromSwap(ret->res, ret->res_filename);
     free(ret);
     freeBigInt(temp1);
     freeBigInt(temp2);
 
-    pthread_join(thread_idMul3, &temp);
+    if (pthread_join(thread_idMul3, &temp) != 0) {
+        perror("Error joining thread!");
+        exit(EXIT_FAILURE);
+    }
     ret = temp;
     v1 = loadBigIntFromSwap(ret->res, ret->res_filename);
     free(ret);
     freeBigInt(da2);
     freeBigInt(db2);
 
-    pthread_join(thread_idMul4, &temp);
+    if (pthread_join(thread_idMul4, &temp) != 0) {
+        perror("Error joining thread!");
+        exit(EXIT_FAILURE);
+    }
     ret = temp;
     v2 = loadBigIntFromSwap(ret->res, ret->res_filename);
     free(ret);
     freeBigInt(temp8);
     freeBigInt(temp5);
 
-    pthread_join(thread_idMul5, &temp);
+    if (pthread_join(thread_idMul5, &temp) != 0) {
+        perror("Error joining thread!");
+        exit(EXIT_FAILURE);
+    }
     struct toomCookReturn *ret_vInf = temp;
     freeBigInt(a2);
     freeBigInt(b2);
@@ -456,6 +487,7 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(v0);
 
     struct toomCookReturn *returnStruct = malloc(sizeof(struct toomCookReturn));
+    mallocCheck(returnStruct);
     returnStruct->res = result;
     if (depth == global_config.mulDepth) {
         size_t l = strlen(NOT_STORED);

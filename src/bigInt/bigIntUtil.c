@@ -6,7 +6,6 @@
 #include <pthread.h>
 
 #include "bigIntDiv.h"
-#include "bigIntMul.h"
 
 const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
@@ -25,7 +24,8 @@ uint64_t decString20CharsTo_uint64_t(const char *dexStr, size_t strLen);
 
 void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z, size_t digestsDone);
 
-void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter, bool beginning);
+void
+bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter, bool beginning);
 
 void *bigIntToDecStringSchoenhageMultithreadHelper(void *input);
 
@@ -125,7 +125,7 @@ char *uint64tArrayToHexString(const uint64_t *array, size_t lenInNibbles, size_t
     char *str = malloc(strLength);
     mallocCheck(str);
     str[strLength - 1] = '\0';
-    const uint8_t * restrict buf = (uint8_t *) array;
+    const uint8_t *restrict buf = (uint8_t *) array;
 
     long j = (long) lenInNibbles - 1;
     long loopEnd = 1;
@@ -206,13 +206,15 @@ struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t dig
     bigIntToDecStringSchoenhageHelper(x, digits, &res, &len, beginning);
     res[len] = '\0';
     struct schoenhageReturn *ret = malloc(sizeof(struct schoenhageReturn));
+    mallocCheck(ret);
     ret->res = res;
     ret->resLen = len;
     return ret;
 }
 
 //shamelessly adapted from Java Jdk8
-void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter, bool beginning) {
+void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter,
+                                       bool beginning) {
     /* If we're smaller than a certain threshold, use the smallToString
        method, padding with leading zeroes when necessary. */
     size_t xLen = getLen(x);
@@ -254,7 +256,8 @@ void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resStrin
 
     size_t expectedDigits = 1 << n;
     // Now recursively build the two halves of each number.
-    bigIntToDecStringSchoenhageHelper(q, digits - expectedDigits, resString, resStringCounter, beginning ? true : false);
+    bigIntToDecStringSchoenhageHelper(q, digits - expectedDigits, resString, resStringCounter,
+                                      beginning ? true : false);
     r = loadBigIntFromSwap(r, filename_r);
     bigIntToDecStringSchoenhageHelper(r, expectedDigits, resString, resStringCounter, false);
 }
@@ -340,22 +343,36 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     args2->digits = expectedDigits;
     args2->beginning = false;
     args2->depth = depth - 1;
-    pthread_create(&thread_idConvert1, NULL, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args1);
-    pthread_create(&thread_idConvert2, NULL, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args2);
+    if (pthread_create(&thread_idConvert1, NULL, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args1) != 0) {
+        perror("Error creating thread!");
+        exit(EXIT_FAILURE);
+    }
+    if (pthread_create(&thread_idConvert2, NULL, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args2) != 0) {
+        perror("Error creating thread!");
+        exit(EXIT_FAILURE);
+    }
     void *tmp1;
     void *tmp2;
-    pthread_join(thread_idConvert1, &tmp1);
-    pthread_join(thread_idConvert2, &tmp2);
+    if (pthread_join(thread_idConvert1, &tmp1) != 0) {
+        perror("Error joining thread!");
+        exit(EXIT_FAILURE);
+    }
+    if (pthread_join(thread_idConvert2, &tmp2) != 0) {
+        perror("Error joining thread!");
+        exit(EXIT_FAILURE);
+    }
     struct schoenhageReturn *res1 = tmp1;
     struct schoenhageReturn *res2 = tmp2;
     free(args1);
     free(args2);
 
     char *result = realloc(res1->res, res1->resLen + res2->resLen + 1);
+    mallocCheck(result);
     memcpy(result + res1->resLen, res2->res, res2->resLen);
     result[res1->resLen + res2->resLen] = '\0';
     free(res2->res);
     struct schoenhageReturn *ret = malloc(sizeof(struct schoenhageReturn));
+    mallocCheck(ret);
     ret->res = result;
     ret->resLen = res1->resLen + res2->resLen;
     free(res1);
@@ -402,6 +419,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
 
     // Put sign (if any) and first digit group into result buffer
     char *res = malloc(numGroups * digitsPerUInt64 + 2);
+    mallocCheck(res);
     size_t resCounter = 0;
     memcpy(res + resCounter, digitGroup[numGroups - 1], strlen(digitGroup[numGroups - 1]));
     resCounter += strlen(digitGroup[numGroups - 1]);

@@ -31,6 +31,7 @@ void selectTest(char *args) {
     //copy args
     size_t argLen = strlen(args);
     char *argsCpy = malloc(argLen + 1);
+    mallocCheck(argsCpy);
     strncpy(argsCpy, args, argLen + 1);
     argsCpy[argLen] = '\0';
 

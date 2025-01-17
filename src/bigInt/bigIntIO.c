@@ -27,7 +27,7 @@ void handleSignals(int sig, siginfo_t *info, void *context) {
                 printf("Cleanup successful, exiting\n");
                 exit(EXIT_FAILURE);
             } else {
-                printf("Errors occurred during cleanup, exiting\n");
+                fprintf(stderr, "Errors occurred during cleanup, exiting\n");
                 exit(EXIT_FAILURE);
             }
         } else {
