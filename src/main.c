@@ -273,12 +273,15 @@ void printFibonacci(uint64_t n, char radix, char output, char *filename, bool in
         if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
         size_t strSizeInBytes;
         char *resString;
+        char *localTime = getCurrentDateTime();
         if (radix == 'd') {
-            if (global_config.verbose) printf("Starting conversion to dec\n");
+            if (global_config.verbose) printf("Starting conversion to dec; %s\n", localTime);
+            free(localTime);
             resString = bigIntToDecString(res, true);
             strSizeInBytes = strlen(resString);
         } else {
-            if (global_config.verbose) printf("Starting conversion to hex\n");
+            if (global_config.verbose) printf("Starting conversion to hex; %s\n", localTime);
+            free(localTime);
             resString = bigIntToHexString(res);
             freeBigInt(res);
             strSizeInBytes = strlen(resString);

@@ -290,7 +290,11 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     size_t depth = ((struct schoenhageArgs *) input)->depth;
 
     size_t xLen = getLen(x);
-    if (global_config.verbose) printf("Convert-Depth: %lu\n", depth);
+    if (global_config.verbose) {
+        char *localTime = getCurrentDateTime();
+        printf("Convert-Depth: %lu;  %s\n", depth, localTime);
+        free(localTime);
+    }
     if (depth == 0 || xLen < DEC_STRING_SMALL_FASTER) {
         struct schoenhageReturn *res = bigIntToDecStringSchoenhageLenRet(x, digits, beginning);
         return res;
@@ -313,13 +317,21 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
         freeBigInt(v);
         v = vNew;
     }
-    if (global_config.verbose && depth == global_config.convertDepth) printf("First muls from conversion finished\n");
+    if (global_config.verbose && depth == global_config.convertDepth) {
+        char *localTime = getCurrentDateTime();
+        printf("First muls from conversion finished  %s\n", localTime);
+        free(localTime);
+    }
 
     bigInt *r = NULL;
     bigInt *q;
     if (depth == global_config.convertDepth) {
         q = divideModMultiThread(x, v, &r, global_config.mulDepth, true);
-        if (global_config.verbose) printf("First div from conversion finished\n");
+        if (global_config.verbose) {
+            char *localTime = getCurrentDateTime();
+            printf("First div from conversion finished;  %s\n", localTime);
+            free(localTime);
+        }
     } else {
         size_t parallelMuls = 1 << (global_config.convertDepth - depth);
         size_t mulDepth = calcMulDepthForParallelMuls(parallelMuls);
@@ -377,7 +389,12 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     ret->resLen = res1->resLen + res2->resLen;
     free(res1);
     free(res2);
-    printf("Thread with Depth: %lu finished\n", depth);
+
+    if (global_config.verbose) {
+        char *localTime = getCurrentDateTime();
+        printf("Thread with Depth: %lu finished;  %s\n", depth, localTime);
+        free(localTime);
+    }
     return ret;
 }
 
