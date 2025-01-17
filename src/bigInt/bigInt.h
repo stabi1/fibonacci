@@ -24,10 +24,10 @@ bigInt *newBigIntNotZeroed(size_t len);
 
 void freeBigInt(bigInt *toDelete);
 
-bigInt *copyBigInt(bigInt *x);
+bigInt *copyBigInt(const bigInt *x);
 
 //compare
-int compareBigInt(bigInt *a, bigInt *b);
+int compareBigInt(const bigInt *a, const bigInt *b);
 
 // I/O methods
 void printBigIntHex(bigInt *x);
@@ -38,30 +38,32 @@ void writeBigIntHexToFile(bigInt *x, char *path);
 
 void writeBigIntDecToFile(bigInt *x, char *path, bool doFree);
 
-bigInt *readBigIntHexFromFile(char *path);
+bigInt *readBigIntHexFromFile(const char *path);
 
-bigInt *readBigIntDecFromFile(char *path);
+bigInt *readBigIntDecFromFile(const char *path);
 
 char *storeBigIntInSwap(bigInt *x);
 
 bigInt *loadBigIntFromSwap(bigInt *x, char *filename);
 
 // calc methods
-bigInt *sub(bigInt *x, bigInt *y);
+bigInt *sub(const bigInt *x, const bigInt *y);
 
-bigInt *add(bigInt *x, bigInt *y);
+bigInt *add(const bigInt *x, const bigInt *y);
 
-bigInt *shiftLeft(bigInt *x, size_t n);
+bigInt *shiftLeft(const bigInt *x, size_t n);
 
-bigInt *shiftRight(bigInt *x, size_t n);
+bigInt *shiftRight(const bigInt *x, size_t n);
 
-bigInt *mul(bigInt *x, bigInt *y);
+bigInt *mul(const bigInt *x, const bigInt *y);
 
-bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth); //TODO remove
+bigInt *mulSingleThread(const bigInt *x, const bigInt *y);
 
-bigInt *divide(bigInt *dividend, bigInt *divisor);
+bigInt *mulParallel(const bigInt *x, const bigInt *y, size_t depth);
 
-bigInt *divideMod(bigInt *dividend, bigInt *divisor, bigInt **reminder);
+bigInt *divide(const bigInt *dividend, const bigInt *divisor);
+
+bigInt *divideMod(const bigInt *dividend, const bigInt *divisor, bigInt **reminder);
 
 // String methods
 bigInt *hexStringToBigInt(const char *hex);
@@ -70,10 +72,10 @@ bigInt *decStringToBigInt(const char *dec);
 
 char *bigIntToDecString(bigInt *x, bool doFree);
 
-char *bigIntToHexString(bigInt *x);
+char *bigIntToHexString(const bigInt *x);
 
 //misc
-size_t bitLength(bigInt *x);
+size_t bitLength(const bigInt *x);
 
 size_t getLen(const bigInt *x);
 

@@ -6,7 +6,7 @@
 .global shiftRight_Asm
 
 
-//bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n); uses SSE
+//bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, size_t n); uses SSE
 shiftAdd_Asm:
     //rdi = x, rsi = toShift, rdx = n
     push r12 //free
@@ -132,7 +132,7 @@ shiftAdd_Asm:
     ret
 
 
-//void shiftAddHelper(bigInt *bigger, bigInt *smaller, bigInt *res, size_t biggerCount, size_t smallerCount, size_t i);
+//void shiftAddHelper(const bigInt *bigger, const bigInt *smaller, bigInt *res, size_t biggerCount, size_t smallerCount, size_t i);
 shiftAddHelper_Asm:
     //rdi = bigger, rsi = smaller, rdx = res, rcx = biggerCount, r8 = samllerCount, r9 = i
     push r12
@@ -173,7 +173,7 @@ shiftAddHelper_Asm:
     jmp .LShiftAddHelperEntry
 
 
-//void do_add_asm(bigInt *bigger, bigInt *smaller, bigInt *res);
+//void do_add_asm(const bigInt *bigger, const bigInt *smaller, bigInt *res);
 do_add_asm:
     //rdi = bigger, rsi = smaller, rdx = res
     //rcx = biggerCount, r8 = smallerCount, r9 = i
@@ -319,43 +319,14 @@ do_add_asm:
     jmp .LAddCopyCarryLoop
 .LAddCopy:
     //ende copy add loop
-    add rcx, 12
-    jge .LAddCopyLoopSingleStart
-.LAddCopyLoopSSE:
-    sub rcx, 12
-
-    //1
-    lddqu xmm0, [r14 + rcx*8]
-    movdqu [r11 + r9*8], xmm0
-    //2
-    lddqu xmm1, [r14 + rcx*8 + 16]
-    movdqu [r11 + r9*8+ 16], xmm1
-    //3
-    lddqu xmm2, [r14 + rcx*8 + 32]
-    movdqu [r11 + r9*8 + 32], xmm2
-    //4
-    lddqu xmm3, [r14 + rcx*8 + 48]
-    movdqu [r11 + r9*8 + 48], xmm3
-    //5
-    lddqu xmm3, [r14 + rcx*8 + 64]
-    movdqu [r11 + r9*8 + 64], xmm3
-    //6
-    lddqu xmm3, [r14 + rcx*8 + 80]
-    movdqu [r11 + r9*8 + 80], xmm3
-
-    add r9, 12
-    add rcx, 24
-    jl .LAddCopyLoopSSE
-
-.LAddCopyLoopSingleStart:
-    sub rcx, 12
-    jz .LAddHelperEnde
-.LAddCopyLoopSingle:
-    mov r10, [r14 + rcx*8]
-    mov [r11 + r9*8], r10
-    add r9, 1
-    add rcx, 1
-    jnz .LAddCopyLoopSingle
+    // r14 = bigger->bigIntArray
+    // r11 = res->BigIntArray
+    // biggerCount = rcx, i = r9
+    lea rdi, [r11 + r9*8] // *dest
+    lea rsi, [r14 + rcx*8] // *src
+    neg rcx // blocks to copy
+    lea rdx, [rcx*8] // num bytes to copy
+    call memcpy
 .LAddHelperEnde:
     pop rbx
     pop r15
@@ -373,7 +344,8 @@ do_add_asm:
     ret
 
 
-//*bigInt *do_sub_asm(bigInt *bigger, bigInt *smaller, bigInt *res);
+//*bigInt *do_sub_asm(const bigInt *bigger, const bigInt *smaller, bigInt *res);
+// len(bigger) == len(res)
 do_sub_asm:
     //rdi = bigger, rsi = smaller, rdx = res
     push r12
@@ -393,7 +365,7 @@ do_sub_asm:
     mov rbx, [rdx + 8]
     lea r11, [r11 + rbx*8]
 
-    // biggerCount = rcx, samllerCount = r8, i = r9
+    // biggerCount = rcx, samllerCount = r8
     mov rcx, r12
     sub rcx, rdi
     neg rcx
@@ -401,10 +373,6 @@ do_sub_asm:
     mov r8, r13
     sub r8, rsi
     neg r8
-
-    mov r9, rbx
-    sub r9, [rdx]
-    neg r9
 
     xor rbx, rbx
 
@@ -417,66 +385,65 @@ do_sub_asm:
     //1
     mov r10, [r14 + rcx*8]
     sbb r10, [r15 + r8*8]
-    mov [r11 + r9*8], r10
+    mov [r11 + rcx*8], r10
 
     //2
     mov r10, [r14 + rcx*8 + 8]
     sbb r10, [r15 + r8*8 + 8]
-    mov [r11 + r9*8 + 8], r10
+    mov [r11 + rcx*8 + 8], r10
 
     //3
     mov r10, [r14 + rcx*8 + 16]
     sbb r10, [r15 + r8*8 + 16]
-    mov [r11 + r9*8 + 16], r10
+    mov [r11 + rcx*8 + 16], r10
 
     //4
     mov r10, [r14 + rcx*8 + 24]
     sbb r10, [r15 + r8*8 + 24]
-    mov [r11 + r9*8 + 24], r10
+    mov [r11 + rcx*8 + 24], r10
 
     //5
     mov r10, [r14 + rcx*8 + 32]
     sbb r10, [r15 + r8*8 + 32]
-    mov [r11 + r9*8 + 32], r10
+    mov [r11 + rcx*8 + 32], r10
 
     //6
     mov r10, [r14 + rcx*8 + 40]
     sbb r10, [r15 + r8*8 + 40]
-    mov [r11 + r9*8 + 40], r10
+    mov [r11 + rcx*8 + 40], r10
 
     //7
     mov r10, [r14 + rcx*8 + 48]
     sbb r10, [r15 + r8*8 + 48]
-    mov [r11 + r9*8 + 48], r10
+    mov [r11 + rcx*8 + 48], r10
 
     //8
     mov r10, [r14 + rcx*8 + 56]
     sbb r10, [r15 + r8*8 + 56]
-    mov [r11 + r9*8 + 56], r10
+    mov [r11 + rcx*8 + 56], r10
 
     //9
     mov r10, [r14 + rcx*8 + 64]
     sbb r10, [r15 + r8*8 + 64]
-    mov [r11 + r9*8 + 64], r10
+    mov [r11 + rcx*8 + 64], r10
 
     //10
     mov r10, [r14 + rcx*8 + 72]
     sbb r10, [r15 + r8*8 + 72]
-    mov [r11 + r9*8 + 72], r10
+    mov [r11 + rcx*8 + 72], r10
 
     //11
     mov r10, [r14 + rcx*8 + 80]
     sbb r10, [r15 + r8*8 + 80]
-    mov [r11 + r9*8 + 80], r10
+    mov [r11 + rcx*8 + 80], r10
 
     //12
     mov r10, [r14 + rcx*8 + 88]
     sbb r10, [r15 + r8*8 + 88]
-    mov [r11 + r9*8 + 88], r10
+    mov [r11 + rcx*8 + 88], r10
 
     setc bl
     add rcx, 12
-    add r9, 12
     add r8, 24
     jl .LSubMultipleLoop
 
@@ -489,11 +456,10 @@ do_sub_asm:
 
     mov r10, [r14 + rcx*8]
     sbb r10, [r15 + r8*8]
-    mov [r11 + r9*8], r10
+    mov [r11 + rcx*8], r10
 
     setc bl
     add rcx, 1
-    add r9, 1
     add r8, 1
     jnz .LSubSingleLoop
 
@@ -506,54 +472,21 @@ do_sub_asm:
 .LSubCopyCarryLoop:
     mov r10, [r14 + rcx*8]
     sub r10, 1
-    mov [r11 + r9*8], r10
+    mov [r11 + rcx*8], r10
     setc bl
-    add r9, 1
     add rcx, 1
     jz .LSubHelperEnde
     test bl, bl
     jnz .LSubCopyCarryLoop
 .LCopySub:
-    cmp rcx, 0
-    jz .LSubHelperEnde
-    //ende copy sub loop
-    add rcx, 12
-    jge .LSubCopyLoopSingleStart
-.LSubCopyLoopSSE:
-    sub rcx, 12
-
-    //1
-    lddqu xmm0, [r14 + rcx*8]
-    movdqu [r11 + r9*8], xmm0
-    //2
-    lddqu xmm1, [r14 + rcx*8 + 16]
-    movdqu [r11 + r9*8+ 16], xmm1
-    //3
-    lddqu xmm2, [r14 + rcx*8 + 32]
-    movdqu [r11 + r9*8 + 32], xmm2
-    //4
-    lddqu xmm3, [r14 + rcx*8 + 48]
-    movdqu [r11 + r9*8 + 48], xmm3
-    //5
-    lddqu xmm3, [r14 + rcx*8 + 64]
-    movdqu [r11 + r9*8 + 64], xmm3
-    //6
-    lddqu xmm3, [r14 + rcx*8 + 80]
-    movdqu [r11 + r9*8 + 80], xmm3
-
-    add r9, 12
-    add rcx, 24
-    jl .LSubCopyLoopSSE
-
-.LSubCopyLoopSingleStart:
-    sub rcx, 12
-    jz .LSubHelperEnde
-.LSubCopyLoopSingle:
-    mov r10, [r14 + rcx*8]
-    mov [r11 + r9*8], r10
-    add r9, 1
-    add rcx, 1
-    jnz .LSubCopyLoopSingle
+    // r14 = bigger->bigIntArray
+    // r11 = res->BigIntArray
+    // biggerCount = rcx
+    lea rdi, [r11 + rcx*8] // *dest
+    lea rsi, [r14 + rcx*8] // *src
+    neg rcx // blocks to copy
+    lea rdx, [rcx*8] // num bytes to copy
+    call memcpy
 .LSubHelperEnde:
     pop rbx
     pop r15
@@ -563,7 +496,8 @@ do_sub_asm:
     ret
 
 
-//bigInt *shiftLeft(bigInt *x, size_t n);
+//bigInt *shiftLeft(const bigInt *x, size_t n);
+// n < 64
 shiftLeft_Asm:
     //rdi = x, rsi = n
     push r15
@@ -610,7 +544,8 @@ shiftLeft_Asm:
     ret
 
 
-//bigInt *shiftRight(bigInt *x, size_t n);
+//bigInt *shiftRight(const bigInt *x, size_t n);
+// n < 64
 shiftRight_Asm:
     //rdi = x, rsi = n
     push r15

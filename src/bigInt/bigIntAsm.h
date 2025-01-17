@@ -3,14 +3,14 @@
 
 #include "bigInt.h"
 
-bigInt *do_add_asm(bigInt *x, bigInt *y, bigInt *res);
+bigInt *do_add_asm(const bigInt *x, const bigInt *y, bigInt *res);
 
-bigInt *do_sub_asm(bigInt *x, bigInt *y, bigInt *res);
+bigInt *do_sub_asm(const bigInt *x, const bigInt *y, bigInt *res);
 
-bigInt *shiftAdd_Asm(bigInt *x, bigInt *toShift, size_t n);
+bigInt *shiftAdd_Asm(const bigInt *x, const bigInt *toShift, size_t n);
 
-bigInt *shiftLeft_Asm(bigInt *x, size_t n);
+bigInt *shiftLeft_Asm(const bigInt *x, size_t n);
 
-bigInt *shiftRight_Asm(bigInt *x, size_t n);
+bigInt *shiftRight_Asm(const bigInt *x, size_t n);
 
 #endif //IMPLEMENTATION_BIGINTASM_H

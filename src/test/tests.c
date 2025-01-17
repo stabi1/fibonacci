@@ -185,7 +185,7 @@ void benchMark() {
     struct timespec start2;
     clock_gettime(CLOCK_MONOTONIC, &start2);
     for (size_t i = 0; i < n; i++) {
-        bigInt *res2 = multiplyToomCook3MultiThread(test1, test2, 1);
+        bigInt *res2 = mulParallel(test1, test2, 1);
         freeBigInt(res2);
     }
     struct timespec end2;

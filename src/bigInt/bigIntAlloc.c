@@ -16,22 +16,22 @@ pthread_once_t bigIntArrayStack_10KB_stack_key_once = PTHREAD_ONCE_INIT;
 pthread_key_t bigIntArrayStack_100KB_stack_key;
 pthread_once_t bigIntArrayStack_100KB_stack_key_once = PTHREAD_ONCE_INIT;
 
-BigIntStack *create_stack(size_t size);
+BigIntStack *create_stack(long size);
 
 bigInt *allocBigIntStruct();
 
 bigInt *newBigIntHelper(size_t len, bool setZero);
 
 //allocates memory for a new bigInt of the given size
-bigInt *newBigInt(size_t len) {
+bigInt *newBigInt(const size_t len) {
     return newBigIntHelper(len, true);
 }
 
-bigInt *newBigIntNotZeroed(size_t len) {
+bigInt *newBigIntNotZeroed(const size_t len) {
     return newBigIntHelper(len, false);
 }
 
-bigInt *newBigIntHelper(size_t len, bool setZero) {
+bigInt *newBigIntHelper(const size_t len, const bool setZero) {
     if (len == 0) {
         fprintf(stderr, "newBigInt: len can not be zero!\n");
         exit(4);
@@ -48,7 +48,7 @@ bigInt *newBigIntHelper(size_t len, bool setZero) {
 }
 
 //creates a new bigInt Struct with the array of another bigInt->not the owner of the array
-bigInt *newBigIntStruct(size_t start, size_t end, uint64_t *bigIntArray) {
+bigInt *newBigIntStruct(const size_t start, const size_t end, uint64_t *bigIntArray) {
     if (start - end == 0) {
         return getZeroBigInt();
     }
@@ -76,7 +76,7 @@ void freeBigInt(bigInt *toDelete) {
 }
 
 //deep copies BigInt
-bigInt *copyBigInt(bigInt *x) {
+bigInt *copyBigInt(const bigInt *x) {
     size_t xLen = x->end - x->start;
     bigInt *res = newBigIntNotZeroed(xLen);
     memcpy(res->bigIntArray, x->bigIntArray + x->start, xLen * 8);
@@ -181,7 +181,7 @@ int popBigIntArrayStack(uint64_t **x, size_t len, size_t *completeLen) {
     }
 }
 
-BigIntStack *create_stack(size_t size) {
+BigIntStack *create_stack(long size) {
     BigIntStack *stack = (BigIntStack *) malloc(sizeof(BigIntStack));
     mallocCheck(stack);
     stack->top = -1;  // Initially, the stack is empty

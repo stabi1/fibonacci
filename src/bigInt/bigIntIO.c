@@ -21,13 +21,19 @@ void handleSignals(int sig, siginfo_t *info, void *context) {
     if (sig == SIGTERM || sig == SIGINT) {
         printf("\nSIGINT or SIGTERM received, cleaning up resources\n");
         fflush(stdout); // Ensure the output is immediately visible
-        int status = delete_files_in_folder(SWAP_DIR);
-        if (status == 0) {
-            printf("Cleanup successful, exiting\n");
+        if (directoryExists(SWAP_DIR)) {
+            int status = delete_files_in_folder(SWAP_DIR);
+            if (status == 0) {
+                printf("Cleanup successful, exiting\n");
+                exit(EXIT_FAILURE);
+            } else {
+                printf("Errors occurred during cleanup, exiting\n");
+                exit(EXIT_FAILURE);
+            }
         } else {
-            printf("Errors occurred during cleanup, exiting\n");
+            printf("Nothing to clean up, exiting\n");
+            exit(EXIT_FAILURE);
         }
-        exit(EXIT_FAILURE);
     }
 }
 
@@ -93,7 +99,7 @@ void writeBigIntDecToFile(bigInt *x, char *path, bool doFree) {
     free(tmp);
 }
 
-bigInt *readBigIntHexFromFile(char *path) {
+bigInt *readBigIntHexFromFile(const char *path) {
     char *fileContent = readFile(path);
     if (fileContent == NULL) exit(EXIT_FAILURE);
     bigInt *res = hexStringToBigInt(fileContent);
@@ -101,7 +107,7 @@ bigInt *readBigIntHexFromFile(char *path) {
     return res;
 }
 
-bigInt *readBigIntDecFromFile(char *path) {
+bigInt *readBigIntDecFromFile(const char *path) {
     char *fileContent = readFile(path);
     if (fileContent == NULL) exit(EXIT_FAILURE);
     bigInt *res = decStringToBigInt(fileContent);
@@ -109,7 +115,7 @@ bigInt *readBigIntDecFromFile(char *path) {
     return res;
 }
 
-inline __attribute__((always_inline)) char *storeBigIntInSwap(bigInt *x) {
+inline __attribute__((always_inline)) char * storeBigIntInSwap(bigInt *x) {
     if (!global_config.swap || !x->arrayOwner || getLen(x) * 8 < global_config.swapThreshold * 1000000) {
         size_t l = strlen(NOT_STORED);
         char *res = malloc(l + 1);

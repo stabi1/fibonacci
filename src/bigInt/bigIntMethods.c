@@ -7,17 +7,18 @@
 #include "bigIntAsm.h"
 #include "bigIntAlloc.h"
 
-bigInt *add_helper(bigInt *x, bigInt *y, bool negative);
+bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative);
 
-bigInt *sub_helper(bigInt *x, bigInt *y, bool negative);
+bigInt *sub_helper(const bigInt *x, const bigInt *y, bool negative);
 
-bool isValidBigInt(bigInt *x) {
+bool isValidBigInt(const bigInt *x) {
     if (isZero(x)) return true;
     if (x->start >= x->end) return false;
     if (x->bigIntArray[x->end - 1] == 0) return false;
     return true;
 }
 
+// Can modify and change bigInt/pointer
 bigInt *stripLeadingZeros(bigInt *x) {
     if (getLen(x) == 0) {
         freeBigInt(x);
@@ -34,7 +35,7 @@ bigInt *getZeroBigInt() {
     return newBigInt(1);
 }
 
-bool isZero(bigInt *x) {
+bool isZero(const bigInt *x) {
     if (x->end - x->start == 1 && x->bigIntArray[x->start] == 0) {
         return true;
     }
@@ -45,7 +46,7 @@ size_t getLen(const bigInt *x) {
     return (x->end) - (x->start);
 }
 
-size_t getOccupiedBlocks(bigInt *x) {
+size_t getOccupiedBlocks(const bigInt *x) {
     long i = (long) x->end;
     size_t n = 0;
     while (i > (long) x->start + 1) {
@@ -57,7 +58,7 @@ size_t getOccupiedBlocks(bigInt *x) {
 }
 
 // Returns -1, 0 or 1 as a is numerically less than, equal to, or greater than b
-int compareBigInt(bigInt *a, bigInt *b) {
+int compareBigInt(const bigInt *a, const bigInt *b) {
     if (isZero(a) && isZero(b))
         return 0;
 
@@ -70,7 +71,7 @@ int compareBigInt(bigInt *a, bigInt *b) {
     return a->negative ? 1 : -1;
 }
 
-int compareBigIntArrays(bigInt *a, bigInt *b) {
+int compareBigIntArrays(const bigInt *a, const bigInt *b) {
     if (isZero(a) && isZero(b)) {
         return 0;
     }
@@ -94,7 +95,7 @@ int compareBigIntArrays(bigInt *a, bigInt *b) {
 }
 
 //compares like compareBigInt, but b is shifted n blocks (n*64 bit) to the left
-int compareShiftedBigInt(bigInt *a, bigInt *b, size_t n) {
+int compareShiftedBigInt(const bigInt *a, const bigInt *b, size_t n) {
     long aLen = (long) (a->end - a->start) - (long) n;
     long bLen = (long) (b->end - b->start);
     if (aLen < bLen) {
@@ -114,7 +115,7 @@ int compareShiftedBigInt(bigInt *a, bigInt *b, size_t n) {
 }
 
 //shifts bigInt to the left
-bigInt *shiftLeft(bigInt *x, size_t n) {
+bigInt *shiftLeft(const bigInt *x, size_t n) {
     if (isZero(x)) {
         return getZeroBigInt();
     }
@@ -137,7 +138,7 @@ bigInt *shiftLeft(bigInt *x, size_t n) {
 }
 
 //shifts bigInt to the right
-bigInt *shiftRight(bigInt *x, size_t n) {
+bigInt *shiftRight(const bigInt *x, size_t n) {
     if (n == 0) {
         return copyBigInt(x);
     }
@@ -159,7 +160,7 @@ bigInt *shiftRight(bigInt *x, size_t n) {
     return res;
 }
 
-bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n) {
+bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, size_t n) {
     if (isZero(toShift)) { // toShift == 0
         return copyBigInt(x);
     }
@@ -170,7 +171,7 @@ bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n) {
 }
 
 //fills the char array with the hex presentation of the bigInt
-char *bigIntToHexString(bigInt *x) {
+char *bigIntToHexString(const bigInt *x) {
     size_t lzcnt = custom_lzcnt(x->bigIntArray[x->end - 1]);
     size_t xLen = x->end - x->start;
     // error handling
@@ -284,7 +285,7 @@ bigInt *decStringToBigInt(const char *decStr) {
 }
 
 //get the lower half of the bigInt (same array, new Struct with different pointers)
-bigInt *getLowerFrom(bigInt *x, size_t n) {
+bigInt *getLowerFrom(const bigInt *x, size_t n) {
     if (x->end < x->start + n) {
         n = getLen(x);
     }
@@ -293,7 +294,7 @@ bigInt *getLowerFrom(bigInt *x, size_t n) {
 }
 
 //get the upper half of the bigInt (same array, new Struct with different pointers)
-bigInt *getUpperFrom(bigInt *x, size_t n) {
+bigInt *getUpperFrom(const bigInt *x, size_t n) {
     if (x->start + n >= x->end) {
         return getZeroBigInt();
     }
@@ -302,7 +303,7 @@ bigInt *getUpperFrom(bigInt *x, size_t n) {
 }
 
 //Returns a slice of a bigInt for Toom-Cook
-void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]) {
+void getToomSlice(const bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]) {
     size_t len = x->end - x->start;
     size_t offset = fullSize - len;
     long long start0, end0, start1, end1, start2, end2;
@@ -351,7 +352,7 @@ void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize
     erg[2] = s2;
 }
 
-bigInt *getBlock(bigInt *x, size_t index, size_t numBlocks, size_t blockLength) {
+bigInt *getBlock(const bigInt *x, size_t index, size_t numBlocks, size_t blockLength) {
     size_t blockStart = index * blockLength;
     size_t xLen = x->end - x->start;
     if (blockStart >= xLen) {
@@ -370,11 +371,11 @@ bigInt *getBlock(bigInt *x, size_t index, size_t numBlocks, size_t blockLength) 
     return stripLeadingZeros(newBigIntStruct(x->start + blockStart, x->start + blockEnd, x->bigIntArray));
 }
 
-bigInt *add(bigInt *x, bigInt *y) {
-    bigInt *addBigger = x;
-    bigInt *addSmaller = y;
+bigInt *add(const bigInt *x, const bigInt *y) {
+    const bigInt *addBigger = x;
+    const bigInt *addSmaller = y;
     if (compareBigIntArrays(x, y) == -1) {
-        bigInt *tmp = addBigger;
+        const bigInt *tmp = addBigger;
         addBigger = addSmaller;
         addSmaller = tmp;
     }
@@ -386,7 +387,7 @@ bigInt *add(bigInt *x, bigInt *y) {
     }
 }
 
-bigInt *add_helper(bigInt *x, bigInt *y, bool negative) {
+bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative) {
     bigInt *res = newBigIntNotZeroed(getLen(x) + 1);
     res->bigIntArray[res->end - 1] = 0;
     do_add_asm(x, y, res);
@@ -396,11 +397,11 @@ bigInt *add_helper(bigInt *x, bigInt *y, bool negative) {
     return res;
 }
 
-bigInt *sub(bigInt *x, bigInt *y) {
-    bigInt *subBigger = x;
-    bigInt *subSmaller = y;
+bigInt *sub(const bigInt *x, const bigInt *y) {
+    const bigInt *subBigger = x;
+    const bigInt *subSmaller = y;
     if (compareBigIntArrays(x, y) == -1) {
-        bigInt *tmp = subBigger;
+        const bigInt *tmp = subBigger;
         subBigger = subSmaller;
         subSmaller = tmp;
     }
@@ -418,7 +419,7 @@ bigInt *sub(bigInt *x, bigInt *y) {
     }
 }
 
-bigInt *sub_helper(bigInt *x, bigInt *y, bool negative) {
+bigInt *sub_helper(const bigInt *x, const bigInt *y, bool negative) {
     bigInt *res = newBigInt(getLen(x));
     do_sub_asm(x, y, res);
     res->negative = negative;

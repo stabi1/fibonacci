@@ -13,18 +13,18 @@ size_t PARALLEL_MUL_FASTER = 1000; //Size when toom-cook-multithread is faster t
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
-bigInt *mulExecute(bigInt *x, bigInt *y);
+bigInt *mulExecute(const bigInt *x, const bigInt *y);
 
-bigInt *mulParallelExecute(bigInt *x, bigInt *y, size_t depth);
+bigInt *mulParallelExecute(const bigInt *x, const bigInt *y, size_t depth);
 
-bigInt *mul(bigInt *x, bigInt *y) {
+bigInt *mul(const bigInt *x, const bigInt *y) {
     if (global_config.parallel)
         return mulParallel(x, y, global_config.mulDepth);
     else
         return mulSingleThread(x, y);
 }
 
-bigInt *mulSingleThread(bigInt *x, bigInt *y) {
+bigInt *mulSingleThread(const bigInt *x, const bigInt *y) {
     bigInt *res;
     if (getLen(x) < getLen(y)) {
         res = mulExecute(y, x);
@@ -35,7 +35,7 @@ bigInt *mulSingleThread(bigInt *x, bigInt *y) {
     return res;
 }
 
-bigInt *mulParallel(bigInt *x, bigInt *y, size_t depth) {
+bigInt *mulParallel(const bigInt *x, const bigInt *y, size_t depth) {
     if (depth == 0) return mulSingleThread(x, y);
 
     bigInt *res;
@@ -48,7 +48,7 @@ bigInt *mulParallel(bigInt *x, bigInt *y, size_t depth) {
     return res;
 }
 
-bigInt *mulExecute(bigInt *x, bigInt *y) {
+bigInt *mulExecute(const bigInt *x, const bigInt *y) {
     if (isZero(x) || isZero(y)) {
         return getZeroBigInt();
     }
@@ -63,7 +63,7 @@ bigInt *mulExecute(bigInt *x, bigInt *y) {
     }
 }
 
-bigInt *mulParallelExecute(bigInt *x, bigInt *y, size_t depth) {
+bigInt *mulParallelExecute(const bigInt *x, const bigInt *y, size_t depth) {
     if (isZero(x) || isZero(y)) {
         return getZeroBigInt();
     }
@@ -81,7 +81,7 @@ bigInt *mulParallelExecute(bigInt *x, bigInt *y, size_t depth) {
 }
 
 //returns x * y with karatsuba
-bigInt *karatsuba(bigInt *x, bigInt *y) {
+bigInt *karatsuba(const bigInt *x, const bigInt *y) {
     size_t xLen = getLen(x);
     //calculate m -> middle of the bigger bigInt
     size_t m = xLen / 2;
@@ -117,7 +117,7 @@ bigInt *karatsuba(bigInt *x, bigInt *y) {
     return res;
 }
 
-bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
+bigInt *multiplyToomCook3(const bigInt *a, const bigInt *b) {
     size_t largest = getLen(a);
     // k is the size (in qword) of the lower-order slices.
     size_t k = (largest + 2) / 3;
@@ -236,8 +236,8 @@ bigInt *multiplyToomCook3(bigInt *a, bigInt *b) {
 }
 
 struct toomCookArgs {
-    bigInt *a;
-    bigInt *b;
+    const bigInt *a;
+    const bigInt *b;
     size_t depth;
 };
 
@@ -246,7 +246,7 @@ struct toomCookReturn {
     char *res_filename;
 };
 
-bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
+bigInt *multiplyToomCook3MultiThread(const bigInt *a, const bigInt *b, size_t depth) {
     struct toomCookArgs *args = malloc(sizeof(struct toomCookArgs));
     mallocCheck(args);
     args->a = a;
@@ -260,8 +260,8 @@ bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth) {
 }
 
 void *multiplyToomCook3MultiThreadHelper(void *input) {
-    bigInt *a = ((struct toomCookArgs *) input)->a;
-    bigInt *b = ((struct toomCookArgs *) input)->b;
+    const bigInt *a = ((struct toomCookArgs *) input)->a;
+    const bigInt *b = ((struct toomCookArgs *) input)->b;
     size_t depth = ((struct toomCookArgs *) input)->depth;
 
     if (depth == 0) {

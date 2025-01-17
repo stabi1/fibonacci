@@ -4,14 +4,10 @@
 #include <stddef.h>
 #include "bigIntMethods.h"
 
-bigInt *mulSingleThread(bigInt *x, bigInt *y);
+bigInt *karatsuba(const bigInt *x, const bigInt *y);
 
-bigInt *mulParallel(bigInt *x, bigInt *y, size_t depth);
+bigInt *multiplyToomCook3(const bigInt *a, const bigInt *b);
 
-bigInt *karatsuba(bigInt *x, bigInt *y);
-
-bigInt *multiplyToomCook3(bigInt *a, bigInt *b);
-
-bigInt *multiplyToomCook3MultiThread(bigInt *a, bigInt *b, size_t depth);
+bigInt *multiplyToomCook3MultiThread(const bigInt *a, const bigInt *b, size_t depth);
 
 #endif //IMPLEMENTIERUNG_KARATSUBA_H

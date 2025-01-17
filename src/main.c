@@ -21,10 +21,8 @@ const char *DEFAULT_FILENAME = "output.txt";
 
 
 //TODO check return values form libc functions (THREAD FUNCTIONS, time measure)
-//TODO make everything const that can be const
 //TODO run more tests in valgrind
 //TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
-//TODO use memcpy in ASM methods
 //TODO fix makefile
 //TODO docu with comments, readme, help-message
 

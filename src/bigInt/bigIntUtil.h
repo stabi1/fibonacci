@@ -8,7 +8,7 @@
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
-char *uint64tArrayToHexString(uint64_t *array, size_t lenInNibbles, size_t start, bool negative);
+char *uint64tArrayToHexString(const uint64_t *array, size_t lenInNibbles, size_t start, bool negative);
 
 void decStringToBigIntHelper(uint64_t *array, size_t arrayLen, const char *decStr, size_t decStrLen);
 

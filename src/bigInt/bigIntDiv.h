@@ -10,7 +10,7 @@
 #include "bigIntAsm.h"
 #include "mulAsm.h"
 
-bigInt *exactDivideBy3(bigInt *x);
+bigInt *exactDivideBy3(const bigInt *x);
 
 bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler, bool multithread, size_t mulDepth, bool freeArguments);
 
@@ -24,7 +24,7 @@ bigInt *divideModMultiThread(bigInt *dividend, bigInt *divisor, bigInt **reminde
 
 void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt *reminder);
 
-void divideD4(bigInt *dividend, bigInt *divisor, bigInt *quotient, bigInt *reminder);
+void divideD4(const bigInt *dividend, const bigInt *divisor, bigInt *quotient, bigInt *reminder);
 
 bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, size_t mulDepth, bool freeArguments);
 

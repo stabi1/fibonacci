@@ -6,27 +6,27 @@
 #include <stdbool.h>
 #include "bigInt.h"
 
-bigInt *getLowerFrom(bigInt *x, size_t n);
+bigInt *getLowerFrom(const bigInt *x, size_t n);
 
-bigInt *getUpperFrom(bigInt *x, size_t n);
+bigInt *getUpperFrom(const bigInt *x, size_t n);
 
-bigInt *shiftAdd(bigInt *x, bigInt *toShift, size_t n);
+bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, size_t n);
 
-void getToomSlice(bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]);
+void getToomSlice(const bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]);
 
-bigInt *getBlock(bigInt *x, size_t index, size_t numBlocks, size_t blockLength);
+bigInt *getBlock(const bigInt *x, size_t index, size_t numBlocks, size_t blockLength);
 
-int compareShiftedBigInt(bigInt *a, bigInt *b, size_t n);
+int compareShiftedBigInt(const bigInt *a, const bigInt *b, size_t n);
 
 bigInt *getZeroBigInt();
 
-bool isZero(bigInt *x);
+bool isZero(const bigInt *x);
 
-size_t getOccupiedBlocks(bigInt *x);
+size_t getOccupiedBlocks(const bigInt *x);
 
-int compareBigIntArrays(bigInt *a, bigInt *b);
+int compareBigIntArrays(const bigInt *a, const bigInt *b);
 
-bool isValidBigInt(bigInt *x);
+bool isValidBigInt(const bigInt *x);
 
 bigInt *stripLeadingZeros(bigInt *x);
 

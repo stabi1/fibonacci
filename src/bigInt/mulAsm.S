@@ -193,7 +193,7 @@ naiveMul_Asm: //mul using naive multiplication
     ret
 */
 
-
+// bigInt *naiveMul_Asm(const bigInt *x, const bigInt *y);
 .align 16
 naiveMul_Asm: //mul using naive multiplication
     //*x in rdi, *y in rsi

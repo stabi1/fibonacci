@@ -46,7 +46,7 @@ size_t custom_lzcnt(uint64_t n) {
 }
 
 // -> max length 2000 petabytes
-size_t bitLength(bigInt *x) {
+size_t bitLength(const bigInt *x) {
     size_t xLen = x->end - x->start;
     return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
@@ -119,13 +119,13 @@ size_t decCharToValue(char dec) {
     return dec - '0';
 }
 
-char *uint64tArrayToHexString(uint64_t *array, size_t lenInNibbles, size_t start, bool negative) {
+char *uint64tArrayToHexString(const uint64_t *array, size_t lenInNibbles, size_t start, bool negative) {
     size_t strLength = sizeof(char) * (lenInNibbles + 1);
     if (negative) strLength++;
     char *str = malloc(strLength);
     mallocCheck(str);
     str[strLength - 1] = '\0';
-    uint8_t *buf = (uint8_t *) array;
+    const uint8_t * restrict buf = (uint8_t *) array;
 
     long j = (long) lenInNibbles - 1;
     long loopEnd = 1;
@@ -175,7 +175,7 @@ char *uint64_t_toDecString(uint64_t x) {
     return res;
 }
 
-size_t calculateDecStringSpace(bigInt *x) {
+size_t calculateDecStringSpace(const bigInt *x) {
     size_t xLen = getLen(x);
     size_t xMaxBitLen = xLen * 64;
     size_t resMaxLen = (size_t) ((double) xMaxBitLen * 0.30103 + 3);
