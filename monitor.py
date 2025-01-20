@@ -76,7 +76,7 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool, start_t
         start_time = time.perf_counter()
     try:
         process = psutil.Process(pid)
-        command = process.cmdline()[0]
+        command = process.cmdline()
         skipped = False
         last_datapoint = (0, 0, 0)
 
@@ -116,7 +116,7 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool, start_t
             time.sleep(monitor_interval)
     except psutil.NoSuchProcess:
         print("Process not found.")
-        return "Continue", start_time
+        return command, start_time
     except psutil.AccessDenied:
         print("Access denied to process information.")
     except Exception as ex:
@@ -151,7 +151,7 @@ def execute_monitoring(monitor_interval: float, chart_filename: str, show_plot, 
     command_ret, start_time = monitor_process(pid_to_monitor, monitor_interval, compress_values)
 
     while True:
-        if command_ret != "Continue":
+        if start_time == 0:
             break
         print("Trying to find new PID")
         pid_to_monitor = get_pid(command_to_monitor)

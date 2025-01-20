@@ -6,14 +6,14 @@ size_t PARALLEL_DIV_FASTER = 1000;
 
 //To be used when the number is known to be exactly divisible by 3
 bigInt *exactDivideBy3(const bigInt *x) {
-    long len = (long) x->end - (long) x->start;
-    bigInt *result = newBigIntNotZeroed(x->end - x->start);
+    size_t len = getLen(x);
+    bigInt *result = newBigIntNotZeroed(len);
     result->negative = x->negative;
     unsigned long borrow;
     unsigned __int128 q, xx, w;
     borrow = 0;
-    long j = (long) x->start;
-    for (long i = 0; i < len; i++, j++) {
+    size_t j = x->start;
+    for (size_t i = 0; i < len; i++, j++) {
         xx = x->bigIntArray[j];
         w = xx - borrow;
         if (borrow > xx) {
@@ -31,7 +31,7 @@ bigInt *exactDivideBy3(const bigInt *x) {
             }
         }
     }
-    if (result->bigIntArray[result->end - 1] == 0 && result->end - result->start > 1) {
+    if (result->bigIntArray[result->end - 1] == 0 && getLen(result) > 1) {
         result->end -= 1;
     }
     return result;
@@ -159,15 +159,6 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
     }
 }
 
-//used by tests
-bigInt *divideD4Helper(bigInt *dividend, bigInt *divisor, bigInt **reminder) {
-    uint64_t m = dividend->end - dividend->start;
-    uint64_t n = divisor->end - divisor->start;
-    bigInt *quotient = newBigInt(m - n + 1);
-    *reminder = newBigInt(n);
-    divideD4(dividend, divisor, quotient, *reminder);
-    return quotient;
-}
 
 void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt *reminder) {
     uint64_t *q = quotient->bigIntArray + quotient->start;
@@ -204,14 +195,14 @@ void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt 
 //adapted from https://raw.githubusercontent.com/hcs0/Hackers-Delight/master/divmnu64.c.txt
 void divideD4(const bigInt *dividend, const bigInt *divisor, bigInt *quotient, bigInt *reminder) {
     uint64_t *q = quotient->bigIntArray + quotient->start;
-    const  uint64_t * restrict u = dividend->bigIntArray + dividend->start;
-    const uint64_t * restrict v = divisor->bigIntArray + divisor->start;
+    const uint64_t *restrict u = dividend->bigIntArray + dividend->start;
+    const uint64_t *restrict v = divisor->bigIntArray + divisor->start;
     long m = (long) (dividend->end - dividend->start);
     long n = (long) (divisor->end - divisor->start);
 
     unsigned __int128 b = 18446744073709551615U; // Number base (2**32).
     b++;
-    uint64_t * restrict un, * restrict vn; // Normalized form of u, v.
+    uint64_t *restrict un, *restrict vn; // Normalized form of u, v.
     unsigned __int128 qhat; // Estimated quotient digit.
     unsigned __int128 rhat; // A remainder.
     unsigned __int128 p; // Product of two digits.
@@ -365,7 +356,7 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, si
     }
 
     // step 2: view A as [a1,a2,a3,a4] where each ai is n/2 ints or less
-    bigInt *aUpper = getUpperFrom(A, n/2);
+    bigInt *aUpper = getUpperFrom(A, n / 2);
 
     // step 3: q1=aUpper/B, r1=aUpper%B
     bigInt *r1 = NULL;

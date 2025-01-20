@@ -26,6 +26,10 @@ Run all non valgrind tests (fast): `pytest -m "not valgrind_test"`
 
 
 
+## Misc
+* Max length = ~2000 petabytes (64bit bit-length counter)
+
+
 # TMP:
 valgrind ./fib -o n -v -n 5000000
 No cache-> total heap usage: 680,772 allocs, 680,772 frees, 482,708,078 bytes allocated
