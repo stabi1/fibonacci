@@ -98,8 +98,7 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
             freeBigInt(dividend);
             freeBigInt(divisor);
         }
-        bigInt *quotient = newBigIntNotZeroed(1);
-        quotient->bigIntArray[0] = 1;
+        bigInt *quotient = getBigIntFromUnsignedInteger(1);
         if (reminder != NULL) {
             *reminder = getZeroBigInt();
         }
@@ -436,8 +435,7 @@ bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, si
     freeBigInt(a_lower);
 
     // step 6: add B until r>=d
-    bigInt *one = getZeroBigInt();
-    one->bigIntArray[0] = 1;
+    bigInt *one = getBigIntFromUnsignedInteger(1);
     while (compareBigInt(r_2, d) < 0) {
         bigInt *r_2_tmp = add(r_2, B);
         freeBigInt(r_2);

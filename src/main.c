@@ -19,7 +19,7 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-
+//TODO: Implement swapping in fibLuc
 //TODO run more tests in valgrind
 //TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
 //TODO fix makefile

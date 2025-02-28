@@ -35,6 +35,22 @@ bigInt *getZeroBigInt() {
     return newBigInt(1);
 }
 
+bigInt* getBigIntFromUnsignedInteger(uint64_t integer) {
+    bigInt* res = newBigIntNotZeroed(1);
+    res->bigIntArray[0] = integer;
+    return res;
+}
+
+bigInt* getBigIntFromSignedInteger(int64_t integer) {
+    bigInt* res = newBigIntNotZeroed(1);
+    if(integer<0) {
+        res->negative = true;
+        integer = -integer;
+    }
+    res->bigIntArray[0] = integer;
+    return res;
+}
+
 bool isZero(const bigInt *x) {
     if (x->end - x->start == 1 && x->bigIntArray[x->start] == 0) {
         return true;
@@ -55,6 +71,10 @@ size_t getOccupiedBlocks(const bigInt *x) {
         n++;
     }
     return x->end - n - x->start;
+}
+
+void negateBigInt(bigInt* x) {
+    x->negative = !x->negative;
 }
 
 // Returns -1, 0 or 1 as a is numerically less than, equal to, or greater than b

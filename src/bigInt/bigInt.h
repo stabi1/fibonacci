@@ -26,6 +26,12 @@ void freeBigInt(bigInt *toDelete);
 
 bigInt *copyBigInt(const bigInt *x);
 
+bigInt *getZeroBigInt();
+
+bigInt* getBigIntFromUnsignedInteger(uint64_t integer);
+
+bigInt* getBigIntFromSignedInteger(int64_t integer);
+
 //compare
 int compareBigInt(const bigInt *a, const bigInt *b);
 
@@ -78,6 +84,8 @@ char *bigIntToHexString(const bigInt *x);
 size_t bitLength(const bigInt *x);
 
 size_t getLen(const bigInt *x);
+
+void negateBigInt(bigInt* x);
 
 //misc utility
 void mallocCheck(void *p);

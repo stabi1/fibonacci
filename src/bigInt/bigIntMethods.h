@@ -18,8 +18,6 @@ bigInt *getBlock(const bigInt *x, size_t index, size_t numBlocks, size_t blockLe
 
 int compareShiftedBigInt(const bigInt *a, const bigInt *b, size_t n);
 
-bigInt *getZeroBigInt();
-
 bool isZero(const bigInt *x);
 
 size_t getOccupiedBlocks(const bigInt *x);

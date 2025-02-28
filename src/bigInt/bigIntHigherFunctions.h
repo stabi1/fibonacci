@@ -5,4 +5,6 @@
 
 bigInt *fibExpFastDoubling(uint64_t n);
 
+bigInt *fibWithLucas(uint64_t n);
+
 #endif //FIBONACCI_BIGINTHIGHERFUNCTIONS_H

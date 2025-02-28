@@ -7,6 +7,7 @@
 #include "../bigInt/bigIntUtil.h"
 #include "../bigInt/bigIntDiv.h"
 #include "../bigInt/bigIntHigherFunctions.h"
+#include "../bigDec/bigDecString.h"
 
 char *randomHex(uint64_t n);
 
@@ -15,11 +16,14 @@ void testDivision();
 void testTmp();
 
 void customTest() {
-    char *s = "-7879728336815204864708405324323";
+    /*char *s = "-7879728336815204864708405324323";
     printf("%s\n", s);
     bigInt *a = decStringToBigInt(s);
     printBigIntDec(a);
-    freeBigInt(a);
+    freeBigInt(a);*/
+
+    printf("Hi\n");
+    printf("0.%s\n", uint64_t_FractionToDecString(85));
 
     //testTmp();
 
@@ -74,7 +78,7 @@ void findBestValues() {
             struct timespec start;
             if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
 
-            bigInt *res = fibExpFastDoubling(fibN);
+            bigInt *res = fibonacci(fibN);
 
             struct timespec end;
             if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
@@ -91,17 +95,18 @@ void findBestValues() {
 }
 
 void benchMark() {
-    size_t n = 500; //iterations
+    size_t iterations = 1; //iterations
+    uint64_t n = 400000000;
 
-    bigInt *test1 = hexStringToBigInt(randomHex(1000 * 16));
-    bigInt *test2 = hexStringToBigInt(randomHex(1000 * 16));
+    printf("Benchmark with Iterations: %ld\n", iterations);
 
     //code1
     struct timespec start;
+    bigInt *res1;
     if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
-    for (size_t i = 0; i < n; i++) {
-        bigInt *res1 = mul(test1, test2);
-        freeBigInt(res1);
+    for (size_t i = 0; i < iterations; i++) {
+        res1 = fibExpFastDoubling(n);
+        // freeBigInt(res1);
     }
     struct timespec end;
     if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
@@ -110,18 +115,23 @@ void benchMark() {
 
     //code2
     struct timespec start2;
+    bigInt *res2;
     if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
-    for (size_t i = 0; i < n; i++) {
-        bigInt *res2 = mulParallel(test1, test2, 1);
-        freeBigInt(res2);
+    for (size_t i = 0; i < iterations; i++) {
+        res2 = fibWithLucas(n);
+        // freeBigInt(res2);
     }
     struct timespec end2;
     if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
     double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
     printf("Time in code 2: %f\n", time2);
-
-    freeBigInt(test1);
-    freeBigInt(test2);
+    if (compareBigInt(res1, res2) != 0) {
+        printf("Numbers not equal!\n");
+    } else {
+        printf("Numbers equal\n");
+    }
+    freeBigInt(res1);
+    freeBigInt(res2);
 }
 
 void bruteForceDebug() {
@@ -135,17 +145,17 @@ void bruteForceDebug() {
     //edge cases
     bigInt *res = newBigInt(1);
     res->bigIntArray[0] = 0;
-    bigInt *res2 = fibExpFastDoubling(0);
+    bigInt *res2 = fibonacci(0);
     bigInt *res3 = NULL;
     if (multiThread) {
         global_config.parallel = true;
-        res3 = fibExpFastDoubling(0);
+        res3 = fibonacci(0);
         global_config.parallel = false;
     }
     if (compareBigInt(res, res2) != 0) {
         printf("Failed at 0 for single-thread\n");
-        freeBigInt(res);
-        freeBigInt(res2);
+        printf("%s\n", bigIntToDecString(res, true));
+        printf("%s\n", bigIntToDecString(res2, true));
         if (multiThread) {
             freeBigInt(res3);
         }
@@ -164,18 +174,16 @@ void bruteForceDebug() {
         freeBigInt(res3);
     }
     res->bigIntArray[0] = 1;
-    res2 = fibExpFastDoubling(1);
+    res2 = fibonacci(1);
     if (multiThread) {
         global_config.parallel = true;
-        res3 = fibExpFastDoubling(1);
+        res3 = fibonacci(1);
         global_config.parallel = false;
     }
     if (compareBigInt(res, res2) != 0) {
         printf("Failed at 1 for single-thread\n");
-        printf("%s\n", bigIntToDecString(res, false));
-        printf("%s\n", bigIntToDecString(res2, false));
-        freeBigInt(res);
-        freeBigInt(res2);
+        printf("%s\n", bigIntToDecString(res, true));
+        printf("%s\n", bigIntToDecString(res2, true));
         if (multiThread) {
             freeBigInt(res3);
         }
@@ -209,7 +217,7 @@ void bruteForceDebug() {
             freeBigInt(fibMinus2);
             fibMinus2 = fibMinus1;
             fibMinus1 = fib;
-            res2 = fibExpFastDoubling(i + 1);
+            res2 = fibonacci(i + 1);
             if (compareBigInt(fibMinus1, res2) != 0) {
                 printf("Failed at %lu for single-thread\n", i + 1);
 
@@ -226,7 +234,7 @@ void bruteForceDebug() {
             }
             if (multiThread) {
                 global_config.parallel = true;
-                res3 = fibExpFastDoubling(i + 1);
+                res3 = fibonacci(i + 1);
                 global_config.parallel = false;
                 if (compareBigInt(fibMinus1, res3) != 0) {
                     printf("Failed at %lu for multi-thread\n", i + 1);
