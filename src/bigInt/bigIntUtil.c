@@ -199,7 +199,7 @@ char *bigIntToDecStringSchoenhage(bigInt *x) {
 
 // FREES the bigInt that is passed!!!
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning) {
-    size_t resMaxLen = calculateDecStringSpace(x);
+    size_t resMaxLen = (digits == 0 || beginning) ? calculateDecStringSpace(x) : digits;
     char *res = malloc(resMaxLen);
     mallocCheck(res);
     size_t len = 0;
@@ -303,8 +303,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     size_t b, n;
     b = bitLength(x);
     n = (size_t) llroundl(log((double) b * log(2.0) / log(10.0)) / log(2.0) - 1.0);
-    bigInt *v = newBigInt(1);
-    v->bigIntArray[v->start] = 10;
+    bigInt *v = getBigIntFromUnsignedInteger(10);
     for (size_t i = 0; i < n; i++) {
         bigInt *vNew;
         if (depth == global_config.convertDepth) {

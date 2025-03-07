@@ -342,6 +342,9 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool mult
     freeBigInt(ri);
     freeBigInt(aShifted);
 
+    (*reminder)->end = (*reminder)->start + getOccupiedBlocks(*reminder);
+    quotient->end = quotient->start + getOccupiedBlocks(quotient);
+
     return quotient;
 }
 

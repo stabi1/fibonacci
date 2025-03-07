@@ -127,6 +127,7 @@ bigInt *fibWithLucas(uint64_t n) {
 
 // from https://www.reddit.com/r/compsci/comments/1im1jd1/20000000th_fibonacci_number_in_1_second/
 // also this here: https://ii.uni.wroc.pl/~lorys/IPL/article75-6-1.pdf
+// needs only 2 multiplications per step instead of the 3 of the fastDoubling -> speedup of 1.5 (33% faster)
 FibLucPair *fibLuc(int64_t n) {
     FibLucPair *result;
 
