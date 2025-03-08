@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <float.h>
+
 #include "../bigInt/bigIntUtil.h"
 #include "../bigInt/bigIntDiv.h"
 #include "../bigInt/bigIntHigherFunctions.h"
@@ -125,6 +126,7 @@ void benchMark() {
     if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
     double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
     printf("Time in code 2: %f\n", time2);
+
     if (compareBigInt(res1, res2) != 0) {
         printf("Numbers not equal!\n");
     } else {

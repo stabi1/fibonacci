@@ -1,11 +1,12 @@
 #include "bigIntUtil.h"
+
+#include "bigIntDiv.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <pthread.h>
-
-#include "bigIntDiv.h"
 
 const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
@@ -184,10 +185,11 @@ size_t calculateDecStringSpace(const bigInt *x) {
 
 char *bigIntToDecStringHelper(bigInt *x, bool doFree) {
     bigInt *convertX = doFree ? x : copyBigInt(x);
-    if (global_config.parallel)
+    if (global_config.parallel) {
         return bigIntToDecStringSchoenhageMultithread(convertX);
-    else
+    } else {
         return bigIntToDecStringSchoenhage(convertX);
+    }
 }
 
 char *bigIntToDecStringSchoenhage(bigInt *x) {
@@ -200,6 +202,7 @@ char *bigIntToDecStringSchoenhage(bigInt *x) {
 // FREES the bigInt that is passed!!!
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning) {
     size_t resMaxLen = (digits == 0 || beginning) ? calculateDecStringSpace(x) : digits;
+    printf("resMaxLen: %zu; digits: %zu; beginning: %s\n", resMaxLen, digits, beginning ? "true" : "false");
     char *res = malloc(resMaxLen);
     mallocCheck(res);
     size_t len = 0;
@@ -300,9 +303,8 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
         return res;
     }
 
-    size_t b, n;
-    b = bitLength(x);
-    n = (size_t) llroundl(log((double) b * log(2.0) / log(10.0)) / log(2.0) - 1.0);
+    size_t xBitLength = bitLength(x);
+    size_t n = (size_t) llroundl(log((double) xBitLength * log(2.0) / log(10.0)) / log(2.0) - 1.0);
     bigInt *v = getBigIntFromUnsignedInteger(10);
     for (size_t i = 0; i < n; i++) {
         bigInt *vNew;

@@ -317,7 +317,7 @@ int directoryExists(const char *path) {
     if (stat(path, &info) != 0)
         return false;
 
-    if (info.st_mode & S_IFDIR) {
+    if (S_ISDIR(info.st_mode)) {
         return true;
     } else {
         // The path exists but is not a directory
