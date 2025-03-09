@@ -245,8 +245,7 @@ void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resStrin
     size_t b, n;
     b = bitLength(x);
     n = (size_t) llroundl(log((double) b * log(2.0) / log(10.0)) / log(2.0) - 1.0);
-    bigInt *v = newBigInt(1);
-    v->bigIntArray[v->start] = 10;
+    bigInt *v = getBigIntFromUnsignedInteger(10);
     for (size_t i = 0; i < n; i++) {
         bigInt *vNew = mulSingleThread(v, v);
         freeBigInt(v);
@@ -260,7 +259,7 @@ void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resStrin
     size_t expectedDigits = 1 << n;
     // Now recursively build the two halves of each number.
     bigIntToDecStringSchoenhageHelper(q, digits - expectedDigits, resString, resStringCounter,
-                                      beginning ? true : false);
+                                      beginning);
     r = loadBigIntFromSwap(r, filename_r);
     bigIntToDecStringSchoenhageHelper(r, expectedDigits, resString, resStringCounter, false);
 }
@@ -340,6 +339,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     }
 
     size_t expectedDigits = 1 << n;
+    printf("Stats of depth: %zu; digits: %zu; expectedDigits: %zu; beginning: %s \t New digits: %zu, %zu\n", depth, digits, expectedDigits, beginning ? "true" : "false", digits - expectedDigits, expectedDigits);
 
     // Now recursively build the two halves of each number.
     pthread_t thread_idConvert1;
@@ -348,7 +348,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     mallocCheck(args1);
     args1->x = q;
     args1->digits = digits - expectedDigits;
-    args1->beginning = beginning ? true : false;
+    args1->beginning = beginning;
     args1->depth = depth - 1;
     struct schoenhageArgs *args2 = malloc(sizeof(struct schoenhageArgs));
     mallocCheck(args2);
