@@ -304,13 +304,14 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
 
     size_t xBitLength = bitLength(x);
     size_t n = (size_t) llroundl(log((double) xBitLength * log(2.0) / log(10.0)) / log(2.0) - 1.0);
+    printf("NEW; xBitLength: %zu; n: %zu\n", xBitLength, n);
     bigInt *v = getBigIntFromUnsignedInteger(10);
     for (size_t i = 0; i < n; i++) {
         bigInt *vNew;
         if (depth == global_config.convertDepth) {
             vNew = mulParallel(v, v, global_config.mulDepth);
         } else {
-            size_t parallelMuls = 1 << (global_config.convertDepth - depth);
+            size_t parallelMuls = 1ULL << (global_config.convertDepth - depth);
             size_t mulDepth = calcMulDepthForParallelMuls(parallelMuls);
             vNew = mulParallel(v, v, mulDepth);
         }
@@ -338,7 +339,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
         q = divideModMultiThread(x, v, &r, mulDepth, true);
     }
 
-    size_t expectedDigits = 1 << n;
+    size_t expectedDigits = 1ULL << n;
     printf("Stats of depth: %zu; digits: %zu; expectedDigits: %zu; beginning: %s \t New digits: %zu, %zu\n", depth, digits, expectedDigits, beginning ? "true" : "false", digits - expectedDigits, expectedDigits);
 
     // Now recursively build the two halves of each number.
