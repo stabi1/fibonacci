@@ -107,12 +107,13 @@ void benchMark() {
     if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
     for (size_t i = 0; i < iterations; i++) {
         res1 = fibExpFastDoubling(n);
-        // freeBigInt(res1);
+        freeBigInt(res1);
     }
     struct timespec end;
     if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
     double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
     printf("Time in code 1: %f\n", time);
+    printf("----------------------------------------------\n");
 
     //code2
     struct timespec start2;
@@ -120,20 +121,20 @@ void benchMark() {
     if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
     for (size_t i = 0; i < iterations; i++) {
         res2 = fibWithLucas(n);
-        // freeBigInt(res2);
+        freeBigInt(res2);
     }
     struct timespec end2;
     if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
     double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
     printf("Time in code 2: %f\n", time2);
 
-    if (compareBigInt(res1, res2) != 0) {
+    /*if (compareBigInt(res1, res2) != 0) {
         printf("Numbers not equal!\n");
     } else {
         printf("Numbers equal\n");
     }
     freeBigInt(res1);
-    freeBigInt(res2);
+    freeBigInt(res2);*/
 }
 
 void bruteForceDebug() {

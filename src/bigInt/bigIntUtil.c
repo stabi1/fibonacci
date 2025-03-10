@@ -13,6 +13,7 @@ const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',
 const char decLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 const int DEC_STRING_SMALL_FASTER = 100;
+const int PARALLEL_DEC_STRING_FASTER = 2000;
 
 struct schoenhageReturn {
     char *res;
@@ -52,6 +53,7 @@ size_t bitLength(const bigInt *x) {
     return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
 
+// calling function still needs to resize!!!
 void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char *decStr, const size_t decStrLen) {
     size_t digitsPerLong = 19;
     const char *decStringEnd = decStr + decStrLen;
@@ -73,7 +75,6 @@ void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char 
         digestsDone += digitsPerLong;
         inplaceMulAddForConversion(array, arrayLen, groupVal, digestsDone);
     }
-    // calling function still needs to resize!!!
 }
 
 void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z, size_t digestsDone) {
@@ -192,6 +193,7 @@ char *bigIntToDecStringHelper(bigInt *x, bool doFree) {
     }
 }
 
+//Frees x
 char *bigIntToDecStringSchoenhage(bigInt *x) {
     struct schoenhageReturn *ret = bigIntToDecStringSchoenhageLenRet(x, 0, true);
     char *res = ret->res;
@@ -202,7 +204,7 @@ char *bigIntToDecStringSchoenhage(bigInt *x) {
 // FREES the bigInt that is passed!!!
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning) {
     size_t resMaxLen = (digits == 0 || beginning) ? calculateDecStringSpace(x) : digits;
-    printf("resMaxLen: %zu; digits: %zu; beginning: %s\n", resMaxLen, digits, beginning ? "true" : "false");
+    // printf("resMaxLen: %zu; digits: %zu; beginning: %s\n", resMaxLen, digits, beginning ? "true" : "false");
     char *res = malloc(resMaxLen);
     mallocCheck(res);
     size_t len = 0;
@@ -271,7 +273,15 @@ struct schoenhageArgs {
     size_t depth;
 };
 
+// Frees x
 char *bigIntToDecStringSchoenhageMultithread(bigInt *x) {
+    if (global_config.convertDepth == 0) {
+        fprintf(stderr, "Warning: string multithread conversion method was called but convertDepth=0, using single thread version\n");
+    }
+    if (PARALLEL_DEC_STRING_FASTER < getLen(x) || global_config.convertDepth == 0) {
+        return bigIntToDecStringSchoenhage(x);
+    }
+
     struct schoenhageArgs *args = malloc(sizeof(struct schoenhageArgs));
     mallocCheck(args);
     args->x = x;
@@ -304,7 +314,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
 
     size_t xBitLength = bitLength(x);
     size_t n = (size_t) llroundl(log((double) xBitLength * log(2.0) / log(10.0)) / log(2.0) - 1.0);
-    printf("NEW; xBitLength: %zu; n: %zu\n", xBitLength, n);
+    //printf("NEW; xBitLength: %zu; n: %zu\n", xBitLength, n);
     bigInt *v = getBigIntFromUnsignedInteger(10);
     for (size_t i = 0; i < n; i++) {
         bigInt *vNew;
@@ -340,7 +350,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     }
 
     size_t expectedDigits = 1ULL << n;
-    printf("Stats of depth: %zu; digits: %zu; expectedDigits: %zu; beginning: %s \t New digits: %zu, %zu\n", depth, digits, expectedDigits, beginning ? "true" : "false", digits - expectedDigits, expectedDigits);
+    //printf("Stats of depth: %zu; digits: %zu; expectedDigits: %zu; beginning: %s \t New digits: %zu, %zu\n", depth, digits, expectedDigits, beginning ? "true" : "false", digits - expectedDigits, expectedDigits);
 
     // Now recursively build the two halves of each number.
     pthread_t thread_idConvert1;

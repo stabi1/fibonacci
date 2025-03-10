@@ -74,26 +74,27 @@ char *getFilename() {
 }
 
 //prints bigInt in Hex
-void printBigIntHex(bigInt *x) {
+void printBigIntHex(const bigInt *x) {
     char *tmp = bigIntToHexString(x);
     printf("%s\n", tmp);
     free(tmp);
 }
 
 //prints bigInt in Dec
-void printBigIntDec(bigInt *x) {
-    char *tmp = bigIntToDecString(x, false);
+void printBigIntDec(const bigInt *x) {
+    // with doFree=False bigIntToDecString does not modify x, so discard const for the compiler
+    char *tmp = bigIntToDecString((bigInt *) x, false);
     printf("%s\n", tmp);
     free(tmp);
 }
 
-void writeBigIntHexToFile(bigInt *x, char *path) {
+void writeBigIntHexToFile(const bigInt *x, const char *path) {
     char *tmp = bigIntToHexString(x);
     writeFile(path, tmp, false);
     free(tmp);
 }
 
-void writeBigIntDecToFile(bigInt *x, char *path, bool doFree) {
+void writeBigIntDecToFile(bigInt *x, const char *path, bool doFree) {
     char *tmp = bigIntToDecString(x, doFree);
     writeFile(path, tmp, false);
     free(tmp);
@@ -115,7 +116,7 @@ bigInt *readBigIntDecFromFile(const char *path) {
     return res;
 }
 
-inline __attribute__((always_inline)) char * storeBigIntInSwap(bigInt *x) {
+inline __attribute__((always_inline)) char *storeBigIntInSwap(bigInt *x) {
     if (!global_config.swap || !x->arrayOwner || getLen(x) * 8 < global_config.swapThreshold * 1000000) {
         size_t l = strlen(NOT_STORED);
         char *res = malloc(l + 1);

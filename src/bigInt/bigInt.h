@@ -36,13 +36,13 @@ bigInt* getBigIntFromSignedInteger(int64_t integer);
 int compareBigInt(const bigInt *a, const bigInt *b);
 
 // I/O methods
-void printBigIntHex(bigInt *x);
+void printBigIntHex(const bigInt *x);
 
-void printBigIntDec(bigInt *x);
+void printBigIntDec(const bigInt *x);
 
-void writeBigIntHexToFile(bigInt *x, char *path);
+void writeBigIntHexToFile(const bigInt *x, const char *path);
 
-void writeBigIntDecToFile(bigInt *x, char *path, bool doFree);
+void writeBigIntDecToFile(bigInt *x, const char *path, bool doFree);
 
 bigInt *readBigIntHexFromFile(const char *path);
 

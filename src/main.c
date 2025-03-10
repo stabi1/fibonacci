@@ -19,13 +19,11 @@ void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, cha
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-//TODO: Implement swapping in fibLuc (and maybe convert to iterative for that)
-//TODO: Faster than multithread threshold for DecToString
 //TODO: Use linter and fix code
 //TODO run more tests in valgrind
 //TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
 //TODO fix makefile
-//TODO docu with comments, readme, help-message
+//TODO docu with comments, update readme, update help-message
 
 enum {
     OPT_MAX_THREADS = 1001,
