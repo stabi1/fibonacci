@@ -8,8 +8,8 @@ SANITIZER_FLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsa
 TEST_FLAGS=-fPIC -g
 
 # Source files
-SOURCE_FILES_C=src/main.c src/util.c src/bigInt/bigIntMul.c src/bigInt/bigIntAlloc.c src/bigInt/bigIntDiv.c src/bigInt/bigIntMethods.c src/bigInt/bigIntIO.c src/bigInt/bigIntUtil.c src/bigInt/config.c src/bigInt/bigIntHigherFunctions.c src/bigInt/misc.c src/test/tests.c src/test/parseTestArgs.c src/test/testMethods.c src/bigDec/bigDecString.c
-SOURCE_FILES_S=src/bigInt/bigIntAsm.S src/bigInt/mulAsm.S
+SOURCE_FILES_C=src/main.c src/util.c src/bigNum/bigInt/bigIntMul.c src/bigNum/bigInt/bigIntAlloc.c src/bigNum/bigInt/bigIntDiv.c src/bigNum/bigInt/bigIntMethods.c src/bigNum/bigInt/bigIntIO.c src/bigNum/bigInt/bigIntUtil.c src/bigNum/config.c src/bigNum/bigInt/bigIntHigherFunctions.c src/bigNum/misc.c src/test/tests.c src/test/parseTestArgs.c src/test/testMethods.c src/bigNum/bigDec/bigDecString.c src/bigNum/constants.c
+SOURCE_FILES_S=src/bigNum/bigInt/bigIntAsm.S src/bigNum/bigInt/mulAsm.S
 
 BUILD_ROOT=build
 SWAP_DIR=swap_storage

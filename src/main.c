@@ -8,7 +8,7 @@
 
 #include "test/tests.h"
 #include "test/parseTestArgs.h"
-#include "bigInt/bigInt.h"
+#include "bigNum/bigInt/bigInt.h"
 #include "util.h"
 
 void printHelpMenu();

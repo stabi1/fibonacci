@@ -5,10 +5,10 @@
 #include <stdbool.h>
 #include <float.h>
 
-#include "../bigInt/bigIntUtil.h"
-#include "../bigInt/bigIntDiv.h"
-#include "../bigInt/bigIntHigherFunctions.h"
-#include "../bigDec/bigDecString.h"
+#include "../bigNum/bigInt/bigIntUtil.h"
+#include "../bigNum/bigInt/bigIntDiv.h"
+#include "../bigNum/bigInt/bigIntHigherFunctions.h"
+#include "../bigNum/bigDec/bigDecString.h"
 
 char *randomHex(uint64_t n);
 
@@ -23,8 +23,10 @@ void customTest() {
     printBigIntDec(a);
     freeBigInt(a);*/
 
-    printf("Hi\n");
-    printf("0.%s\n", uint64_t_FractionToDecString(85));
+    uint64_t fraction = 0xA000000000000000; // 0.625 in binary fraction
+    printf("0.%s\n", uint64_t_FractionToDecString(fraction));
+    printf("0.%s\n", uint64_t_FractionToDecString(0xFFFFFFFFFFFFFFFF));
+    printf("0.%s\n", uint64_t_FractionToDecString(0x0));
 
     //testTmp();
 

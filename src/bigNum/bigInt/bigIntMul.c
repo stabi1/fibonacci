@@ -4,7 +4,7 @@
 #include "mulAsm.h"
 #include "bigIntAsm.h"
 #include "bigIntDiv.h"
-#include "config.h"
+#include "../config.h"
 #include "bigIntIO.h"
 
 size_t NAIVEMUL_FASTER = 100; //Size when naiveMul is faster than karatsuba

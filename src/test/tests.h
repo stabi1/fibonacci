@@ -2,7 +2,7 @@
 #define FIBONACCI_TESTS_H
 
 #include <stdbool.h>
-#include "../bigInt/bigInt.h"
+#include "../bigNum/bigInt/bigInt.h"
 
 void customTest();
 

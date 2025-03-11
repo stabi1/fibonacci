@@ -1,5 +1,6 @@
 #include "bigIntDiv.h"
 #include "bigIntMul.h"
+#include "../constants.h"
 
 size_t D4FASTER = 70;
 size_t PARALLEL_DIV_FASTER = 1000;
@@ -10,7 +11,7 @@ bigInt *exactDivideBy3(const bigInt *x) {
     bigInt *result = newBigIntNotZeroed(len);
     result->negative = x->negative;
     unsigned long borrow;
-    unsigned __int128 q, xx, w;
+    uint128_t q, xx, w;
     borrow = 0;
     size_t j = x->start;
     for (size_t i = 0; i < len; i++, j++) {
@@ -21,7 +22,7 @@ bigInt *exactDivideBy3(const bigInt *x) {
         } else {
             borrow = 0;
         }
-        q = (unsigned __int128) (w * 0xAAAAAAAAAAAAAAAB);
+        q = (uint128_t) (w * 0xAAAAAAAAAAAAAAAB);
         result->bigIntArray[i] = (uint64_t) q;
 
         if ((unsigned long long) q >= 0x5555555555555556) {
@@ -163,26 +164,26 @@ void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt 
     uint64_t *q = quotient->bigIntArray + quotient->start;
     uint64_t *d = dividend->bigIntArray + dividend->start;
     size_t m = dividend->end - dividend->start;
-    unsigned __int128 divisor128 = (unsigned __int128) divisor;
+    uint128_t divisor128 = (uint128_t) divisor;
 
     uint64_t rem = d[m - 1];
-    unsigned __int128 rem128 = (unsigned __int128) rem;
+    uint128_t rem128 = (uint128_t) rem;
     if (rem < divisor) {
         q[m - 1] = 0;
     } else {
         uint64_t tmp = rem / divisor;
         q[m - 1] = tmp;
         rem = (uint64_t) (rem128 - (tmp * divisor128));
-        rem128 = (unsigned __int128) rem;
+        rem128 = (uint128_t) rem;
     }
     size_t xLen = 1;
     while (++xLen <= m) {
-        unsigned __int128 dividendEstimate = (rem128 << 64) | (unsigned __int128) (d[m - xLen]);
+        uint128_t dividendEstimate = (rem128 << 64) | (uint128_t) (d[m - xLen]);
         uint64_t qAct = dividendEstimate / divisor;
         rem = dividendEstimate % divisor;
 
         q[m - xLen] = qAct;
-        rem128 = (unsigned __int128) rem;
+        rem128 = (uint128_t) rem;
     }
     if (reminder != NULL) {
         reminder->bigIntArray[reminder->start] = rem;
@@ -199,12 +200,12 @@ void divideD4(const bigInt *dividend, const bigInt *divisor, bigInt *quotient, b
     long m = (long) (dividend->end - dividend->start);
     long n = (long) (divisor->end - divisor->start);
 
-    unsigned __int128 b = 18446744073709551615U; // Number base (2**32).
+    uint128_t b = 18446744073709551615U; // Number base (2**32).
     b++;
     uint64_t *restrict un, *restrict vn; // Normalized form of u, v.
-    unsigned __int128 qhat; // Estimated quotient digit.
-    unsigned __int128 rhat; // A remainder.
-    unsigned __int128 p; // Product of two digits.
+    uint128_t qhat; // Estimated quotient digit.
+    uint128_t rhat; // A remainder.
+    uint128_t p; // Product of two digits.
     __int128 t, k;
     long s, i, j;
     if (v[n - 1] == 0) {//should not happen
@@ -218,13 +219,13 @@ void divideD4(const bigInt *dividend, const bigInt *divisor, bigInt *quotient, b
     vn = malloc(sizeof(uint64_t) * n);
     mallocCheck(vn);
     for (i = n - 1; i > 0; i--)
-        vn[i] = (v[i] << s) | ((unsigned __int128) v[i - 1] >> (64 - s));
+        vn[i] = (v[i] << s) | ((uint128_t) v[i - 1] >> (64 - s));
     vn[0] = v[0] << s;
     un = malloc(sizeof(uint64_t) * (m + 1));
     mallocCheck(un);
-    un[m] = (unsigned __int128) u[m - 1] >> (64 - s);
+    un[m] = (uint128_t) u[m - 1] >> (64 - s);
     for (i = m - 1; i > 0; i--)
-        un[i] = (u[i] << s) | ((unsigned __int128) u[i - 1] >> (64 - s));
+        un[i] = (u[i] << s) | ((uint128_t) u[i - 1] >> (64 - s));
     un[0] = u[0] << s;
     for (j = m - n; j >= 0; j--) { // Main loop.
         // Compute estimate qhat of q[j].
@@ -264,7 +265,7 @@ void divideD4(const bigInt *dividend, const bigInt *divisor, bigInt *quotient, b
     if (reminder != NULL) {
         uint64_t *r = reminder->bigIntArray + reminder->start;
         for (i = 0; i < n - 1; i++)
-            r[i] = (un[i] >> s) | ((unsigned __int128) un[i + 1] << (64 - s));
+            r[i] = (un[i] >> s) | ((uint128_t) un[i + 1] << (64 - s));
         r[n - 1] = un[n - 1] >> s;
         reminder->end = reminder->start + getOccupiedBlocks(reminder);
     }

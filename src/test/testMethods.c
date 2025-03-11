@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "../bigInt/bigInt.h"
-#include "../bigInt/bigIntMethods.h"
+#include "../bigNum/bigInt/bigInt.h"
+#include "../bigNum/bigInt/bigIntMethods.h"
 #include "../util.h"
 
 void verifyBigInt(bigInt *x) {

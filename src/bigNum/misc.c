@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "bigIntUtil.h"
+#include "bigInt/bigIntUtil.h"
 
 char *getCurrentDateTime() {
     char *dateTimeString = (char *) malloc(75 * sizeof(char)); // "DD-MM-YYYY HH:MM:SS\0"

@@ -1,16 +1,13 @@
 #include "bigIntUtil.h"
 
 #include "bigIntDiv.h"
+#include "../constants.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <pthread.h>
-
-const char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-
-const char decLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 const int DEC_STRING_SMALL_FASTER = 100;
 const int PARALLEL_DEC_STRING_FASTER = 2000;
@@ -80,10 +77,10 @@ void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char 
 void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z, size_t digestsDone) {
     // Perform the multiplication word by word
     size_t num_blocks = (long) (((double) digestsDone * 3.32193f) / 64.0f + 1);
-    unsigned __int128 yLong = 10000000000000000000ULL;
-    unsigned __int128 zLong = z;
+    uint128_t  yLong = 10000000000000000000ULL;
+    uint128_t zLong = z;
 
-    unsigned __int128 product = 0;
+    uint128_t product = 0;
     uint64_t carry = 0;
     size_t boundary = num_blocks + 1 > arrayLen ? arrayLen : num_blocks + 1;
 
@@ -94,7 +91,7 @@ void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t
     }
 
     // Perform the addition
-    unsigned __int128 sum = (array[0]) + zLong;
+    uint128_t sum = (array[0]) + zLong;
     array[0] = (uint64_t) sum;
     carry = sum >> 64;
     for (size_t i = 1; i < boundary; i++) {
@@ -204,7 +201,6 @@ char *bigIntToDecStringSchoenhage(bigInt *x) {
 // FREES the bigInt that is passed!!!
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning) {
     size_t resMaxLen = (digits == 0 || beginning) ? calculateDecStringSpace(x) : digits;
-    // printf("resMaxLen: %zu; digits: %zu; beginning: %s\n", resMaxLen, digits, beginning ? "true" : "false");
     char *res = malloc(resMaxLen);
     mallocCheck(res);
     size_t len = 0;
@@ -314,7 +310,6 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
 
     size_t xBitLength = bitLength(x);
     size_t n = (size_t) llroundl(log((double) xBitLength * log(2.0) / log(10.0)) / log(2.0) - 1.0);
-    //printf("NEW; xBitLength: %zu; n: %zu\n", xBitLength, n);
     bigInt *v = getBigIntFromUnsignedInteger(10);
     for (size_t i = 0; i < n; i++) {
         bigInt *vNew;
@@ -350,7 +345,6 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     }
 
     size_t expectedDigits = 1ULL << n;
-    //printf("Stats of depth: %zu; digits: %zu; expectedDigits: %zu; beginning: %s \t New digits: %zu, %zu\n", depth, digits, expectedDigits, beginning ? "true" : "false", digits - expectedDigits, expectedDigits);
 
     // Now recursively build the two halves of each number.
     pthread_t thread_idConvert1;
@@ -412,7 +406,6 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
 
 //shamelessly adapted from Java Jdk8
 char *bigIntToDecStringSmall(bigInt *x) {
-    const size_t digitsPerUInt64 = 19;
     const char *zeros = "00000000000000000000";
 
     size_t xLen = x->end - x->start;
@@ -434,7 +427,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
     int numGroups = 0;
     bigInt *tmp = copyBigInt(x);
     bigInt *d = newBigInt(1);
-    d->bigIntArray[0] = 0x8AC7230489E80000; //10^digitsPerUInt64 = 8AC7230489E80000
+    d->bigIntArray[0] = 0x8AC7230489E80000; //10^DEC_DIGITS_PER_UINT64 = 8AC7230489E80000
     while (!(tmp->end - tmp->start == 1 && tmp->bigIntArray[0] == 0)) {
         bigInt *r = NULL;
         bigInt *q = divideModSingleThread(tmp, d, &r, false);
@@ -447,7 +440,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
     freeBigInt(d);
 
     // Put sign (if any) and first digit group into result buffer
-    char *res = malloc(numGroups * digitsPerUInt64 + 2);
+    char *res = malloc(numGroups * DEC_DIGITS_PER_UINT64 + 2);
     mallocCheck(res);
     size_t resCounter = 0;
     memcpy(res + resCounter, digitGroup[numGroups - 1], strlen(digitGroup[numGroups - 1]));
@@ -456,7 +449,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
     // Append remaining digit groups padded with leading zeros
     for (int i = numGroups - 2; i >= 0; i--) {
         // Prepend (any) leading zeros for this digit group
-        size_t numLeadingZeros = digitsPerUInt64 - strlen(digitGroup[i]);
+        size_t numLeadingZeros = DEC_DIGITS_PER_UINT64 - strlen(digitGroup[i]);
         if (numLeadingZeros != 0) {
             memcpy(res + resCounter, zeros, numLeadingZeros);
             resCounter += numLeadingZeros;

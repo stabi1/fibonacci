@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/sysinfo.h>
 #include "config.h"
-#include "bigIntAlloc.h"
+#include "bigInt/bigIntAlloc.h"
 
 Config global_config = {
         .verbose = false,

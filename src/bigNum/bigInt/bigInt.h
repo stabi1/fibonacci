@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#include "config.h"
+#include "../config.h"
 
 typedef struct BigIntTag { //The datastructure that represents a large number
     size_t start; // in qWords(64bit)
