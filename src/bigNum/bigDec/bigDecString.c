@@ -16,8 +16,8 @@ char *uint64_t_FractionToDecString(uint64_t fraction) {
         res[1] = '\0';
         return res;
     }
-
-    size_t bufLen = 20;
+    size_t wantedDigits = 64;
+    size_t bufLen = wantedDigits + 1;
     char buf[bufLen];
 
     uint128_t value = fraction;
@@ -25,7 +25,7 @@ char *uint64_t_FractionToDecString(uint64_t fraction) {
     uint128_t mask = (((uint128_t)1 << 64) - 1);
 
     // max of 19 chars out of a 64bit number
-    for (size_t i = 0; i < DEC_DIGITS_PER_UINT64; i++) {
+    for (size_t i = 0; i < wantedDigits; i++) {
         value *= 10;
         // Extract the integer part from the upper 64 bits.
         int digit = (int)(value >> 64);
@@ -35,7 +35,7 @@ char *uint64_t_FractionToDecString(uint64_t fraction) {
     }
 
     // Trim trailing zeros.
-    size_t end = DEC_DIGITS_PER_UINT64 - 1;
+    size_t end = wantedDigits - 1;
     while (end > 0 && buf[end] == '0') {
         end--;
     }

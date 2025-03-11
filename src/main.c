@@ -22,7 +22,6 @@ const char *DEFAULT_FILENAME = "output.txt";
 //TODO: Use linter and fix code
 //TODO run more tests in valgrind
 //TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
-//TODO fix makefile
 //TODO docu with comments, update readme, update help-message
 
 enum {

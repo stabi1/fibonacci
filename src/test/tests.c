@@ -23,7 +23,7 @@ void customTest() {
     printBigIntDec(a);
     freeBigInt(a);*/
 
-    uint64_t fraction = 0xA000000000000000; // 0.625 in binary fraction
+    uint64_t fraction = 0xA000000000000001; // 0.625 in binary fraction
     printf("0.%s\n", uint64_t_FractionToDecString(fraction));
     printf("0.%s\n", uint64_t_FractionToDecString(0xFFFFFFFFFFFFFFFF));
     printf("0.%s\n", uint64_t_FractionToDecString(0x0));

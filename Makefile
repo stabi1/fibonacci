@@ -1,64 +1,76 @@
+#Makeflags
+MAKEFLAGS += --no-print-directory # to remove Entering directory output
+
 # Flags
-NEED_FLAGS=-pthread -lpthread -march=native -z noexecstack -std=c17 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
-PERFORMANCE_FLAGS=-O3 -flto -fuse-linker-plugin
-WARNING_FLAGS=-Wall -Wextra
-LINKER_FLAGS=-lm
-DEBUG_FLAGS=-O1 -g -no-pie
-SANITIZER_FLAGS=-D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsanitize=leak
-TEST_FLAGS=-fPIC -g
+NEED_FLAGS = -pthread -lpthread -march=native -z noexecstack -std=c17 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
+PERFORMANCE_FLAGS = -O3 -flto -fuse-linker-plugin
+WARNING_FLAGS = -Wall -Wextra
+LINKER_FLAGS = -lm
+DEBUG_FLAGS = -O1 -g -no-pie
+SANITIZER_FLAGS = -D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fsanitize=leak
+TEST_FLAGS = -fPIC -g
 
-# Source files
-SOURCE_FILES_C=src/main.c src/util.c src/bigNum/bigInt/bigIntMul.c src/bigNum/bigInt/bigIntAlloc.c src/bigNum/bigInt/bigIntDiv.c src/bigNum/bigInt/bigIntMethods.c src/bigNum/bigInt/bigIntIO.c src/bigNum/bigInt/bigIntUtil.c src/bigNum/config.c src/bigNum/bigInt/bigIntHigherFunctions.c src/bigNum/misc.c src/test/tests.c src/test/parseTestArgs.c src/test/testMethods.c src/bigNum/bigDec/bigDecString.c src/bigNum/constants.c
-SOURCE_FILES_S=src/bigNum/bigInt/bigIntAsm.S src/bigNum/bigInt/mulAsm.S
+# Automatically find source files
+SOURCE_FILES_C := $(shell find src -type f -name '*.c')
+SOURCE_FILES_S := $(shell find src -type f -name '*.S')
 
-BUILD_ROOT=build
-SWAP_DIR=swap_storage
+# Global build configuration (default: main)
+BUILD_CONFIG ?= main
+BUILD_ROOT = build
+BUILD_DIR = $(BUILD_ROOT)/$(BUILD_CONFIG)
 
-OUTPUT_FILENAME=fib
-OUTPUT_LIBNAME_TEST=pytest/bigInt.so
-OUTPUT_FILENAME_TEST=pytest/fib
+SWAP_DIR = swap_storage
 
-all: main
+OUTPUT_FILENAME = fib
+OUTPUT_LIBNAME_TEST = pytest/bigInt.so
+OUTPUT_FILENAME_TEST = pytest/fib
 
-main: TARGET_NAME=main
-main: CFLAGS=$(NEED_FLAGS) $(PERFORMANCE_FLAGS) $(WARNING_FLAGS)
-main: $(OUTPUT_FILENAME)
+# Define object files based on BUILD_DIR
+OBJECT_FILES = $(patsubst src/%.c, $(BUILD_DIR)/%.o, $(SOURCE_FILES_C)) \
+               $(patsubst src/%.S, $(BUILD_DIR)/%.o, $(SOURCE_FILES_S))
 
-debug: TARGET_NAME+=debug
-debug: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(DEBUG_FLAGS)
-debug: $(OUTPUT_FILENAME)
+# ===== Recursive Targets =====
+# Wrapper targets that invoke make with the proper BUILD_CONFIG and CFLAGS
 
-sanitize: TARGET_NAME=sanitize
-sanitize: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(DEBUG_FLAGS) $(SANITIZER_FLAGS)
-sanitize: $(OUTPUT_FILENAME)
+.PHONY: main debug sanitize test clean setup
 
-test: TARGET_NAME=test
-test: CFLAGS=$(NEED_FLAGS) $(WARNING_FLAGS) $(TEST_FLAGS) $(PERFORMANCE_FLAGS)
-test: $(OUTPUT_LIBNAME_TEST)
+main:
+	@$(MAKE) all-target OUTPUT_FILENAME=$(OUTPUT_FILENAME) CFLAGS="$(NEED_FLAGS) $(PERFORMANCE_FLAGS) $(WARNING_FLAGS)" BUILD_CONFIG=main
+
+debug:
+	@$(MAKE) all-target OUTPUT_FILENAME=$(OUTPUT_FILENAME) CFLAGS="$(NEED_FLAGS) $(WARNING_FLAGS) $(DEBUG_FLAGS)" BUILD_CONFIG=debug
+
+sanitize:
+	@$(MAKE) all-target OUTPUT_FILENAME=$(OUTPUT_FILENAME) CFLAGS="$(NEED_FLAGS) $(WARNING_FLAGS) $(DEBUG_FLAGS) $(SANITIZER_FLAGS)" BUILD_CONFIG=sanitize
+
+test:
+	@$(MAKE) all-test OUTPUT_LIBNAME_TEST=$(OUTPUT_LIBNAME_TEST) CFLAGS="$(NEED_FLAGS) $(WARNING_FLAGS) $(TEST_FLAGS) $(PERFORMANCE_FLAGS)" BUILD_CONFIG=test
 	pytest
 
-# BUILD_DIR=$(BUILD_ROOT)/$(TARGET_NAME) TODO
-BUILD_DIR=$(BUILD_ROOT)
-OBJECT_FILES=$(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SOURCE_FILES_C)) \
-              $(patsubst src/%.S,$(BUILD_DIR)/%.o,$(SOURCE_FILES_S))
+# ===== Internal Targets =====
+.PHONY: all-target all-test
 
-# Link the final executable
+# Link final executable using objects in the configuration-specific build directory
+all-target: $(OUTPUT_FILENAME)
+
 $(OUTPUT_FILENAME): $(OBJECT_FILES)
 	$(CC) $(CFLAGS) -o $@ $^ $(LINKER_FLAGS)
 
-# Link the shared library for testing
+# Link shared library for testing
+all-test: $(OUTPUT_LIBNAME_TEST)
+
 $(OUTPUT_LIBNAME_TEST): $(OBJECT_FILES)
 	$(CC) -shared -o $@ $(CFLAGS) $^
 	$(CC) $(CFLAGS) -o $(OUTPUT_FILENAME_TEST) $^ $(LINKER_FLAGS)
 
-# Compile C files
+# Pattern rule for compiling C files (handles nested directories)
 $(BUILD_DIR)/%.o: src/%.c
-	@mkdir -p $(dir $@)  # Ensure the directory structure exists
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# Compile assembly files
+# Pattern rule for compiling Assembly files (handles nested directories)
 $(BUILD_DIR)/%.o: src/%.S
-	@mkdir -p $(dir $@)  # Ensure the directory structure exists
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 setup:
@@ -78,5 +90,3 @@ clean:
 	rm -f $(OUTPUT_FILENAME_TEST)
 	rm -rf $(BUILD_ROOT)
 	rm -rf $(SWAP_DIR)
-
-.PHONY: all main debug sanitize test clean setup
