@@ -14,7 +14,7 @@ typedef struct BigIntTag { //The datastructure that represents a large number
     bool arrayOwner; //if the bigInt is the "owner" of the array. If false the array is not freed with the bigInt
     uint64_t *bigIntArray;
     bool negative;
-    size_t completeLength;
+    size_t completeLength; // the complete length of the bigIntArray, is used when a bigInt struct is recycled
 } bigInt;
 
 // create/delete
@@ -34,6 +34,8 @@ bigInt* getBigIntFromSignedInteger(int64_t integer);
 
 //compare
 int compareBigInt(const bigInt *a, const bigInt *b);
+
+bool isZero(const bigInt *x);
 
 // I/O methods
 void printBigIntHex(const bigInt *x);

@@ -8,7 +8,7 @@
 #include "../bigNum/bigInt/bigIntUtil.h"
 #include "../bigNum/bigInt/bigIntDiv.h"
 #include "../bigNum/bigInt/bigIntHigherFunctions.h"
-#include "../bigNum/bigDec/bigDecString.h"
+#include "../bigNum/bigFrac/bigFracString.h"
 
 char *randomHex(uint64_t n);
 

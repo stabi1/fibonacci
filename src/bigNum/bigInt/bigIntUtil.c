@@ -409,7 +409,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
     const char *zeros = "00000000000000000000";
 
     size_t xLen = x->end - x->start;
-    if (xLen == 1 && x->bigIntArray[0] == 0) {
+    if (isZero(x)) {
         char *zero = malloc(2);
         mallocCheck(zero);
         zero[0] = '0';
@@ -439,7 +439,6 @@ char *bigIntToDecStringSmall(bigInt *x) {
     freeBigInt(tmp);
     freeBigInt(d);
 
-    // Put sign (if any) and first digit group into result buffer
     char *res = malloc(numGroups * DEC_DIGITS_PER_UINT64 + 2);
     mallocCheck(res);
     size_t resCounter = 0;

@@ -1,0 +1,6 @@
+#ifndef FIBONACCI_BIGFRACALLOC_H
+#define FIBONACCI_BIGFRACALLOC_H
+
+#include "bigFrac.h"
+
+#endif //FIBONACCI_BIGFRACALLOC_H

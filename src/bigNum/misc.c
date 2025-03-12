@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 
 #include "bigInt/bigIntUtil.h"
@@ -30,4 +29,12 @@ char *getCurrentDateTime() {
              localTime.tm_sec);
 
     return dateTimeString;
+}
+
+size_t max(size_t a, size_t b) {
+    return (a > b) ? a : b;
+}
+
+size_t min(size_t a, size_t b) {
+    return (a < b) ? a : b;
 }

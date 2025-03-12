@@ -52,7 +52,7 @@ bigInt* getBigIntFromSignedInteger(int64_t integer) {
 }
 
 bool isZero(const bigInt *x) {
-    if (x->end - x->start == 1 && x->bigIntArray[x->start] == 0) {
+    if (getLen(x) == 1 && x->bigIntArray[x->start] == 0) {
         return true;
     }
     return false;
@@ -71,6 +71,16 @@ size_t getOccupiedBlocks(const bigInt *x) {
         n++;
     }
     return x->end - n - x->start;
+}
+
+size_t getTrailingZeroBlocks(const bigInt *x) {
+    size_t i = x->start;
+    for(; i<x->end; i++) {
+        if(x->bigIntArray[i] != 0){
+            break;
+        }
+    }
+    return i;
 }
 
 void negateBigInt(bigInt* x) {
