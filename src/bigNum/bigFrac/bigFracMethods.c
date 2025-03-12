@@ -8,7 +8,6 @@ bigFrac *getBigFracFromUnsignedInteger(uint64_t integer) {
     return newBigFracFromBigInt(bigIntPart, false);
 }
 
-
 bigFrac *getBigFracFromSignedInteger(int64_t integer) {
     bigInt *bigIntPart = getBigIntFromSignedInteger(integer);
     return newBigFracFromBigInt(bigIntPart, false);
@@ -24,7 +23,8 @@ void removeLeadingAndTrailingZeroBlocks(bigFrac *x) {
     x->bigIntPart->end -= min(leadingZeroBlocks, holeBlocks);
 
     //Trailing
-    size_t fractionBlocks = (totalBits - x->fractionBits) / 64;
+    size_t fractionBlocks = x->fractionBits / 64;
     size_t trailingZeroBlocks = getTrailingZeroBlocks(x->bigIntPart);
     x->bigIntPart->start += min(trailingZeroBlocks, fractionBlocks);
+    x->fractionBits -= min(trailingZeroBlocks, fractionBlocks) * 64;
 }

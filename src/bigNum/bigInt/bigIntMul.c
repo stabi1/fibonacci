@@ -1,11 +1,13 @@
-#include <stddef.h>
-#include <pthread.h>
 #include "bigIntMul.h"
+
 #include "mulAsm.h"
 #include "bigIntAsm.h"
 #include "bigIntDiv.h"
-#include "../config.h"
+#include "../misc.h"
 #include "bigIntIO.h"
+
+#include <stddef.h>
+#include <pthread.h>
 
 size_t NAIVEMUL_FASTER = 100; //Size when naiveMul is faster than karatsuba
 size_t KARATSUBA_FASTER = 400; //Size when karatsuba is faster than toom-cook

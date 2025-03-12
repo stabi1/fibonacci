@@ -1,8 +1,9 @@
+#include "bigIntHigherFunctions.h"
+
+#include "../misc.h"
+
 #include <stdio.h>
 #include <time.h>
-
-#include "../config.h"
-#include "bigIntHigherFunctions.h"
 
 typedef struct {
     bigInt *fib; // Fibonacci value

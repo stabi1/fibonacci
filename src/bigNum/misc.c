@@ -1,7 +1,14 @@
 #include <stdio.h>
 #include <time.h>
+#include <stdlib.h>
+#include <inttypes.h>
 
-#include "bigInt/bigIntUtil.h"
+void mallocCheck(void *p) {
+    if (p == NULL) {
+        fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
+        exit(EXIT_FAILURE);
+    }
+}
 
 char *getCurrentDateTime() {
     char *dateTimeString = (char *) malloc(75 * sizeof(char)); // "DD-MM-YYYY HH:MM:SS\0"
@@ -29,6 +36,20 @@ char *getCurrentDateTime() {
              localTime.tm_sec);
 
     return dateTimeString;
+}
+
+size_t custom_lzcnt(uint64_t n) {
+    if (n == 0) {
+        return 64;
+    }
+    return __builtin_clzll(n);
+}
+
+size_t custom_tzcnt(uint64_t n) {
+    if (n == 0) {
+        return 64;
+    }
+    return  __builtin_ctzll(n);
 }
 
 size_t max(size_t a, size_t b) {

@@ -10,6 +10,7 @@
 #include "test/parseTestArgs.h"
 #include "bigNum/bigInt/bigInt.h"
 #include "util.h"
+#include "bigNum/misc.h"
 
 void printHelpMenu();
 

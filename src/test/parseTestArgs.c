@@ -4,6 +4,7 @@
 
 #include "tests.h"
 #include "testMethods.h"
+#include "../bigNum/misc.h"
 
 enum TestType {
     CUSTOM_TEST = 0,

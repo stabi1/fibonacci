@@ -8,7 +8,9 @@
 #include "../bigNum/bigInt/bigIntUtil.h"
 #include "../bigNum/bigInt/bigIntDiv.h"
 #include "../bigNum/bigInt/bigIntHigherFunctions.h"
+
 #include "../bigNum/bigFrac/bigFracString.h"
+#include "../bigNum/bigFrac/bigFrac.h"
 
 char *randomHex(uint64_t n);
 
@@ -23,10 +25,26 @@ void customTest() {
     printBigIntDec(a);
     freeBigInt(a);*/
 
-    uint64_t fraction = 0xA000000000000001; // 0.625 in binary fraction
-    printf("0.%s\n", uint64_t_FractionToDecString(fraction));
-    printf("0.%s\n", uint64_t_FractionToDecString(0xFFFFFFFFFFFFFFFF));
-    printf("0.%s\n", uint64_t_FractionToDecString(0x0));
+    bigFrac *tmp0 = newBigFrac(1);
+    tmp0->bigIntPart->bigIntArray[0] = 0xA000000000000000;
+    tmp0->fractionBits = 4;
+    printf("0.%s\n", bigDecToDecStringSmall(tmp0, true));
+
+    printf("-----------------------------\n");
+
+    bigFrac *tmp = newBigFrac(2);
+    tmp->bigIntPart->bigIntArray[0] = 0xFFFFFFFFFFFFFFF0;
+    tmp->bigIntPart->bigIntArray[1] = 0xA000000000000001;
+    tmp->fractionBits = 120;
+    printf("0.%s\n", bigDecToDecStringSmall(tmp, true));
+
+    printf("-----------------------------\n");
+
+    bigFrac *tmp2 = newBigFrac(3);
+    tmp2->bigIntPart->bigIntArray[0] = 0xFFFFFFFFFFFFFFFF;
+    tmp2->bigIntPart->bigIntArray[1] = 0xFFFFFFFFFFFFFFFF;
+    tmp2->bigIntPart->bigIntArray[2] = 0xFFFFFFFFFFFFFFFF;
+    printf("0.%s\n", bigDecToDecStringSmall(tmp2, true));
 
     //testTmp();
 

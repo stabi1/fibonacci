@@ -7,7 +7,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <stdatomic.h>
-#include "../config.h"
+#include "../misc.h"
 
 const char *NOT_STORED = "NOT_STORED";
 const char *FILE_ENDING = ".bigint";

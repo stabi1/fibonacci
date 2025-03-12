@@ -90,15 +90,9 @@ size_t getLen(const bigInt *x);
 void negateBigInt(bigInt* x);
 
 //misc utility
-void mallocCheck(void *p);
-
-size_t custom_lzcnt(uint64_t n);
-
 char *readFile(const char *path);
 
 int writeFile(const char *path, const char *string, bool append);
-
-char *getCurrentDateTime();
 
 void handleSignals(int sig, siginfo_t *info, void *context);
 

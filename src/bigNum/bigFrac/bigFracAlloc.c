@@ -1,5 +1,7 @@
 #include "bigFracAlloc.h"
 
+#include "../misc.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -2,6 +2,7 @@
 
 #include "bigIntDiv.h"
 #include "../constants.h"
+#include "../misc.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -29,20 +30,6 @@ bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, si
 void *bigIntToDecStringSchoenhageMultithreadHelper(void *input);
 
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning);
-
-void mallocCheck(void *p) {
-    if (p == NULL) {
-        fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
-        exit(EXIT_FAILURE);
-    }
-}
-
-size_t custom_lzcnt(uint64_t n) {
-    if (n == 0) {
-        return 64;
-    }
-    return __builtin_clzll(n);
-}
 
 // -> max length 2000 petabytes
 size_t bitLength(const bigInt *x) {
@@ -426,8 +413,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
     // Translate number to string, a digit group at a time
     int numGroups = 0;
     bigInt *tmp = copyBigInt(x);
-    bigInt *d = newBigInt(1);
-    d->bigIntArray[0] = 0x8AC7230489E80000; //10^DEC_DIGITS_PER_UINT64 = 8AC7230489E80000
+    bigInt *d = getBigIntFromUnsignedInteger(0x8AC7230489E80000); // 10^DEC_DIGITS_PER_UINT64 = 8AC7230489E80000
     while (!(tmp->end - tmp->start == 1 && tmp->bigIntArray[0] == 0)) {
         bigInt *r = NULL;
         bigInt *q = divideModSingleThread(tmp, d, &r, false);

@@ -1,8 +1,10 @@
+#include "bigIntAlloc.h"
+
+#include "bigIntMethods.h"
+#include "../misc.h"
+
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include "bigIntAlloc.h"
-#include "bigIntMethods.h"
 
 // Global variables
 pthread_key_t bigIntStruct_stack_key;

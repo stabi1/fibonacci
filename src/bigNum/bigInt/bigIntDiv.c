@@ -1,6 +1,8 @@
 #include "bigIntDiv.h"
+
 #include "bigIntMul.h"
 #include "../constants.h"
+#include "../misc.h"
 
 size_t D4FASTER = 70;
 size_t PARALLEL_DIV_FASTER = 1000;
@@ -284,7 +286,7 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool mult
     long j = (s + m - 1) / m;      // step 2a: j = ceil(s/m)
     long n = j * m;             // step 2b: block length in 64-bit units
     long n64 = 64L * n;         // block length in bits
-    long sigma = (long) MAX((long) 0, (long) (n64 - bitLength(B)));   // step 3: sigma = max{T | (2^T)*B < beta^n}
+    long sigma = (long) max((long) 0, (long) (n64 - bitLength(B)));   // step 3: sigma = max{T | (2^T)*B < beta^n}
 
     bigInt *bShifted = shiftLeft(B, sigma);// step 4a: shift B so its length is a multiple of n
     if (freeArguments) freeBigInt(B);

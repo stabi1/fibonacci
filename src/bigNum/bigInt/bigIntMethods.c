@@ -1,11 +1,14 @@
+#include "bigIntMethods.h"
+
+#include "bigIntUtil.h"
+#include "bigIntAsm.h"
+#include "bigIntAlloc.h"
+#include "../misc.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "bigIntMethods.h"
-#include "bigIntUtil.h"
-#include "bigIntAsm.h"
-#include "bigIntAlloc.h"
 
 bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative);
 
@@ -212,7 +215,7 @@ char *bigIntToHexString(const bigInt *x) {
         resStr[1] = '\0';
         return resStr;
     } else if (lzcnt == 64 && xLen > 1) {
-        fprintf(stderr, "BigInt not printable, has leading zero block");
+        fprintf(stderr, "BigInt not printable, has leading zero block\n");
         exit(EXIT_FAILURE);
     }
 
