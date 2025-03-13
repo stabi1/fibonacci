@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <float.h>
 
-#include "../bigNum/bigInt/bigIntUtil.h"
+#include "../bigNum/bigInt/bigIntString.h"
 #include "../bigNum/bigInt/bigIntDiv.h"
 #include "../bigNum/bigInt/bigIntHigherFunctions.h"
 

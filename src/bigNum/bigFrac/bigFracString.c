@@ -6,7 +6,7 @@
 #include "bigFracMethods.h"
 #include "../constants.h"
 #include "../misc.h"
-#include "../bigInt/bigIntUtil.h"
+#include "../bigInt/bigIntString.h"
 #include "../bigInt/bigIntMethods.h"
 
 #include <math.h>

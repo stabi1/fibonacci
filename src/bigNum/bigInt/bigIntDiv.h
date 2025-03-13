@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "bigIntMethods.h"
-#include "bigIntUtil.h"
+#include "bigIntString.h"
 #include "bigIntAsm.h"
 #include "mulAsm.h"
 

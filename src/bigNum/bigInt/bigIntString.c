@@ -1,4 +1,4 @@
-#include "bigIntUtil.h"
+#include "bigIntString.h"
 
 #include "bigIntDiv.h"
 #include "../constants.h"
@@ -20,7 +20,7 @@ struct schoenhageReturn {
 
 size_t decCharToValue(char dec);
 
-uint64_t decString20CharsTo_uint64_t(const char *dexStr, size_t strLen);
+uint64_t decString19CharsTo_uint64_t(const char *dexStr, size_t strLen);
 
 void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z, size_t digetsDone);
 
@@ -31,11 +31,116 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input);
 
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning);
 
-// -> max length 2000 petabytes
-size_t bitLength(const bigInt *x) {
+
+//fills the char array with the hex presentation of the bigInt
+char *bigIntToHexString(const bigInt *x) {
+    size_t lzcnt = custom_lzcnt(x->bigIntArray[x->end - 1]);
     size_t xLen = x->end - x->start;
-    return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
+    // error handling
+    if (lzcnt == 64 && xLen == 1) {
+        return getZeroString();
+    } else if (lzcnt == 64 && xLen > 1) {
+        fprintf(stderr, "BigInt not printable, has leading zero block\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t lenInNibbles = xLen * 16 - (lzcnt / 4);
+    char *resStr = uint64tArrayToHexString(x->bigIntArray, lenInNibbles, x->start, x->negative);
+    return resStr;
 }
+
+//returns the bigInt of the HexString, hex is being freed
+bigInt *hexStringToBigInt(const char *hexStr) {
+    size_t hexStrLength = strlen(hexStr);
+    // error handling
+    if (hexStrLength == 0) {
+        fprintf(stderr, "hexStr can not be of length 0\n");
+        exit(EXIT_FAILURE);
+    }
+    bool negative = false;
+    if (hexStr[0] == '-') {
+        negative = true;
+        hexStrLength--;
+        hexStr++;
+    } else if (hexStr[0] == '+') {
+        hexStrLength--;
+        hexStr++;
+    }
+    if (hexStrLength == 0) {
+        fprintf(stderr, "hexStr must contain a number\n");
+        exit(EXIT_FAILURE);
+    } else if (hexStrLength >= 2 && hexStr[0] == '0') {
+        fprintf(stderr, "number can not start with 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t resLength = hexStrLength / 16;
+    if (hexStrLength % 16 != 0) resLength++;
+    bigInt *res = newBigIntNotZeroed(resLength);
+    res->bigIntArray[res->end - 1] = 0;
+    if (negative) res->negative = true;
+
+    size_t j = 0;
+    long i = (long) (hexStrLength - 1);
+    uint8_t *resByteArray = (uint8_t *) res->bigIntArray;
+    for (; i >= 1; i -= 2, j++) {
+        uint8_t akt8 = hexToNibble(hexStr[i - 1]);
+        akt8 <<= 4;
+        akt8 += hexToNibble(hexStr[i]);
+        resByteArray[j] = akt8;
+    }
+    if (i == 0) {
+        uint8_t akt8 = hexToNibble(hexStr[i]);
+        resByteArray[j] = akt8;
+    }
+    return res;
+}
+
+bigInt *decStringToBigInt(const char *decStr) {
+    return decStringToBigIntLength(decStr, strlen(decStr));
+}
+
+bigInt *decStringToBigIntLength(const char *decStr, const size_t strLen) {
+    size_t decStrLength = strLen;
+    if (decStrLength == 0) {
+        fprintf(stderr, "decStr can not be of length 0\n");
+        exit(EXIT_FAILURE);
+    }
+    bool negative = false;
+    if (decStr[0] == '-') {
+        negative = true;
+        decStrLength--;
+        decStr++;
+    } else if (decStr[0] == '+') {
+        decStrLength--;
+        decStr++;
+    }
+    if (decStrLength == 0) {
+        fprintf(stderr, "decStr must contain a number\n");
+        exit(EXIT_FAILURE);
+    } else if (decStrLength >= 2 && decStr[0] == '0') {
+        fprintf(stderr, "number can not start with 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    double num_blocks = ((double) decStrLength * 3.32193f) / 64.0f + 1;
+    size_t resLength = (size_t) num_blocks;
+    bigInt *res = newBigInt(resLength);
+    if (negative) res->negative = true;
+
+    decStringToBigIntHelper(res->bigIntArray, resLength, decStr, decStrLength);
+    //resize if necessary
+    size_t newLen = getOccupiedBlocks(res);
+    if (newLen != res->end - res->start) {
+        res->end = res->start + newLen;
+        uint64_t *tmp = realloc(res->bigIntArray, newLen * sizeof(uint64_t));
+        mallocCheck(tmp);
+        res->bigIntArray = tmp;
+        res->completeLength = res->end - res->start;
+    }
+    return res;
+}
+
 
 // calling function still needs to resize!!!
 void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char *decStr, const size_t decStrLen) {
@@ -46,14 +151,14 @@ void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char 
     size_t firstGroupLen = decStrLen % DEC_DIGITS_PER_UINT64;
     if (firstGroupLen == 0)
         firstGroupLen = DEC_DIGITS_PER_UINT64;
-    array[0] = decString20CharsTo_uint64_t(decStr, firstGroupLen);
+    array[0] = decString19CharsTo_uint64_t(decStr, firstGroupLen);
     decStr += firstGroupLen;
     digestsDone += firstGroupLen;
 
     // Process remaining digit groups
     uint64_t groupVal = 0;
     while (decStr < decStringEnd) {
-        groupVal = decString20CharsTo_uint64_t(decStr, DEC_DIGITS_PER_UINT64);
+        groupVal = decString19CharsTo_uint64_t(decStr, DEC_DIGITS_PER_UINT64);
         decStr += DEC_DIGITS_PER_UINT64;
         digestsDone += DEC_DIGITS_PER_UINT64;
         inplaceMulAddForConversion(array, arrayLen, groupVal, digestsDone);
@@ -88,7 +193,7 @@ void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t
     }
 }
 
-uint64_t decString20CharsTo_uint64_t(const char *dexStr, size_t strLen) {
+uint64_t decString19CharsTo_uint64_t(const char *dexStr, size_t strLen) {
     uint64_t res = decCharToValue(dexStr[0]);
     for (size_t i = 1; i < strLen; i++) {
         res = res * 10 + decCharToValue(dexStr[i]);
@@ -167,7 +272,8 @@ size_t calculateDecStringSpace(const bigInt *x) {
     return resMaxLen;
 }
 
-char *bigIntToDecStringHelper(bigInt *x, bool doFree) {
+//fills the char array with the dec presentation of the bigInt
+char *bigIntToDecString(bigInt *x, bool doFree) {
     bigInt *convertX = doFree ? x : copyBigInt(x);
     if (global_config.parallel) {
         return bigIntToDecStringSchoenhageMultithread(convertX);

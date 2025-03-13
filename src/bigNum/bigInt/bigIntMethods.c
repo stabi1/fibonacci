@@ -1,14 +1,12 @@
 #include "bigIntMethods.h"
 
-#include "bigIntUtil.h"
+#include "bigIntString.h"
 #include "bigIntAsm.h"
 #include "bigIntAlloc.h"
 #include "../misc.h"
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative);
 
@@ -63,6 +61,12 @@ bool isZero(const bigInt *x) {
 
 size_t getLen(const bigInt *x) {
     return (x->end) - (x->start);
+}
+
+// -> max length 2000 petabytes
+size_t bitLength(const bigInt *x) {
+    size_t xLen = x->end - x->start;
+    return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
 
 size_t getOccupiedBlocks(const bigInt *x) {
@@ -211,119 +215,9 @@ bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
     return shiftAdd_Asm(x, toShift, n);
 }
 
-//fills the char array with the hex presentation of the bigInt
-char *bigIntToHexString(const bigInt *x) {
-    size_t lzcnt = custom_lzcnt(x->bigIntArray[x->end - 1]);
-    size_t xLen = x->end - x->start;
-    // error handling
-    if (lzcnt == 64 && xLen == 1) {
-        return getZeroString();
-    } else if (lzcnt == 64 && xLen > 1) {
-        fprintf(stderr, "BigInt not printable, has leading zero block\n");
-        exit(EXIT_FAILURE);
-    }
 
-    size_t lenInNibbles = xLen * 16 - (lzcnt / 4);
-    char *resStr = uint64tArrayToHexString(x->bigIntArray, lenInNibbles, x->start, x->negative);
-    return resStr;
-}
 
-//fills the char array with the dec presentation of the bigInt
-char *bigIntToDecString(bigInt *x, bool doFree) {
-    return bigIntToDecStringHelper(x, doFree);
-}
 
-//returns the bigInt of the HexString, hex is being freed
-bigInt *hexStringToBigInt(const char *hexStr) {
-    size_t hexStrLength = strlen(hexStr);
-    // error handling
-    if (hexStrLength == 0) {
-        fprintf(stderr, "hexStr can not be of length 0\n");
-        exit(EXIT_FAILURE);
-    }
-    bool negative = false;
-    if (hexStr[0] == '-') {
-        negative = true;
-        hexStrLength--;
-        hexStr++;
-    } else if (hexStr[0] == '+') {
-        hexStrLength--;
-        hexStr++;
-    }
-    if (hexStrLength == 0) {
-        fprintf(stderr, "hexStr must contain a number\n");
-        exit(EXIT_FAILURE);
-    } else if (hexStrLength >= 2 && hexStr[0] == '0') {
-        fprintf(stderr, "number can not start with 0\n");
-        exit(EXIT_FAILURE);
-    }
-
-    size_t resLength = hexStrLength / 16;
-    if (hexStrLength % 16 != 0) resLength++;
-    bigInt *res = newBigIntNotZeroed(resLength);
-    res->bigIntArray[res->end - 1] = 0;
-    if (negative) res->negative = true;
-
-    size_t j = 0;
-    long i = (long) (hexStrLength - 1);
-    uint8_t *resByteArray = (uint8_t *) res->bigIntArray;
-    for (; i >= 1; i -= 2, j++) {
-        uint8_t akt8 = hexToNibble(hexStr[i - 1]);
-        akt8 <<= 4;
-        akt8 += hexToNibble(hexStr[i]);
-        resByteArray[j] = akt8;
-    }
-    if (i == 0) {
-        uint8_t akt8 = hexToNibble(hexStr[i]);
-        resByteArray[j] = akt8;
-    }
-    return res;
-}
-
-bigInt *decStringToBigInt(const char *decStr) {
-    return decStringToBigIntLength(decStr, strlen(decStr));
-}
-
-bigInt *decStringToBigIntLength(const char *decStr, const size_t strLen) {
-    size_t decStrLength = strLen;
-    if (decStrLength == 0) {
-        fprintf(stderr, "decStr can not be of length 0\n");
-        exit(EXIT_FAILURE);
-    }
-    bool negative = false;
-    if (decStr[0] == '-') {
-        negative = true;
-        decStrLength--;
-        decStr++;
-    } else if (decStr[0] == '+') {
-        decStrLength--;
-        decStr++;
-    }
-    if (decStrLength == 0) {
-        fprintf(stderr, "decStr must contain a number\n");
-        exit(EXIT_FAILURE);
-    } else if (decStrLength >= 2 && decStr[0] == '0') {
-        fprintf(stderr, "number can not start with 0\n");
-        exit(EXIT_FAILURE);
-    }
-
-    double num_blocks = ((double) decStrLength * 3.32193f) / 64.0f + 1;
-    size_t resLength = (size_t) num_blocks;
-    bigInt *res = newBigInt(resLength);
-    if (negative) res->negative = true;
-
-    decStringToBigIntHelper(res->bigIntArray, resLength, decStr, decStrLength);
-    //resize if necessary
-    size_t newLen = getOccupiedBlocks(res);
-    if (newLen != res->end - res->start) {
-        res->end = res->start + newLen;
-        uint64_t *tmp = realloc(res->bigIntArray, newLen * sizeof(uint64_t));
-        mallocCheck(tmp);
-        res->bigIntArray = tmp;
-        res->completeLength = res->end - res->start;
-    }
-    return res;
-}
 
 //get the lower half of the bigInt (same array, new Struct with different pointers)
 bigInt *getLowerFrom(const bigInt *x, size_t n) {

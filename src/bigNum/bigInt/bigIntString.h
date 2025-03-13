@@ -1,5 +1,5 @@
-#ifndef FIBONACCI_BIGINTUTIL_H
-#define FIBONACCI_BIGINTUTIL_H
+#ifndef FIBONACCI_BIGINTSTRING_H
+#define FIBONACCI_BIGINTSTRING_H
 
 #include "bigInt.h"
 #include <stdint-gcc.h>
@@ -22,4 +22,6 @@ char *bigIntToDecStringSmall(bigInt *x);
 
 size_t hexToNibble(char hex);
 
-#endif //FIBONACCI_BIGINTUTIL_H
+bigInt *decStringToBigIntLength(const char *decStr, size_t strLen);
+
+#endif //FIBONACCI_BIGINTSTRING_H

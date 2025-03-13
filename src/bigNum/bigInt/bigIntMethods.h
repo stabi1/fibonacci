@@ -22,8 +22,6 @@ size_t getOccupiedBlocks(const bigInt *x);
 
 size_t getTrailingZeroBlocks(const bigInt *x);
 
-bigInt *decStringToBigIntLength(const char *decStr, size_t strLen);
-
 int compareBigIntArrays(const bigInt *a, const bigInt *b);
 
 bool isValidBigInt(const bigInt *x);
