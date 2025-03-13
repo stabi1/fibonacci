@@ -10,6 +10,14 @@ void mallocCheck(void *p) {
     }
 }
 
+char *getZeroString() {
+    char *zero = malloc(2);
+    mallocCheck(zero);
+    zero[0] = '0';
+    zero[1] = '\0';
+    return zero;
+}
+
 char *getCurrentDateTime() {
     char *dateTimeString = (char *) malloc(75 * sizeof(char)); // "DD-MM-YYYY HH:MM:SS\0"
     mallocCheck(dateTimeString);
@@ -49,7 +57,7 @@ size_t custom_tzcnt(uint64_t n) {
     if (n == 0) {
         return 64;
     }
-    return  __builtin_ctzll(n);
+    return __builtin_ctzll(n);
 }
 
 size_t max(size_t a, size_t b) {

@@ -22,7 +22,7 @@ size_t decCharToValue(char dec);
 
 uint64_t decString20CharsTo_uint64_t(const char *dexStr, size_t strLen);
 
-void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z, size_t digestsDone);
+void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z, size_t digetsDone);
 
 void
 bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter, bool beginning);
@@ -39,14 +39,13 @@ size_t bitLength(const bigInt *x) {
 
 // calling function still needs to resize!!!
 void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char *decStr, const size_t decStrLen) {
-    size_t digitsPerLong = 19;
     const char *decStringEnd = decStr + decStrLen;
     size_t digestsDone = 0;
 
     // Process first (potentially short) digit group
-    size_t firstGroupLen = decStrLen % digitsPerLong;
+    size_t firstGroupLen = decStrLen % DEC_DIGITS_PER_UINT64;
     if (firstGroupLen == 0)
-        firstGroupLen = digitsPerLong;
+        firstGroupLen = DEC_DIGITS_PER_UINT64;
     array[0] = decString20CharsTo_uint64_t(decStr, firstGroupLen);
     decStr += firstGroupLen;
     digestsDone += firstGroupLen;
@@ -54,16 +53,16 @@ void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char 
     // Process remaining digit groups
     uint64_t groupVal = 0;
     while (decStr < decStringEnd) {
-        groupVal = decString20CharsTo_uint64_t(decStr, digitsPerLong);
-        decStr += digitsPerLong;
-        digestsDone += digitsPerLong;
+        groupVal = decString20CharsTo_uint64_t(decStr, DEC_DIGITS_PER_UINT64);
+        decStr += DEC_DIGITS_PER_UINT64;
+        digestsDone += DEC_DIGITS_PER_UINT64;
         inplaceMulAddForConversion(array, arrayLen, groupVal, digestsDone);
     }
 }
 
-void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z, size_t digestsDone) {
+void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z, size_t digetsDone) {
     // Perform the multiplication word by word
-    size_t num_blocks = (long) (((double) digestsDone * 3.32193f) / 64.0f + 1);
+    size_t num_blocks = (long) (((double) digetsDone * 3.32193f) / 64.0f + 1);
     uint128_t  yLong = 10000000000000000000ULL;
     uint128_t zLong = z;
 
@@ -397,11 +396,7 @@ char *bigIntToDecStringSmall(bigInt *x) {
 
     size_t xLen = x->end - x->start;
     if (isZero(x)) {
-        char *zero = malloc(2);
-        mallocCheck(zero);
-        zero[0] = '0';
-        zero[1] = '\0';
-        return zero;
+        return getZeroString();
     }
 
     // Compute upper bound on number of digit groups and allocate space

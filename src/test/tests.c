@@ -26,17 +26,19 @@ void customTest() {
     freeBigInt(a);*/
 
     bigFrac *tmp0 = newBigFrac(1);
-    tmp0->bigIntPart->bigIntArray[0] = 0xA000000000000000;
+    tmp0->bigIntPart->bigIntArray[0] = 0x000000000000000A;
     tmp0->fractionBits = 4;
-    printf("0.%s\n", bigDecToDecStringSmall(tmp0, true));
+    tmp0->bigIntPart->negative = true;
+    printf("%s\n", bigDecToDecString(tmp0, true));
 
     printf("-----------------------------\n");
 
     bigFrac *tmp = newBigFrac(2);
     tmp->bigIntPart->bigIntArray[0] = 0xFFFFFFFFFFFFFFF0;
     tmp->bigIntPart->bigIntArray[1] = 0xA000000000000001;
-    tmp->fractionBits = 120;
-    printf("0.%s\n", bigDecToDecStringSmall(tmp, true));
+    tmp->bigIntPart->negative = true;
+    tmp->fractionBits = 119;
+    printf("%s\n", bigDecToDecString(tmp, true));
 
     printf("-----------------------------\n");
 
@@ -44,7 +46,16 @@ void customTest() {
     tmp2->bigIntPart->bigIntArray[0] = 0xFFFFFFFFFFFFFFFF;
     tmp2->bigIntPart->bigIntArray[1] = 0xFFFFFFFFFFFFFFFF;
     tmp2->bigIntPart->bigIntArray[2] = 0xFFFFFFFFFFFFFFFF;
-    printf("0.%s\n", bigDecToDecStringSmall(tmp2, true));
+    tmp2->fractionBits = 3;
+    printf("%s\n", bigDecToDecString(tmp2, false));
+
+    printf("I-----------------------------\n");
+
+    printBigIntDec(decStringToBigInt("1"));
+
+    printf("F-----------------------------\n");
+
+    printf("%s\n", bigDecToDecString(decStringToBigFrac("1.111111111111111122222222222222223333333333333333", 1000), false));
 
     //testTmp();
 

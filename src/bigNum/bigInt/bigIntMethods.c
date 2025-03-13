@@ -148,7 +148,7 @@ int compareShiftedBigInt(const bigInt *a, const bigInt *b, size_t n) {
 }
 
 //shifts bigInt to the left
-bigInt *shiftLeft(const bigInt *x, size_t n) {
+bigInt *shiftLeft(const bigInt *x, const size_t n) {
     if (isZero(x)) {
         return getZeroBigInt();
     }
@@ -157,27 +157,33 @@ bigInt *shiftLeft(const bigInt *x, size_t n) {
     }
     size_t toShift64 = n / 64;
     if (toShift64 == 0) {
-        return shiftLeft_Asm(x, n);
+        bigInt *resTmp = shiftLeft_Asm(x, n);
+        resTmp->negative = x->negative;
+        return resTmp;
     }
     size_t xLen = x->end - x->start;
     bigInt *resTmp = newBigInt(xLen + toShift64);
     memcpy(resTmp->bigIntArray + toShift64, x->bigIntArray, xLen * 8);
     if (n % 64 == 0) {
+        resTmp->negative = x->negative;
         return resTmp;
     }
     bigInt *res = shiftLeft_Asm(resTmp, n % 64);
     freeBigInt(resTmp);
+    res->negative = x->negative;
     return res;
 }
 
 //shifts bigInt to the right
-bigInt *shiftRight(const bigInt *x, size_t n) {
+bigInt *shiftRight(const bigInt *x, const size_t n) {
     if (n == 0) {
         return copyBigInt(x);
     }
     size_t toShift64 = n / 64;
     if (toShift64 == 0) {
-        return shiftRight_Asm(x, n);
+        bigInt *resTmp = shiftRight_Asm(x, n);
+        resTmp->negative = x->negative;
+        return resTmp;
     }
     size_t xLen = x->end - x->start;
     if (xLen <= toShift64) {
@@ -186,14 +192,16 @@ bigInt *shiftRight(const bigInt *x, size_t n) {
     bigInt *resTmp = newBigInt(xLen - toShift64);
     memcpy(resTmp->bigIntArray, x->bigIntArray + toShift64, (xLen - toShift64) * 8);
     if (n % 64 == 0) {
+        resTmp->negative = x->negative;
         return resTmp;
     }
     bigInt *res = shiftRight_Asm(resTmp, n % 64);
     freeBigInt(resTmp);
+    res->negative = x->negative;
     return res;
 }
 
-bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, size_t n) {
+bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
     if (isZero(toShift)) { // toShift == 0
         return copyBigInt(x);
     }
@@ -209,11 +217,7 @@ char *bigIntToHexString(const bigInt *x) {
     size_t xLen = x->end - x->start;
     // error handling
     if (lzcnt == 64 && xLen == 1) {
-        char *resStr = malloc(2);
-        mallocCheck(resStr);
-        resStr[0] = '0';
-        resStr[1] = '\0';
-        return resStr;
+        return getZeroString();
     } else if (lzcnt == 64 && xLen > 1) {
         fprintf(stderr, "BigInt not printable, has leading zero block\n");
         exit(EXIT_FAILURE);
@@ -277,9 +281,13 @@ bigInt *hexStringToBigInt(const char *hexStr) {
 }
 
 bigInt *decStringToBigInt(const char *decStr) {
-    size_t decStrLength = strlen(decStr);
+    return decStringToBigIntLength(decStr, strlen(decStr));
+}
+
+bigInt *decStringToBigIntLength(const char *decStr, const size_t strLen) {
+    size_t decStrLength = strLen;
     if (decStrLength == 0) {
-        fprintf(stderr, "hexStr can not be of length 0");
+        fprintf(stderr, "decStr can not be of length 0\n");
         exit(EXIT_FAILURE);
     }
     bool negative = false;
@@ -292,10 +300,10 @@ bigInt *decStringToBigInt(const char *decStr) {
         decStr++;
     }
     if (decStrLength == 0) {
-        fprintf(stderr, "hexStr must contain a number");
+        fprintf(stderr, "decStr must contain a number\n");
         exit(EXIT_FAILURE);
     } else if (decStrLength >= 2 && decStr[0] == '0') {
-        fprintf(stderr, "number can not start with 0");
+        fprintf(stderr, "number can not start with 0\n");
         exit(EXIT_FAILURE);
     }
 

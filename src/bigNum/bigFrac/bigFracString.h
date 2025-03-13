@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
-char *bigDecToDecStringSmall(bigFrac *x, bool exactPrecision);
+bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, size_t wantedPrecisionInBlocks);
+
+char *bigDecToDecStringFractionPart(bigFrac *x, bool exactPrecision);
 
 #endif //FIBONACCI_BIGFRACSTRING_H

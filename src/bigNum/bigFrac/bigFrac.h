@@ -20,12 +20,21 @@ void freeBigFrac(bigFrac *toDelete);
 
 bigFrac *newBigFracFromBigInt(bigInt *x, bool copy);
 
-bigFrac* getBigFracFromUnsignedInteger(uint64_t integer);
+bigFrac *getBigFracFromUnsignedInteger(uint64_t integer);
 
-bigFrac* getBigFracFromSignedInteger(int64_t integer);
+bigFrac *getBigFracFromSignedInteger(int64_t integer);
 
 // calc methods
 bigFrac *mulBigFrac(const bigFrac *x, const bigFrac *y);
+
+bigFrac *shiftLeftBigFrac(const bigFrac *x, size_t n);
+
+bigFrac *shiftRightBigFrac(const bigFrac *x, size_t n);
+
+// string methods
+char *bigDecToDecString(const bigFrac *x, bool exactPrecision);
+
+bigFrac *decStringToBigFrac(const char *decStr, size_t binaryDigits);
 
 
 #endif

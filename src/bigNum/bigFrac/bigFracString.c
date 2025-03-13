@@ -3,35 +3,167 @@
 #include "bigFracString.h"
 #include "bigFrac.h"
 #include "bigFracMul.h"
+#include "bigFracMethods.h"
 #include "../constants.h"
 #include "../misc.h"
 #include "../bigInt/bigIntUtil.h"
+#include "../bigInt/bigIntMethods.h"
 
 #include <math.h>
 #include <stdio.h>
 
 
-char *bigDecToDecString(__attribute__((unused)) bigFrac *x) {
-    return NULL;
+bigFrac *decStringToBigFrac(const char *decStr, size_t const binaryDigits) {
+    size_t wantedPrecisionInBlocks = binaryDigits % 64 == 0 ? binaryDigits/64 : binaryDigits/64 + 1;
+    size_t hexStrLength = strlen(decStr);
+
+    if (hexStrLength == 0) {
+        fprintf(stderr, "decStr can not be of length 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    char *ptr = strchr(decStr, '.');
+    if (ptr == NULL) { // only integer, no fraction part
+        return newBigFracFromBigInt(decStringToBigInt(decStr), false);
+    }
+
+    size_t pointIndex = ptr - decStr;
+    if (pointIndex == 0) {
+        fprintf(stderr, "decStr can not begin with .\n");
+        exit(EXIT_FAILURE);
+    } else if (ptr[1] == '\0') {
+        fprintf(stderr, "decStr can not end with .\n");
+        exit(EXIT_FAILURE);
+    }
+
+    bigInt* holePart = decStringToBigIntLength(decStr, pointIndex);
+
+    bigFrac* fractionPart = fractionDecStringToBigFrac(ptr + 1, wantedPrecisionInBlocks);
+
+    bigInt *resBigInt = newBigIntNotZeroed(getLen(holePart) + getLen(fractionPart->bigIntPart));
+    memcpy(resBigInt->bigIntArray, fractionPart->bigIntPart->bigIntArray + fractionPart->bigIntPart->start, getLen(fractionPart->bigIntPart) * 8);
+    memcpy((resBigInt->bigIntArray + getLen(fractionPart->bigIntPart)), holePart->bigIntArray + holePart->start, getLen(holePart));
+    resBigInt->negative = holePart->negative;
+
+    bigFrac *res = newBigFracFromBigInt(resBigInt, false);
+    res->fractionBits = fractionPart->fractionBits;
+    return res;
 }
 
-char *bigDecToDecStringSmall(bigFrac *x, bool exactPrecision) {
+bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wantedPrecisionInBlocks) {
+    bigInt* resBigInt = newBigIntNotZeroed(wantedPrecisionInBlocks);
+
+    // Build numerator from the decimal string (using your decStringToBigIntHelper)
+    bigInt* numerator = decStringToBigInt(decStrFraction);
+
+    // Build denominator = 10^decStrLen as a big integer.
+    bigInt* denominator = getBigIntFromUnsignedInteger(1);
+    bigInt * ten = getBigIntFromUnsignedInteger(10);
+    // Set denominator to 1, then multiply by 10 decStrLen times.
+    for (size_t i = 0; i < strlen(decStrFraction); i++) {
+        // Multiply denominator by 10
+        bigInt* tmp = mul(denominator, ten);
+        freeBigInt(denominator);
+        denominator = tmp;
+    }
+
+    size_t blockDone = 0;
+    for (; blockDone < wantedPrecisionInBlocks; blockDone++) {
+        // Multiply numerator by 2^(BLOCK_BITS)
+        bigInt* tmp = shiftLeft(numerator, 64);
+        freeBigInt(numerator);
+        numerator = tmp;
+
+        // Divide numerator by denominator: numerator = (quotient, remainder)
+        bigInt* reminder;
+        bigInt* quotient = divideMod(numerator, denominator, &reminder);
+
+        // Store the 64-bit block of binary digits
+        resBigInt->bigIntArray[resBigInt->end - blockDone - 1] = quotient->bigIntArray[0];
+
+        // Update numerator to be the remainder for next iteration.
+
+        freeBigInt(numerator);
+        numerator = reminder;
+
+        if(isZero(numerator)) {
+            break;
+        }
+    }
+
+    resBigInt->end = blockDone;
+    bigFrac *res = newBigFracFromBigInt(resBigInt, false);
+    res->fractionBits = blockDone*64;
+    return res;
+}
+
+
+char *bigDecToDecString(const bigFrac *x, bool exactPrecision) {
+    bigFrac *aligned = alignToBlock(x);
+    if (isZero(aligned->bigIntPart)) {
+        char *zero = malloc(4);
+        mallocCheck(zero);
+        zero[0] = '0';
+        zero[1] = '.';
+        zero[2] = '0';
+        zero[3] = '\0';
+        return zero;
+    }
+    size_t fractionBlocks = aligned->fractionBits / 64;
+    size_t originalStart = aligned->bigIntPart->start;
+
+    aligned->bigIntPart->start += fractionBlocks;
+    char *holePart;
+    if (getLen(aligned->bigIntPart) == 0) {
+        if (aligned->bigIntPart->negative) {
+            holePart = malloc(3);
+            mallocCheck(holePart);
+            holePart[0] = '-';
+            holePart[1] = '0';
+            holePart[2] = '\0';
+        } else {
+            holePart = getZeroString();
+        }
+    } else {
+        holePart = bigIntToDecString(aligned->bigIntPart, false);
+    }
+
+    aligned->bigIntPart->start = originalStart;
+    aligned->bigIntPart->end = aligned->bigIntPart->start + fractionBlocks;
+    char *fractionPart;
+    if (getLen(aligned->bigIntPart) == 0) {
+        fractionPart = getZeroString();
+    } else {
+        fractionPart = bigDecToDecStringFractionPart(aligned, exactPrecision);
+    }
+
+    size_t holePartLength = strlen(holePart);
+    size_t fractionPartLength = strlen(fractionPart);
+    char *finalString = malloc(holePartLength + fractionPartLength + 2); // for '.' and '\0'
+
+    memcpy(finalString, holePart, holePartLength);
+    free(holePart);
+    finalString[holePartLength] = '.';
+    memcpy(finalString + holePartLength + 1, fractionPart, fractionPartLength);
+    free(fractionPart);
+    finalString[holePartLength + fractionPartLength + 1] = '\0';
+    return finalString;
+}
+
+char *bigDecToDecStringFractionPart(bigFrac *x, bool exactPrecision) {
     const char *zeros = "00000000000000000000";
 
     bigInt *bigIntPart = x->bigIntPart;
 
     size_t xLen = getLen(bigIntPart);
     if (isZero(bigIntPart)) {
-        char *zero = malloc(2);
-        mallocCheck(zero);
-        zero[0] = '0';
-        zero[1] = '\0';
-        return zero;
+        return getZeroString();
     }
 
     size_t realFractionBits = xLen * 64 - custom_tzcnt(bigIntPart->bigIntArray[bigIntPart->end - 1]);
     double log10_2 = log(2) / log(10);
     size_t decimalDigits = exactPrecision ? realFractionBits : (size_t) ((double) realFractionBits * log10_2);
+    decimalDigits = decimalDigits == 0 ? 1 : decimalDigits;
 
     char **digitGroup = malloc(sizeof(char **) * ((decimalDigits / DEC_DIGITS_PER_UINT64) + 3));
     mallocCheck(digitGroup);
@@ -42,14 +174,10 @@ char *bigDecToDecStringSmall(bigFrac *x, bool exactPrecision) {
     tmp->fractionBits = getLen(tmp->bigIntPart) * 64;
     bigFrac *d = getBigFracFromUnsignedInteger(0x8AC7230489E80000); // 10^DEC_DIGITS_PER_UINT64 = 8AC7230489E80000
     for (size_t i = 0; i < (decimalDigits / DEC_DIGITS_PER_UINT64); i++) {
-        if(isZero(tmp->bigIntPart)) {break;}
+        if (isZero(tmp->bigIntPart)) { break; }
         bigFrac *mulRes = mulBigFracNoResize(tmp, d);
         if (getLen(tmp->bigIntPart) == getLen(mulRes->bigIntPart)) {
-            char *zero = malloc(2);
-            mallocCheck(zero);
-            zero[0] = '0';
-            zero[1] = '\0';
-            digitGroup[numGroups++] = zero;
+            digitGroup[numGroups++] = getZeroString();
         } else {
             digitGroup[numGroups++] = uint64_t_toDecString(mulRes->bigIntPart->bigIntArray[mulRes->bigIntPart->end - 1]);
             mulRes->bigIntPart->end -= 1;
@@ -68,7 +196,7 @@ char *bigDecToDecStringSmall(bigFrac *x, bool exactPrecision) {
         mallocCheck(buf);
         size_t j = 0;
         for (; j < (decimalDigits % DEC_DIGITS_PER_UINT64); j++) {
-            if(isZero(tmp->bigIntPart)) {break;}
+            if (isZero(tmp->bigIntPart)) { break; }
             bigFrac *mulRes = mulBigFracNoResize(tmp, d);
 
             // Extract the integer part from the upper 64 bits.
