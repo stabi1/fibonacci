@@ -34,7 +34,7 @@ bigFrac *shiftRightBigFrac(const bigFrac *x, size_t n);
 // string methods
 char *bigDecToDecString(const bigFrac *x, bool exactPrecision);
 
-bigFrac *decStringToBigFrac(const char *decStr, size_t binaryDigits);
+bigFrac *decStringToBigFrac(const char *decStr, bool automaticPrecision, size_t binaryDigits);
 
 
 #endif

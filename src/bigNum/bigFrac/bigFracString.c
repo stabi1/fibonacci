@@ -7,17 +7,15 @@
 #include "../constants.h"
 #include "../misc.h"
 #include "../bigInt/bigIntString.h"
-#include "../bigInt/bigIntMethods.h"
 
 #include <math.h>
 #include <stdio.h>
 
 
-bigFrac *decStringToBigFrac(const char *decStr, size_t const binaryDigits) {
-    size_t wantedPrecisionInBlocks = binaryDigits % 64 == 0 ? binaryDigits/64 : binaryDigits/64 + 1;
-    size_t hexStrLength = strlen(decStr);
+bigFrac *decStringToBigFrac(const char *decStr, bool automaticPrecision, const size_t binaryDigits) {
+    size_t decStrLength = strlen(decStr);
 
-    if (hexStrLength == 0) {
+    if (decStrLength == 0) {
         fprintf(stderr, "decStr can not be of length 0\n");
         exit(EXIT_FAILURE);
     }
@@ -36,10 +34,11 @@ bigFrac *decStringToBigFrac(const char *decStr, size_t const binaryDigits) {
         exit(EXIT_FAILURE);
     }
 
-    bigInt* holePart = decStringToBigIntLength(decStr, pointIndex);
+    size_t wantedBinaryDigits = automaticPrecision ? (size_t) ceil((double) (decStrLength - pointIndex - 1) * (log(10) / log(2))) : binaryDigits;
 
-    bigFrac* fractionPart = fractionDecStringToBigFrac(ptr + 1, wantedPrecisionInBlocks);
+    bigInt *holePart = decStringToBigIntLength(decStr, pointIndex);
 
+    bigFrac *fractionPart = fractionDecStringToBigFrac(ptr + 1, wantedBinaryDigits);
     bigInt *resBigInt = newBigIntNotZeroed(getLen(holePart) + getLen(fractionPart->bigIntPart));
     memcpy(resBigInt->bigIntArray, fractionPart->bigIntPart->bigIntArray + fractionPart->bigIntPart->start, getLen(fractionPart->bigIntPart) * 8);
     memcpy((resBigInt->bigIntArray + getLen(fractionPart->bigIntPart)), holePart->bigIntArray + holePart->start, getLen(holePart));
@@ -50,19 +49,21 @@ bigFrac *decStringToBigFrac(const char *decStr, size_t const binaryDigits) {
     return res;
 }
 
-bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wantedPrecisionInBlocks) {
-    bigInt* resBigInt = newBigIntNotZeroed(wantedPrecisionInBlocks);
+bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wantedBinaryDigits) {
+    size_t wantedPrecisionInBlocks = wantedBinaryDigits % 64 == 0 ? wantedBinaryDigits / 64 : wantedBinaryDigits / 64 + 1;
+
+    bigInt *resBigInt = newBigIntNotZeroed(wantedPrecisionInBlocks);
 
     // Build numerator from the decimal string (using your decStringToBigIntHelper)
-    bigInt* numerator = decStringToBigInt(decStrFraction);
+    bigInt *numerator = decStringToBigInt(decStrFraction);
 
     // Build denominator = 10^decStrLen as a big integer.
-    bigInt* denominator = getBigIntFromUnsignedInteger(1);
-    bigInt * ten = getBigIntFromUnsignedInteger(10);
+    bigInt *denominator = getBigIntFromUnsignedInteger(1);
+    bigInt *ten = getBigIntFromUnsignedInteger(10);
     // Set denominator to 1, then multiply by 10 decStrLen times.
     for (size_t i = 0; i < strlen(decStrFraction); i++) {
         // Multiply denominator by 10
-        bigInt* tmp = mul(denominator, ten);
+        bigInt *tmp = mul(denominator, ten);
         freeBigInt(denominator);
         denominator = tmp;
     }
@@ -70,13 +71,13 @@ bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wan
     size_t blockDone = 0;
     for (; blockDone < wantedPrecisionInBlocks; blockDone++) {
         // Multiply numerator by 2^(BLOCK_BITS)
-        bigInt* tmp = shiftLeft(numerator, 64);
+        bigInt *tmp = shiftLeft(numerator, 64);
         freeBigInt(numerator);
         numerator = tmp;
 
         // Divide numerator by denominator: numerator = (quotient, remainder)
-        bigInt* reminder;
-        bigInt* quotient = divideMod(numerator, denominator, &reminder);
+        bigInt *reminder;
+        bigInt *quotient = divideMod(numerator, denominator, &reminder);
 
         // Store the 64-bit block of binary digits
         resBigInt->bigIntArray[resBigInt->end - blockDone - 1] = quotient->bigIntArray[0];
@@ -85,15 +86,21 @@ bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wan
 
         freeBigInt(numerator);
         numerator = reminder;
-
-        if(isZero(numerator)) {
+        if (isZero(numerator)) {
+            blockDone++;
             break;
         }
     }
 
     resBigInt->end = blockDone;
+    size_t n = wantedBinaryDigits % 64;
+    if (n != 0) {
+        uint64_t mask = ~((uint64_t) 0xFFFFFFFFFFFFFFFF >> n);
+        resBigInt->bigIntArray[resBigInt->end - 1] &= mask;
+    }
+
     bigFrac *res = newBigFracFromBigInt(resBigInt, false);
-    res->fractionBits = blockDone*64;
+    res->fractionBits = blockDone * 64;
     return res;
 }
 

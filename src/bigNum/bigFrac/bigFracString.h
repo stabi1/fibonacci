@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, size_t wantedPrecisionInBlocks);
+bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, size_t wantedBinaryDigits);
 
 char *bigDecToDecStringFractionPart(bigFrac *x, bool exactPrecision);
 

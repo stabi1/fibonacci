@@ -55,7 +55,7 @@ void customTest() {
 
     printf("F-----------------------------\n");
 
-    printf("%s\n", bigDecToDecString(decStringToBigFrac("1.111111111111111122222222222222223333333333333333", 1000), false));
+    printf("%s\n", bigDecToDecString(decStringToBigFrac("1.3", true, 10), true));
 
     //testTmp();
 
