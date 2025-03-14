@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <signal.h>
 
-enum computeOperation getComputeOperation(char* token);
+enum computeOperation getComputeOperation(char *token);
 
 void printHelpMenu();
 
@@ -39,6 +39,7 @@ const size_t numOfArgsComputeOperation[] = {
         [CONVERT_NUMBER]    = 0,
         [GOLDEN_RATIO]      = 1,
         [FIBONACCI]         = 1,
+        [SQUARE_ROOT]       = 2,
         [UNKNOWN_OPERATION] = 0,
 };
 
@@ -88,12 +89,14 @@ int main(int argc, char *argv[]) {
     char output = 't';
     size_t cores = 0; //available cores
     size_t max_threads = 0;
-    uint64_t computeNumberArgument = 0;
     bool do_debug = false;
     bool do_test = false;
     bool do_benchmark = false;
     char *outputFilename = NULL;
     bool infoInOutputFile = false;
+
+    uint64_t computeNumberArgument1 = 0;
+    uint64_t computeNumberArgument2 = 0;
     enum computeOperation computeOperation = UNKNOWN_OPERATION;
 
     char inputRadix = '\0';
@@ -167,13 +170,22 @@ int main(int argc, char *argv[]) {
                 case 'c':
                     if (optind < argc) {
                         computeOperation = getComputeOperation(optarg);
-                        if(computeOperation == UNKNOWN_OPERATION) {
+                        if (computeOperation == UNKNOWN_OPERATION) {
                             fprintf(stderr, "Unknown compute Operation\n");
                             exit(EXIT_FAILURE);
                         }
-                        if (numOfArgsComputeOperation[computeOperation] == 1) {
-                            computeNumberArgument = parseUINT64(argv[optind], UINT64_MAX, 0);
+                        if (numOfArgsComputeOperation[computeOperation] >= 1) {
+                            computeNumberArgument1 = parseUINT64(argv[optind], UINT64_MAX, 0);
                             optind++;
+                        }
+                        if (optind < argc) {
+                            if (numOfArgsComputeOperation[computeOperation] >= 2) {
+                                computeNumberArgument2 = parseUINT64(argv[optind], UINT64_MAX, 0);
+                                optind++;
+                            }
+                        } else {
+                            fprintf(stderr, "Option -c requires a operation and a number (-c <operation> <number> <number>)\n");
+                            exit(EXIT_FAILURE);
                         }
                     } else {
                         fprintf(stderr, "Option -c requires a operation and a number (-c <operation> <number>)\n");
@@ -258,10 +270,13 @@ int main(int argc, char *argv[]) {
                 convertNumber(inputRadix, inputFilename, outputRadix, outputFilename);
                 break;
             case FIBONACCI:
-                printFibonacci(computeNumberArgument, outputRadix, output, outputFilename, infoInOutputFile);
+                printFibonacci(computeNumberArgument1, outputRadix, output, outputFilename, infoInOutputFile);
                 break;
             case GOLDEN_RATIO:
-                printGoldenRatio(computeNumberArgument, outputRadix, output, outputFilename, infoInOutputFile);
+                printGoldenRatio(computeNumberArgument1, outputRadix, output, outputFilename, infoInOutputFile);
+                break;
+            case SQUARE_ROOT:
+                printSquareRoot(computeNumberArgument1, computeNumberArgument2, outputRadix, output, outputFilename, infoInOutputFile);
                 break;
             case UNKNOWN_OPERATION:
                 printf("No operation selected\n");
@@ -275,13 +290,15 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-enum computeOperation getComputeOperation(char* token) {
-    if(strcmp(token, "convert-number") == 0) {
+enum computeOperation getComputeOperation(char *token) {
+    if (strcmp(token, "convert-number") == 0) {
         return CONVERT_NUMBER;
-    } else if(strcmp(token, "fibonacci") == 0) {
+    } else if (strcmp(token, "fibonacci") == 0) {
         return FIBONACCI;
-    } else if(strcmp(token, "golden-ratio") == 0) {
+    } else if (strcmp(token, "golden-ratio") == 0) {
         return GOLDEN_RATIO;
+    } else if (strcmp(token, "square-root") == 0) {
+        return SQUARE_ROOT;
     } else {
         return UNKNOWN_OPERATION;
     }

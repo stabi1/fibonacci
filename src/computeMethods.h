@@ -8,6 +8,7 @@ enum computeOperation {
     CONVERT_NUMBER = 0,
     GOLDEN_RATIO,
     FIBONACCI,
+    SQUARE_ROOT,
     UNKNOWN_OPERATION
 };
 
@@ -16,5 +17,7 @@ void convertNumber(char inputRadix, const char *inputFilename, char outputRadix,
 void printFibonacci(uint64_t n, char radix, char output, const char *filename, bool infoInOutputFile);
 
 void printGoldenRatio(uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
+
+void printSquareRoot(uint64_t n, uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
 
 #endif //FIBONACCI_COMPUTEFUNCTIONS_H

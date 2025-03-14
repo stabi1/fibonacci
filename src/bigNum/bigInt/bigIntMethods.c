@@ -82,9 +82,9 @@ size_t getOccupiedBlocks(const bigInt *x) {
 }
 
 size_t getTrailingZeroBlocks(const bigInt *x) {
-    size_t i = x->start;
+    size_t i = 0;
     for(; i<x->end; i++) {
-        if(x->bigIntArray[i] != 0){
+        if(x->bigIntArray[x->start + i] != 0){
             break;
         }
     }

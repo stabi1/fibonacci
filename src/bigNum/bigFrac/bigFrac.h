@@ -24,6 +24,9 @@ bigFrac *getBigFracFromUnsignedInteger(uint64_t integer);
 
 bigFrac *getBigFracFromSignedInteger(int64_t integer);
 
+// compare methods:
+int compareBigFrac(const bigFrac *a, const bigFrac *b);
+
 // calc methods
 bigFrac *addBigFrac(const bigFrac *x, const bigFrac *y);
 
@@ -36,6 +39,8 @@ bigFrac *divideBigFrac(const bigFrac *dividend, const bigFrac *divisor, size_t w
 bigFrac *shiftLeftBigFrac(const bigFrac *x, size_t n);
 
 bigFrac *shiftRightBigFrac(const bigFrac *x, size_t n);
+
+bigFrac* sqrt2(const bigFrac* radicand, size_t wantedFractionBlocks);
 
 // string methods
 char *bigFracToHexString(const bigFrac *x);

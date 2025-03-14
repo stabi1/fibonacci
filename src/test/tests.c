@@ -19,13 +19,12 @@ void testDivision();
 void testTmp();
 
 void customTest() {
-    /*char *s = "-7879728336815204864708405324323";
-    printf("%s\n", s);
-    bigInt *a = decStringToBigInt(s);
-    printBigIntDec(a);
-    freeBigInt(a);*/
 
-    bigFrac *tmp0 = newBigFrac(1);
+    bigFrac *tmp_0 = sqrt2(getBigFracFromUnsignedInteger(2), 200);
+    printBigFracDec(tmp_0, false);
+    freeBigFrac(tmp_0);
+
+    /*bigFrac *tmp0 = newBigFrac(1);
     tmp0->bigIntPart->bigIntArray[0] = 0x000000000000000A;
     tmp0->fractionBlocks = 1;
     tmp0->bigIntPart->negative = true;
@@ -66,7 +65,7 @@ void customTest() {
     freeBigFrac(ooo);
     freeBigFrac(tmp3);
 
-    /*printf("A-----------------------------\n");
+    printf("A-----------------------------\n");
 
     bigFrac *add1 = decStringToBigFrac("1.32390843874029384792038742908470923849348579348750349857439857340958734095873405723908473298472309847", false, 1000);
     bigFrac *add2 = decStringToBigFrac("111.7", false, 100);

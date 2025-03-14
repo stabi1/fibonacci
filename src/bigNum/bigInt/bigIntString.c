@@ -371,7 +371,7 @@ char *bigIntToDecStringSchoenhageMultithread(bigInt *x) {
     if (global_config.convertDepth == 0) {
         fprintf(stderr, "Warning: string multithread conversion method was called but convertDepth=0, using single thread version\n");
     }
-    if (PARALLEL_DEC_STRING_FASTER < getLen(x) || global_config.convertDepth == 0) {
+    if (PARALLEL_DEC_STRING_FASTER > getLen(x) || global_config.convertDepth == 0) {
         return bigIntToDecStringSchoenhage(x);
     }
 
