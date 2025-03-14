@@ -25,7 +25,7 @@ bigFrac *newBigFracFromBigInt(bigInt *x, bool copy) {
     } else {
         res->bigIntPart = x;
     }
-    res->fractionBits = 0;
+    res->fractionBlocks = 0;
     return res;
 }
 

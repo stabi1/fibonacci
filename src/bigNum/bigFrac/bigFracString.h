@@ -7,6 +7,6 @@
 
 bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, size_t wantedBinaryDigits);
 
-char *bigDecToDecStringFractionPart(bigFrac *x, bool exactPrecision);
+char *bigFracToDecStringFractionPart(const bigFrac *x, bool exactPrecision);
 
 #endif //FIBONACCI_BIGFRACSTRING_H

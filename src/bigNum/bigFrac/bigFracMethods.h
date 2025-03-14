@@ -5,6 +5,6 @@
 
 void removeLeadingAndTrailingZeroBlocks(bigFrac *x);
 
-bigFrac *alignToBlock(const bigFrac *x);
+int compareBigIntArraysBigFrac(const bigFrac *a, const bigFrac *b);
 
 #endif //FIBONACCI_BIGFRACMETHODS_H

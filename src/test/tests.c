@@ -27,9 +27,10 @@ void customTest() {
 
     bigFrac *tmp0 = newBigFrac(1);
     tmp0->bigIntPart->bigIntArray[0] = 0x000000000000000A;
-    tmp0->fractionBits = 4;
+    tmp0->fractionBlocks = 1;
     tmp0->bigIntPart->negative = true;
-    printf("%s\n", bigDecToDecString(tmp0, true));
+    printBigFracDec(tmp0, true);
+    freeBigFrac(tmp0);
 
     printf("-----------------------------\n");
 
@@ -37,8 +38,9 @@ void customTest() {
     tmp->bigIntPart->bigIntArray[0] = 0xFFFFFFFFFFFFFFF0;
     tmp->bigIntPart->bigIntArray[1] = 0xA000000000000001;
     tmp->bigIntPart->negative = true;
-    tmp->fractionBits = 119;
-    printf("%s\n", bigDecToDecString(tmp, true));
+    tmp->fractionBlocks = 1;
+    printBigFracDec(tmp, true);
+    freeBigFrac(tmp);
 
     printf("-----------------------------\n");
 
@@ -46,30 +48,37 @@ void customTest() {
     tmp2->bigIntPart->bigIntArray[0] = 0xFFFFFFFFFFFFFFFF;
     tmp2->bigIntPart->bigIntArray[1] = 0xFFFFFFFFFFFFFFFF;
     tmp2->bigIntPart->bigIntArray[2] = 0xFFFFFFFFFFFFFFFF;
-    tmp2->fractionBits = 3;
-    printf("%s\n", bigDecToDecString(tmp2, false));
+    tmp2->fractionBlocks = 1;
+    printBigFracDec(tmp2, true);
+    freeBigFrac(tmp2);
 
-    printf("I-----------------------------\n");
+    printf("-----------------------------\n");
 
-    printBigIntDec(decStringToBigInt("1"));
+    bigFrac *tmp3 = decStringToBigFrac("1.3", true, 10);
+    printBigFracDec(tmp3, true);
+    freeBigFrac(tmp3);
 
-    printf("F-----------------------------\n");
+    printf("A-----------------------------\n");
 
-    printf("%s\n", bigDecToDecString(decStringToBigFrac("1.3", true, 10), true));
+    bigFrac *add1 = decStringToBigFrac("1.32390843874029384792038742908470923849348579348750349857439857340958734095873405723908473298472309847", false, 1000);
+    bigFrac *add2 = decStringToBigFrac("111.7", false, 100);
+    bigFrac* res = addBigFrac(add1, add2);
+    printBigFracDec(res, true);
+    freeBigFrac(add1);
+    freeBigFrac(add2);
+    freeBigFrac(res);
+
+    printf("S-----------------------------\n");
+
+    bigFrac *sub1 = decStringToBigFrac("2343241.37", false, 1000);
+    bigFrac *sub2 = decStringToBigFrac("111.7239084387402938479203874290847092384934857934875034985743985734095873409587340572390847329847230984", false, 100);
+    bigFrac* res2 = subBigFrac(sub1, sub2);
+    printBigFracDec(res2, true);
+    freeBigFrac(sub1);
+    freeBigFrac(sub2);
+    freeBigFrac(res2);
 
     //testTmp();
-
-    //findBestValues();
-    /*uint64_t n = 40000;
-    bigInt *res1 = fibExpFastDoubling(n, 0);
-    bigInt *res2 = fibExpFastDoubling(n, true, 0);
-    if (compareBigInt(res1, res2) != 0) {
-        printf("Fault\n");
-        return;
-    }
-    printf("Correct; Length of result in 8 byte: %lu\n", res1->end - res1->start);
-    freeBigInt(res1);
-    freeBigInt(res2);*/
 }
 
 void testTmp() {

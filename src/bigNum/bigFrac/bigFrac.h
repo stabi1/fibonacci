@@ -9,7 +9,7 @@
 
 typedef struct BigFracTag { //The datastructure that represents a binary fraction number, the sign of the bigFrac is stored in bigIntPart
     bigInt *bigIntPart;
-    size_t fractionBits; //how many bits of bigIntPart belong to the fraction part
+    size_t fractionBlocks; //how many blocks of bigIntPart belong to the fraction part, means that the . must always at the border between 2 blocks
 } bigFrac;
 
 
@@ -25,6 +25,10 @@ bigFrac *getBigFracFromUnsignedInteger(uint64_t integer);
 bigFrac *getBigFracFromSignedInteger(int64_t integer);
 
 // calc methods
+bigFrac *addBigFrac(const bigFrac *x, const bigFrac *y);
+
+bigFrac *subBigFrac(const bigFrac *x, const bigFrac *y);
+
 bigFrac *mulBigFrac(const bigFrac *x, const bigFrac *y);
 
 bigFrac *shiftLeftBigFrac(const bigFrac *x, size_t n);
@@ -32,9 +36,11 @@ bigFrac *shiftLeftBigFrac(const bigFrac *x, size_t n);
 bigFrac *shiftRightBigFrac(const bigFrac *x, size_t n);
 
 // string methods
-char *bigDecToDecString(const bigFrac *x, bool exactPrecision);
+char *bigFracToDecString(const bigFrac *x, bool exactPrecision);
 
 bigFrac *decStringToBigFrac(const char *decStr, bool automaticPrecision, size_t binaryDigits);
 
+// IO methods
+void printBigFracDec(const bigFrac *x, bool exactPrecision);
 
 #endif

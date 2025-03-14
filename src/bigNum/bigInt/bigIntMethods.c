@@ -215,10 +215,6 @@ bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
     return shiftAdd_Asm(x, toShift, n);
 }
 
-
-
-
-
 //get the lower half of the bigInt (same array, new Struct with different pointers)
 bigInt *getLowerFrom(const bigInt *x, size_t n) {
     if (x->end < x->start + n) {
