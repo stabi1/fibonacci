@@ -51,7 +51,12 @@ char *bigIntToHexString(const bigInt *x) {
 
 //returns the bigInt of the HexString, hex is being freed
 bigInt *hexStringToBigInt(const char *hexStr) {
-    size_t hexStrLength = strlen(hexStr);
+    return hexStringToBigIntLength(hexStr, strlen(hexStr));
+}
+
+
+bigInt *hexStringToBigIntLength(const char *hexStr, const size_t strLen) {
+    size_t hexStrLength = strLen;
     // error handling
     if (hexStrLength == 0) {
         fprintf(stderr, "hexStr can not be of length 0\n");

@@ -10,6 +10,7 @@ bigFrac *addBigFrac_helper(const bigFrac *x, const bigFrac *y, bool negative);
 
 bigFrac *subBigFrac_helper(const bigFrac *x, const bigFrac *y, bool negative);
 
+
 bigFrac *getBigFracFromUnsignedInteger(uint64_t integer) {
     bigInt *bigIntPart = getBigIntFromUnsignedInteger(integer);
     return newBigFracFromBigInt(bigIntPart, false);
@@ -90,7 +91,7 @@ int compareBigIntArraysBigFrac(const bigFrac *a, const bigFrac *b) {
     }
     if (a->fractionBlocks < b->fractionBlocks) {
         return -1;
-    } else if (a->fractionBlocks > b->fractionBlocks){
+    } else if (a->fractionBlocks > b->fractionBlocks) {
         return 1;
     }
     return 0;
@@ -119,11 +120,11 @@ bigFrac *addBigFrac_helper(const bigFrac *x, const bigFrac *y, bool negative) {
     size_t lenDif = 0;
     if (x->fractionBlocks < y->fractionBlocks) {
         lenDif = y->fractionBlocks - x->fractionBlocks;
-        memcpy(resBigInt->bigIntArray, y->bigIntPart->bigIntArray, lenDif*8);
+        memcpy(resBigInt->bigIntArray, y->bigIntPart->bigIntArray, lenDif * 8);
         y->bigIntPart->start += lenDif;
-    } else if (x->fractionBlocks > y->fractionBlocks){
+    } else if (x->fractionBlocks > y->fractionBlocks) {
         lenDif = x->fractionBlocks - y->fractionBlocks;
-        memcpy(resBigInt->bigIntArray, x->bigIntPart->bigIntArray, lenDif*8);
+        memcpy(resBigInt->bigIntArray, x->bigIntPart->bigIntArray, lenDif * 8);
         x->bigIntPart->start += lenDif;
     }
     resBigInt->start += lenDif;
@@ -135,7 +136,7 @@ bigFrac *addBigFrac_helper(const bigFrac *x, const bigFrac *y, bool negative) {
 
     if (x->fractionBlocks < y->fractionBlocks) {
         y->bigIntPart->start -= lenDif;
-    } else if (x->fractionBlocks > y->fractionBlocks){
+    } else if (x->fractionBlocks > y->fractionBlocks) {
         x->bigIntPart->start -= lenDif;
     }
 
@@ -175,10 +176,10 @@ bigFrac *subBigFrac_helper(const bigFrac *x, const bigFrac *y, bool negative) {
     bigInt *xTmp = x->bigIntPart;
     if (x->fractionBlocks < y->fractionBlocks) {
         lenDif = y->fractionBlocks - x->fractionBlocks;
-        xTmp = shiftLeft(x->bigIntPart, lenDif*64);
-    } else if (x->fractionBlocks > y->fractionBlocks){
+        xTmp = shiftLeft(x->bigIntPart, lenDif * 64);
+    } else if (x->fractionBlocks > y->fractionBlocks) {
         lenDif = x->fractionBlocks - y->fractionBlocks;
-        memcpy(resBigInt->bigIntArray, x->bigIntPart->bigIntArray, lenDif*8);
+        memcpy(resBigInt->bigIntArray, x->bigIntPart->bigIntArray, lenDif * 8);
         x->bigIntPart->start += lenDif;
         resBigInt->start += lenDif;
     }
@@ -189,7 +190,7 @@ bigFrac *subBigFrac_helper(const bigFrac *x, const bigFrac *y, bool negative) {
 
     if (x->fractionBlocks < y->fractionBlocks) {
         freeBigInt(xTmp);
-    } else if (x->fractionBlocks > y->fractionBlocks){
+    } else if (x->fractionBlocks > y->fractionBlocks) {
         x->bigIntPart->start -= lenDif;
         resBigInt->start -= lenDif;
     }

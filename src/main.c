@@ -1,22 +1,20 @@
-#include <stdio.h>
-#include <getopt.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <stdbool.h>
-#include <signal.h>
-
 #include "test/tests.h"
 #include "test/parseTestArgs.h"
 #include "bigNum/bigInt/bigInt.h"
 #include "util.h"
 #include "bigNum/misc.h"
+#include "computeMethods.h"
+
+#include <stdio.h>
+#include <getopt.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <signal.h>
+
+enum computeOperation getComputeOperation(char* token);
 
 void printHelpMenu();
-
-void printFibonacci(uint64_t n, char radix, char output, char *filename, bool infoInOutputFile);
-
-void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, char *outputFilename);
 
 const char *DEFAULT_FILENAME = "output.txt";
 
@@ -31,11 +29,17 @@ enum {
     OPT_RESULT_FILENAME,
     OPT_DO_SWAP,
     OPT_SWAP_THRESHOLD,
-    OPT_CONVERT_NUMBER,
     OPT_INPUT_FILENAME,
     OPT_INPUT_RADIX,
     OPT_DEACTIVATE_CACHES,
     OPT_INFO_IN_OUTPUTFILE
+};
+
+const size_t numOfArgsComputeOperation[] = {
+        [CONVERT_NUMBER]    = 0,
+        [GOLDEN_RATIO]      = 1,
+        [FIBONACCI]         = 1,
+        [UNKNOWN_OPERATION] = 0,
 };
 
 static struct option long_options[] = {
@@ -46,7 +50,7 @@ static struct option long_options[] = {
         {"debug",              no_argument,       NULL, 'd'},
         {"benchMark",          no_argument,       NULL, 'b'},
         {"test",               required_argument, NULL, 't'},
-        {"nth-fibonacci",      required_argument, NULL, 'n'},
+        {"compute",            required_argument, NULL, 'c'},
         {"verbose",            no_argument,       NULL, 'v'},
         {"max-threads",        required_argument, NULL, OPT_MAX_THREADS},
         {"num-cores",          required_argument, NULL, OPT_NUM_CORES},
@@ -54,7 +58,6 @@ static struct option long_options[] = {
         {"info-in-outputfile", no_argument,       NULL, OPT_INFO_IN_OUTPUTFILE},
         {"do-swap",            no_argument,       NULL, OPT_DO_SWAP},
         {"swap-threshold",     required_argument, NULL, OPT_SWAP_THRESHOLD},
-        {"convert-number",     no_argument,       NULL, OPT_CONVERT_NUMBER},
         {"input-filename",     required_argument, NULL, OPT_INPUT_FILENAME},
         {"input-radix",        required_argument, NULL, OPT_INPUT_RADIX},
         {"deactivate-caches",  no_argument,       NULL, OPT_DEACTIVATE_CACHES},
@@ -85,14 +88,14 @@ int main(int argc, char *argv[]) {
     char output = 't';
     size_t cores = 0; //available cores
     size_t max_threads = 0;
-    uint64_t n = 0;
+    uint64_t computeNumberArgument = 0;
     bool do_debug = false;
     bool do_test = false;
     bool do_benchmark = false;
     char *outputFilename = NULL;
     bool infoInOutputFile = false;
+    enum computeOperation computeOperation = UNKNOWN_OPERATION;
 
-    bool convertNumber = false;
     char inputRadix = '\0';
     char *inputFilename = NULL;
     char *testArgs = NULL;
@@ -100,7 +103,7 @@ int main(int argc, char *argv[]) {
     int option;
 
     while (optind < argc) {
-        if ((option = getopt_long(argc, argv, "+hbt:mvdr:o:n:", long_options, NULL)) != -1) {
+        if ((option = getopt_long(argc, argv, "+hbt:mvdr:o:c:", long_options, NULL)) != -1) {
             switch (option) {
                 case 'h':
                     printHelpMenu();
@@ -161,11 +164,21 @@ int main(int argc, char *argv[]) {
                         fprintf(stderr, "Invalid output option %c!\nno output...\n", output);
                     }
                     break;
-                case 'n':
-                    n = parseUINT64(optarg, UINT64_MAX, 0);
-                    break;
-                case OPT_CONVERT_NUMBER:
-                    convertNumber = true;
+                case 'c':
+                    if (optind < argc) {
+                        computeOperation = getComputeOperation(optarg);
+                        if(computeOperation == UNKNOWN_OPERATION) {
+                            fprintf(stderr, "Unknown compute Operation\n");
+                            exit(EXIT_FAILURE);
+                        }
+                        if (numOfArgsComputeOperation[computeOperation] == 1) {
+                            computeNumberArgument = parseUINT64(argv[optind], UINT64_MAX, 0);
+                            optind++;
+                        }
+                    } else {
+                        fprintf(stderr, "Option -c requires a operation and a number (-c <operation> <number>)\n");
+                        exit(EXIT_FAILURE);
+                    }
                     break;
                 case OPT_INPUT_FILENAME: {
                     size_t len = strlen(optarg);
@@ -232,17 +245,28 @@ int main(int argc, char *argv[]) {
         bruteForceDebug();
     } else if (do_benchmark) {
         benchMark();
-    } else if (convertNumber) {
-        if (inputRadix == '\0') {
-            fprintf(stderr, "input-radix required for convert-number\n");
-            exit(EXIT_FAILURE);
-        } else if (inputFilename == NULL) {
-            fprintf(stderr, "input-filename required for convert-number\n");
-            exit(EXIT_FAILURE);
-        }
-        doConvertNumber(inputRadix, inputFilename, outputRadix, outputFilename);
     } else {
-        printFibonacci(n, outputRadix, output, outputFilename, infoInOutputFile);
+        switch (computeOperation) {
+            case CONVERT_NUMBER:
+                if (inputRadix == '\0') {
+                    fprintf(stderr, "input-radix required for convert-number\n");
+                    exit(EXIT_FAILURE);
+                } else if (inputFilename == NULL) {
+                    fprintf(stderr, "input-filename required for convert-number\n");
+                    exit(EXIT_FAILURE);
+                }
+                convertNumber(inputRadix, inputFilename, outputRadix, outputFilename);
+                break;
+            case FIBONACCI:
+                printFibonacci(computeNumberArgument, outputRadix, output, outputFilename, infoInOutputFile);
+                break;
+            case GOLDEN_RATIO:
+                printGoldenRatio(computeNumberArgument, outputRadix, output, outputFilename, infoInOutputFile);
+                break;
+            case UNKNOWN_OPERATION:
+                printf("No operation selected\n");
+                break;
+        }
     }
 
     free(outputFilename);
@@ -251,112 +275,16 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-void printFibonacci(uint64_t n, char radix, char output, char *filename, bool infoInOutputFile) {
-    size_t estimatedSizeInBytes = (size_t) (0.0868 * (double) n + 3.8275);
-    double sizeInMBEst = ((double) estimatedSizeInBytes) / 1000000;
-    printf("Starting calculation for n=%zu | estimated size in bytes:%zu in MB:%0.2f\n", n, estimatedSizeInBytes,
-           sizeInMBEst);
-
-    struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
-
-    bigInt *res = fibonacci(n);
-
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-
-    size_t sizeInBytes = (res->end - res->start) * 8;
-
-    if (output == 't' || output == 'f') {
-        struct timespec start2;
-        if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
-        size_t strSizeInBytes;
-        char *resString;
-        char *localTime = getCurrentDateTime();
-        if (radix == 'd') {
-            if (global_config.verbose) printf("Starting conversion to dec; %s\n", localTime);
-            free(localTime);
-            resString = bigIntToDecString(res, true);
-            strSizeInBytes = strlen(resString);
-        } else {
-            if (global_config.verbose) printf("Starting conversion to hex; %s\n", localTime);
-            free(localTime);
-            resString = bigIntToHexString(res);
-            freeBigInt(res);
-            strSizeInBytes = strlen(resString);
-        }
-
-        if (output == 'f') {
-            // File output
-            if (infoInOutputFile) {
-                char infoStr[200];
-                sprintf(infoStr, "Result for n=%zu | length of string=%zu:\n", n, strSizeInBytes);
-                if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
-                if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
-            } else {
-                if (writeFile(filename, resString, false) == -1) exit(EXIT_FAILURE);
-            }
-
-            if (global_config.verbose) printf("Result written into file %s\n", filename);
-        } else {
-            // Terminal output: output == 't'
-            printf("Result: %s\n", resString);
-        }
-
-        struct timespec end2;
-        if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
-        double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
-
-        double sizeInKB = ((double) sizeInBytes) / 1000;
-        double sizeInMB = ((double) sizeInBytes) / 1000000;
-
-        double sizeStrInKB = ((double) strSizeInBytes) / 1000;
-        double sizeStrInMB = ((double) strSizeInBytes) / 1000000;
-
-        printf("Time to calculate: %f s | Time to output: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n"
-               "ResultString size in B:%zu KB:%.2f MB:%.2f\n",
-               time, time2,
-               sizeInBytes, sizeInKB, sizeInMB, strSizeInBytes, sizeStrInKB, sizeStrInMB);
-        free(resString);
+enum computeOperation getComputeOperation(char* token) {
+    if(strcmp(token, "convert-number") == 0) {
+        return CONVERT_NUMBER;
+    } else if(strcmp(token, "fibonacci") == 0) {
+        return FIBONACCI;
+    } else if(strcmp(token, "golden-ratio") == 0) {
+        return GOLDEN_RATIO;
     } else {
-        printf("No output\n");
-        double sizeInKB = ((double) sizeInBytes) / 1000;
-        double sizeInMB = ((double) sizeInBytes) / 1000000;
-        printf("Time to calculate: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n", time, sizeInBytes, sizeInKB,
-               sizeInMB);
+        return UNKNOWN_OPERATION;
     }
-}
-
-void doConvertNumber(char inputRadix, char *inputFilename, char outputRadix, char *outputFilename) {
-    if (inputRadix == outputRadix) {
-        printf("WARNING: Input-radix and output-radix are the same\n");
-    }
-    char *dateTime = getCurrentDateTime();
-    printf("Converting number from %c to %c; Time: %s\n", inputRadix, outputRadix, dateTime);
-    free(dateTime);
-
-    bigInt *tmp;
-    struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
-    if (inputRadix == 'd') {
-        tmp = readBigIntDecFromFile(inputFilename);
-    } else {
-        tmp = readBigIntHexFromFile(inputFilename);
-    }
-    if( clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-    printf("Reading from file %s and converting to bigInt done, took %.2f seconds\n", inputFilename, time);
-
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
-    if (outputRadix == 'd') {
-        writeBigIntDecToFile(tmp, outputFilename, true);
-    } else {
-        writeBigIntHexToFile(tmp, outputFilename);
-        freeBigInt(tmp);
-    }
-    if (clock_gettime(CLOCK_MONOTONIC, &end)  == -1) perror("Error measuring time!");
-    time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
-    printf("Finished conversion, result in %s, took %.2f seconds\n", outputFilename, time);
 }
 
 void printHelpMenu() {
@@ -364,11 +292,11 @@ void printHelpMenu() {
                          "fibonacci:  -o -> output f|t|n (f=file, t=terminal, n=none); default value: t\n"
                          "            -r -> radix d|h (d=decimal, h=hexadecimal); default value: h\n"
                          "            -m -> enables multithreading; default value: false\n"
-                         "            -n -> nth-fibonacci number; default value: 0 | n needs to be a positive 64bit integer\n"
+                         "            -c -> compute\n"
                          "\n"
                          "            e.g.:\n "
                          "                  Calculate 10000000t fibonacci number and write the result in decimal into the file res.txt\n"
-                         "                  ./fib -o f -r d --output-filename res.txt -n 10000000\n"
+                         "                  ./fib -o f -r d --output-filename res.txt -c fibonacci 10000000\n"
                          "                  Same as before, now with verbose output and swap activated if a bigInt is bigger than 1 MB\n"
                          "                  ./fib -o f -r d --output-filename res.txt -v --do-swap --swap-threshold 1 -n 10000000 \n"
                          "\n"

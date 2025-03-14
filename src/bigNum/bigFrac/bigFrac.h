@@ -31,16 +31,27 @@ bigFrac *subBigFrac(const bigFrac *x, const bigFrac *y);
 
 bigFrac *mulBigFrac(const bigFrac *x, const bigFrac *y);
 
+bigFrac *divideBigFrac(const bigFrac *dividend, const bigFrac *divisor, size_t wantedFractionBlocks);
+
 bigFrac *shiftLeftBigFrac(const bigFrac *x, size_t n);
 
 bigFrac *shiftRightBigFrac(const bigFrac *x, size_t n);
 
 // string methods
+char *bigFracToHexString(const bigFrac *x);
+
+bigFrac *hexStringToBigFrac(const char *decStr);
+
 char *bigFracToDecString(const bigFrac *x, bool exactPrecision);
 
 bigFrac *decStringToBigFrac(const char *decStr, bool automaticPrecision, size_t binaryDigits);
 
 // IO methods
+void printBigFracHex(const bigFrac *x);
+
 void printBigFracDec(const bigFrac *x, bool exactPrecision);
+
+//higherFunctions
+bigFrac* goldenRatio(size_t binaryDigits);
 
 #endif

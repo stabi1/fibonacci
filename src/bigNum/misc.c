@@ -18,6 +18,16 @@ char *getZeroString() {
     return zero;
 }
 
+char *getZeroDotZeroString() {
+    char *zero = malloc(2);
+    mallocCheck(zero);
+    zero[0] = '0';
+    zero[1] = '.';
+    zero[2] = '0';
+    zero[3] = '\0';
+    return zero;
+}
+
 char *getCurrentDateTime() {
     char *dateTimeString = (char *) malloc(75 * sizeof(char)); // "DD-MM-YYYY HH:MM:SS\0"
     mallocCheck(dateTimeString);

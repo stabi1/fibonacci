@@ -8,6 +8,8 @@ void mallocCheck(void *p);
 
 char *getZeroString();
 
+char *getZeroDotZeroString();
+
 char *getCurrentDateTime();
 
 size_t custom_lzcnt(uint64_t n);

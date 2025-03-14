@@ -54,11 +54,19 @@ void customTest() {
 
     printf("-----------------------------\n");
 
-    bigFrac *tmp3 = decStringToBigFrac("1.3", true, 10);
-    printBigFracDec(tmp3, true);
+    bigFrac *tmp3 = decStringToBigFrac("1.3", false, 500); // 130
+    printBigIntHex(tmp3->bigIntPart);
+    printBigFracHex(tmp3);
+    printBigFracDec(tmp3, false);
+    char *s = bigFracToHexString(tmp3);
+    printf("%s\n", s);
+    bigFrac *ooo = hexStringToBigFrac(s);
+    printBigFracHex(ooo);
+    free(s);
+    freeBigFrac(ooo);
     freeBigFrac(tmp3);
 
-    printf("A-----------------------------\n");
+    /*printf("A-----------------------------\n");
 
     bigFrac *add1 = decStringToBigFrac("1.32390843874029384792038742908470923849348579348750349857439857340958734095873405723908473298472309847", false, 1000);
     bigFrac *add2 = decStringToBigFrac("111.7", false, 100);
@@ -77,6 +85,25 @@ void customTest() {
     freeBigFrac(sub1);
     freeBigFrac(sub2);
     freeBigFrac(res2);
+
+    printf("D-----------------------------\n");
+
+    bigFrac* ha1 = decStringToBigFrac("1", true, 10);
+    bigFrac *ha2 = decStringToBigFrac("3", true, 10);
+    bigFrac* res3 = divideBigFrac(ha1, ha2, 10);
+    printBigFracDec(res3, false);
+    freeBigFrac(ha1);
+    freeBigFrac(ha2);
+    freeBigFrac(res3);
+
+    printf("2-----------------------------\n");
+    bigFrac* ho1 = newBigFracFromBigInt(fibonacci(1000), false);
+    bigFrac *ho2 = newBigFracFromBigInt(fibonacci(999), false);
+    bigFrac* res4 = divideBigFrac(ho1, ho2, 2);
+    printBigFracDec(res4, false);
+    freeBigFrac(ho1);
+    freeBigFrac(ho2);
+    freeBigFrac(res4);*/
 
     //testTmp();
 }

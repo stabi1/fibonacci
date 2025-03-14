@@ -11,7 +11,7 @@ bigFrac *mulBigFrac(const bigFrac *x, const bigFrac *y) {
 }
 
 bigFrac *mulBigFracNoResize(const bigFrac *x, const bigFrac *y) {
-    bigInt* bigIntRes = mul(x->bigIntPart, y->bigIntPart);
+    bigInt *bigIntRes = mul(x->bigIntPart, y->bigIntPart);
     bigFrac *res = newBigFracFromBigInt(bigIntRes, false);
     res->fractionBlocks = x->fractionBlocks + y->fractionBlocks;
     return res;

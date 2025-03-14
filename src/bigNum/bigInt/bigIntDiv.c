@@ -78,6 +78,10 @@ bigInt *divideModMultiThread(bigInt *dividend, bigInt *divisor, bigInt **reminde
 }
 
 bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler, bool multithread, size_t mulDepth, bool freeArguments) {
+    if(isZero(divisor)) {
+        fprintf(stderr, "Division by zero!\n");
+        exit(EXIT_FAILURE);
+    }
     uint64_t m = dividend->end - dividend->start;
     uint64_t n = divisor->end - divisor->start;
 

@@ -13,6 +13,7 @@ bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative);
 bigInt *sub_helper(const bigInt *x, const bigInt *y, bool negative);
 
 bool isValidBigInt(const bigInt *x) {
+    if(x == NULL || x->bigIntArray == NULL) return false;
     if (isZero(x)) return true;
     if (x->start >= x->end) return false;
     if (x->bigIntArray[x->end - 1] == 0) return false;
