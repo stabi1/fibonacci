@@ -1,17 +1,18 @@
 #include "bigFracHigherFunctions.h"
 
 #include <math.h>
+#include <stdio.h>
 
-double goldenRatioDouble = 1.618033988749;
+double goldenRatioDouble = 1.61803399;
 
-bigFrac* goldenRatio(size_t binaryDigits) {
-    size_t nFib = (binaryDigits + log2(sqrt(5)))/log2(goldenRatioDouble); // accurate Estimate
+bigFrac *goldenRatio(size_t binaryDigits) {
+    size_t nFib = ((double) binaryDigits + log2(sqrt(5)))/ log2(goldenRatioDouble); // accurate Estimate
     nFib += 10; // to be safe
 
-    bigInt* fibN = fibonacci(nFib);
-    bigInt* fibNMinus1 = fibonacci(nFib - 1);
+    bigInt *fibN = fibonacci(nFib);
+    bigInt *fibNMinus1 = fibonacci(nFib - 1);
 
-    bigFrac* fibNFrac = newBigFracFromBigInt(fibN, false);
+    bigFrac *fibNFrac = newBigFracFromBigInt(fibN, false);
     bigFrac *fibNMinus1Frac = newBigFracFromBigInt(fibNMinus1, false);
 
     bigFrac *res = divideBigFrac(fibNFrac, fibNMinus1Frac, getLen(fibNMinus1));

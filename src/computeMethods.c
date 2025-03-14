@@ -40,7 +40,7 @@ void convertNumber(const char inputRadix, const char *inputFilename, const char 
 }
 
 void printFibonacci(const uint64_t n, const char radix, const char output, const char *filename, const bool infoInOutputFile) {
-    char* radixStr = radix == 'd' ? "decimal" : "hexadecimal";
+    char *radixStr = radix == 'd' ? "decimal" : "hexadecimal";
     size_t estimatedSizeInBytes = (size_t) (0.0868 * (double) n + 3.8275);
     double sizeInMBEst = ((double) estimatedSizeInBytes) / 1000000;
     printf("Starting calculation for the %zu th fibonacci number | estimated size in bytes:%zu in MB:%0.2f\n", n, estimatedSizeInBytes,
@@ -115,15 +115,14 @@ void printFibonacci(const uint64_t n, const char radix, const char output, const
     }
 }
 
-
 void printGoldenRatio(const uint64_t digits, const char radix, const char output, const char *filename, const bool infoInOutputFile) {
     size_t binaryDigits;
-    char* radixStr;
-    if(radix == 'd') {
+    char *radixStr;
+    if (radix == 'd') {
         binaryDigits = ceil((double) digits * log2(10));
         radixStr = "decimal";
     } else {
-        binaryDigits = digits*4;
+        binaryDigits = digits * 4;
         radixStr = "hexadecimal";
     }
     binaryDigits += 64;
@@ -159,6 +158,10 @@ void printGoldenRatio(const uint64_t digits, const char radix, const char output
             resString = bigFracToHexString(res);
             freeBigFrac(res);
             strSizeInBytes = strlen(resString);
+        }
+        if (strSizeInBytes < digits + 2) {
+            fprintf(stderr, "Not enough digits calculated\n");
+            exit(EXIT_FAILURE);
         }
         resString[digits + 2] = '\0'; //cut of the too many digits
 
