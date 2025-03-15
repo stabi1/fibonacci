@@ -22,8 +22,8 @@ char *bigIntToDecStringSmall(bigInt *x);
 
 size_t hexToNibble(char hex);
 
-bigInt *hexStringToBigIntLength(const char *hexStr, const size_t strLen);
+bigInt *hexStringToBigIntLength(const char *hexStr, size_t strLen, bool allowLeadingZeros);
 
-bigInt *decStringToBigIntLength(const char *decStr, size_t strLen);
+bigInt *decStringToBigIntLength(const char *decStr, size_t strLen, bool allowLeadingZeros);
 
 #endif //FIBONACCI_BIGINTSTRING_H

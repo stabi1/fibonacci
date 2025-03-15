@@ -3,9 +3,11 @@
 #include "bigFracString.h"
 #include "bigFrac.h"
 #include "bigFracMul.h"
+#include "bigFracMethods.h"
 #include "../constants.h"
 #include "../misc.h"
 #include "../bigInt/bigIntString.h"
+
 
 #include <math.h>
 #include <stdio.h>
@@ -32,10 +34,9 @@ bigFrac *hexStringToBigFrac(const char *decStr) {
         exit(EXIT_FAILURE);
     }
 
+    bigInt *holePart = hexStringToBigIntLength(decStr, pointIndex, false);
 
-    bigInt *holePart = hexStringToBigIntLength(decStr, pointIndex);
-
-    bigInt *fractionPart = hexStringToBigInt(ptr + 1);
+    bigInt *fractionPart = hexStringToBigIntLength(ptr + 1, strlen(ptr + 1), true);
     size_t nibbles = strlen(ptr + 1);
     size_t nibblesToShift = (16 - (nibbles % 16)) % 16;
     bigInt *fractionPartShifted = shiftLeft(fractionPart, nibblesToShift*4);
@@ -51,6 +52,7 @@ bigFrac *hexStringToBigFrac(const char *decStr) {
     bigFrac *res = newBigFracFromBigInt(resBigInt, false);
     res->fractionBlocks = getLen(fractionPartShifted);
     freeBigInt(fractionPartShifted);
+    removeLeadingAndTrailingZeroBlocks(res);
     return res;
 }
 
@@ -130,7 +132,7 @@ bigFrac *decStringToBigFrac(const char *decStr, bool automaticPrecision, const s
 
     size_t wantedBinaryDigits = automaticPrecision ? (size_t) ceil((double) (decStrLength - pointIndex - 1) * log2(10)) : binaryDigits;
 
-    bigInt *holePart = decStringToBigIntLength(decStr, pointIndex);
+    bigInt *holePart = decStringToBigIntLength(decStr, pointIndex, false);
 
     bigFrac *fractionPart = fractionDecStringToBigFrac(ptr + 1, wantedBinaryDigits);
     bigInt *resBigInt = newBigIntNotZeroed(getLen(holePart) + getLen(fractionPart->bigIntPart));
@@ -142,6 +144,7 @@ bigFrac *decStringToBigFrac(const char *decStr, bool automaticPrecision, const s
     bigFrac *res = newBigFracFromBigInt(resBigInt, false);
     res->fractionBlocks = fractionPart->fractionBlocks;
     freeBigFrac(fractionPart);
+    removeLeadingAndTrailingZeroBlocks(res);
     return res;
 }
 
@@ -151,7 +154,7 @@ bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wan
     bigInt *resBigInt = newBigIntNotZeroed(wantedPrecisionInBlocks);
 
     // Build numerator from the decimal string (using your decStringToBigIntHelper)
-    bigInt *numerator = decStringToBigInt(decStrFraction); //TODO, allow string to start with 0 so I can do 4.001
+    bigInt *numerator = decStringToBigIntLength(decStrFraction, strlen(decStrFraction), true);
 
     // Build denominator = 10^decStrLen as a big integer.
     bigInt *denominator = getBigIntFromUnsignedInteger(1);

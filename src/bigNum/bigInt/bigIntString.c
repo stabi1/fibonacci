@@ -51,11 +51,11 @@ char *bigIntToHexString(const bigInt *x) {
 
 //returns the bigInt of the HexString, hex is being freed
 bigInt *hexStringToBigInt(const char *hexStr) {
-    return hexStringToBigIntLength(hexStr, strlen(hexStr));
+    return hexStringToBigIntLength(hexStr, strlen(hexStr), false);
 }
 
 
-bigInt *hexStringToBigIntLength(const char *hexStr, const size_t strLen) {
+bigInt *hexStringToBigIntLength(const char *hexStr, const size_t strLen, const bool allowLeadingZeros) {
     size_t hexStrLength = strLen;
     // error handling
     if (hexStrLength == 0) {
@@ -74,8 +74,8 @@ bigInt *hexStringToBigIntLength(const char *hexStr, const size_t strLen) {
     if (hexStrLength == 0) {
         fprintf(stderr, "hexStr must contain a number\n");
         exit(EXIT_FAILURE);
-    } else if (hexStrLength >= 2 && hexStr[0] == '0') {
-        fprintf(stderr, "number can not start with 0\n");
+    } else if (!allowLeadingZeros && hexStrLength >= 2 && hexStr[0] == '0') {
+        fprintf(stderr, "hexStr can not start with 0\n");
         exit(EXIT_FAILURE);
     }
 
@@ -102,10 +102,10 @@ bigInt *hexStringToBigIntLength(const char *hexStr, const size_t strLen) {
 }
 
 bigInt *decStringToBigInt(const char *decStr) {
-    return decStringToBigIntLength(decStr, strlen(decStr));
+    return decStringToBigIntLength(decStr, strlen(decStr), false);
 }
 
-bigInt *decStringToBigIntLength(const char *decStr, const size_t strLen) {
+bigInt *decStringToBigIntLength(const char *decStr, const size_t strLen, const bool allowLeadingZeros) {
     size_t decStrLength = strLen;
     if (decStrLength == 0) {
         fprintf(stderr, "decStr can not be of length 0\n");
@@ -123,8 +123,8 @@ bigInt *decStringToBigIntLength(const char *decStr, const size_t strLen) {
     if (decStrLength == 0) {
         fprintf(stderr, "decStr must contain a number\n");
         exit(EXIT_FAILURE);
-    } else if (decStrLength >= 2 && decStr[0] == '0') {
-        fprintf(stderr, "number can not start with 0\n");
+    } else if (!allowLeadingZeros && decStrLength >= 2 && decStr[0] == '0') {
+        fprintf(stderr, "decStr can not start with 0\n");
         exit(EXIT_FAILURE);
     }
 
