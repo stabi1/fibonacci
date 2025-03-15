@@ -19,7 +19,7 @@ char *getZeroString() {
 }
 
 char *getZeroDotZeroString() {
-    char *zero = malloc(2);
+    char *zero = malloc(4);
     mallocCheck(zero);
     zero[0] = '0';
     zero[1] = '.';

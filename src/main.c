@@ -18,10 +18,12 @@ void printHelpMenu();
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-//TODO: Use linter and fix code
-//TODO run more tests in valgrind
-//TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
-//TODO docu with comments, update readme, update help-message
+
+// TODO: implement swapping for goldenRation and Pi, check bigFrac for swapping potential
+// TODO: Use linter and fix code
+// TODO run more tests in valgrind
+// TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
+// TODO docu with comments, update readme, update help-message
 
 enum {
     OPT_MAX_THREADS = 1001,
@@ -259,8 +261,9 @@ int main(int argc, char *argv[]) {
         mallocCheck(outputFilename);
         strncpy(outputFilename, DEFAULT_FILENAME, len + 1);
     }
-    if (global_config.verbose && output == 'f')
+    if (global_config.verbose && output == 'f') {
         printf("Writing result in file: %s\n", outputFilename);
+    }
 
     if (do_test) {
         printf("Running Tests, ignoring set input/output filename\n");
