@@ -11,7 +11,8 @@
 
 size_t NAIVEMUL_FASTER = 100; //Size when naiveMul is faster than karatsuba
 size_t KARATSUBA_FASTER = 400; //Size when karatsuba is faster than toom-cook
-size_t PARALLEL_MUL_FASTER = 1000; //Size when toom-cook-multithread is faster than toom-cook
+size_t PARALLEL_MUL_FASTER_DEPTH_1 = 2000; //Size when toom-cook-multithread is faster than toom-cook
+size_t PARALLEL_MUL_FASTER_DEPTH_2 = 10000;
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
@@ -75,8 +76,10 @@ bigInt *mulParallelExecute(const bigInt *x, const bigInt *y, size_t depth) {
         return naiveMul_Asm(x, y);
     } else if (yLen <= KARATSUBA_FASTER) {
         return karatsuba(x, y);
-    } else if (yLen <= PARALLEL_MUL_FASTER) {
+    } else if (yLen <= PARALLEL_MUL_FASTER_DEPTH_1) {
         return multiplyToomCook3(x, y);
+    } else if (yLen <= PARALLEL_MUL_FASTER_DEPTH_2) {
+        return multiplyToomCook3MultiThread(x, y, 1);
     } else {
         return multiplyToomCook3MultiThread(x, y, depth);
     }
@@ -488,10 +491,12 @@ void *multiplyToomCook3MultiThreadHelper(void *input) {
     freeBigInt(temp16);
     freeBigInt(v0);
 
+    result->negative = a->negative ^ b->negative;
+
     struct toomCookReturn *returnStruct = malloc(sizeof(struct toomCookReturn));
     mallocCheck(returnStruct);
     returnStruct->res = result;
-    if (depth == global_config.mulDepth) {
+    if (depth == global_config.mulDepth) { // don't store on swap if we are at the top level, we need the result immediately
         size_t l = strlen(NOT_STORED);
         char *res = malloc(l + 1);
         mallocCheck(res);

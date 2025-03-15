@@ -9,6 +9,7 @@ enum computeOperation {
     GOLDEN_RATIO,
     FIBONACCI,
     SQUARE_ROOT,
+    PI,
     UNKNOWN_OPERATION
 };
 
@@ -19,5 +20,7 @@ void printFibonacci(uint64_t n, char radix, char output, const char *filename, b
 void printGoldenRatio(uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
 
 void printSquareRoot(uint64_t n, uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
+
+void printPi(uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
 
 #endif //FIBONACCI_COMPUTEFUNCTIONS_H

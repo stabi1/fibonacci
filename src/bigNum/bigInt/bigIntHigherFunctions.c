@@ -136,7 +136,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
 
     // Base case: n == 0: return (0, 2)
     if (n == 0) {
-        if (global_config.verbose) { printf("Base Case | depth: %zu; n=%ld\n", depth, n);}
+        if (global_config.superVerbose) { printf("Base Case | depth: %zu; n=%ld\n", depth, n);}
         result = malloc(sizeof(FibLucPair));
         result->fib = getBigIntFromUnsignedInteger(0);
         result->luc = getBigIntFromUnsignedInteger(2);
@@ -145,10 +145,10 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
 
     // If n is negative, compute fibLuc(-n) and then adjust by k = (n % 2)*2 - 1
     if (n < 0) {
-        if (global_config.verbose) { printf("Case n<0 | depth: %zu; n=%ld\n", depth, n);}
+        if (global_config.superVerbose) { printf("Case n<0 | depth: %zu; n=%ld\n", depth, n);}
         n = -n;
         result = fibLuc(n, depth + 1);
-        if (global_config.verbose) {
+        if (global_config.superVerbose) {
             printf("Calculating case n<0 | depth: %zu; n=%ld\n", depth, n);
             if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
         }
@@ -159,7 +159,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
             negateBigInt(result->luc);
         }
         // If k is 1, no change is needed.
-        if (global_config.verbose) {
+        if (global_config.superVerbose) {
             if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
             size_t sizeInBytes = (result->fib->end - result->fib->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
@@ -173,9 +173,9 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
 
     // If n is odd (n & 1 == 1)
     if (n & 1) {
-        if (global_config.verbose) {printf("Case n&1==1 | depth: %zu; n=%ld\n", depth, n);}
+        if (global_config.superVerbose) {printf("Case n&1==1 | depth: %zu; n=%ld\n", depth, n);}
         FibLucPair *prev = fibLuc(n - 1, depth + 1);
-        if (global_config.verbose) {
+        if (global_config.superVerbose) {
             printf("Calculating case n&1==1 | depth: %zu; n=%ld\n", depth, n);
             if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
         }
@@ -201,7 +201,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         result->fib = loadBigIntFromSwap(fib_new, filename_fib_new);
         result->luc = luc_new;
 
-        if (global_config.verbose) {
+        if (global_config.superVerbose) {
             if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
             size_t sizeInBytes = (result->fib->end - result->fib->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
@@ -212,14 +212,14 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         }
         return result;
     } else {
-        if (global_config.verbose) {printf("Case n&1==0 | depth: %zu; n=%ld\n", depth, n);}
+        if (global_config.superVerbose) {printf("Case n&1==0 | depth: %zu; n=%ld\n", depth, n);}
         // n is even:
         // First, halve n.
         n = n >> 1;
         // k = (n % 2) * 2 - 1; (again, if n is even then k will be -1; if odd then 1)
         int64_t k = ((n % 2) * 2) - 1;
         FibLucPair *half = fibLuc(n, depth + 1);
-        if (global_config.verbose) {
+        if (global_config.superVerbose) {
             printf("Calculating case n&1==0 | depth: %zu; n=%ld\n", depth, n);
             if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
         }
@@ -237,7 +237,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         result->fib = loadBigIntFromSwap(fib_new, filename_fib_new);
         result->luc = luc_new;
 
-        if (global_config.verbose) {
+        if (global_config.superVerbose) {
             if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
             size_t sizeInBytes = (result->fib->end - result->fib->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;

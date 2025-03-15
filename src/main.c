@@ -32,7 +32,8 @@ enum {
     OPT_INPUT_FILENAME,
     OPT_INPUT_RADIX,
     OPT_DEACTIVATE_CACHES,
-    OPT_INFO_IN_OUTPUTFILE
+    OPT_INFO_IN_OUTPUTFILE,
+    OPT_SUPER_VERBOSE
 };
 
 const size_t numOfArgsComputeOperation[] = {
@@ -40,6 +41,7 @@ const size_t numOfArgsComputeOperation[] = {
         [GOLDEN_RATIO]      = 1,
         [FIBONACCI]         = 1,
         [SQUARE_ROOT]       = 2,
+        [PI]                = 1,
         [UNKNOWN_OPERATION] = 0,
 };
 
@@ -53,6 +55,7 @@ static struct option long_options[] = {
         {"test",               required_argument, NULL, 't'},
         {"compute",            required_argument, NULL, 'c'},
         {"verbose",            no_argument,       NULL, 'v'},
+        {"super-verbose",      no_argument,       NULL, OPT_SUPER_VERBOSE},
         {"max-threads",        required_argument, NULL, OPT_MAX_THREADS},
         {"num-cores",          required_argument, NULL, OPT_NUM_CORES},
         {"output-filename",    required_argument, NULL, OPT_RESULT_FILENAME},
@@ -127,6 +130,10 @@ int main(int argc, char *argv[]) {
                 case 'v':
                     global_config.verbose = true;
                     break;
+                case OPT_SUPER_VERBOSE:
+                    global_config.verbose = true;
+                    global_config.superVerbose = true;
+                    break;
                 case OPT_NUM_CORES:
                     cores = parseUINT64(optarg, UINT64_MAX, 1);
                     break;
@@ -178,14 +185,14 @@ int main(int argc, char *argv[]) {
                             computeNumberArgument1 = parseUINT64(argv[optind], UINT64_MAX, 0);
                             optind++;
                         }
-                        if (optind < argc) {
-                            if (numOfArgsComputeOperation[computeOperation] >= 2) {
-                                computeNumberArgument2 = parseUINT64(argv[optind], UINT64_MAX, 0);
-                                optind++;
+                        if (numOfArgsComputeOperation[computeOperation] >= 2) {
+                            if (optind >= argc) {
+                                fprintf(stderr, "Option -c requires a operation and a number (-c <operation> <number> <number>)\n");
+                                exit(EXIT_FAILURE);
+
                             }
-                        } else {
-                            fprintf(stderr, "Option -c requires a operation and a number (-c <operation> <number> <number>)\n");
-                            exit(EXIT_FAILURE);
+                            computeNumberArgument2 = parseUINT64(argv[optind], UINT64_MAX, 0);
+                            optind++;
                         }
                     } else {
                         fprintf(stderr, "Option -c requires a operation and a number (-c <operation> <number>)\n");
@@ -220,10 +227,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (global_config.verbose && global_config.deactivateCaches)
+    if(global_config.superVerbose) {
+        printf("Super Verbose activated\n");
+    }
+    if (global_config.verbose && global_config.deactivateCaches) {
         printf("Caches are deactivated\n");
-    if (global_config.verbose && global_config.swap)
+    }
+    if (global_config.verbose && global_config.swap) {
         printf("Swapping is activated with threshold: %lu MB\n", global_config.swapThreshold);
+    }
 
     if (global_config.parallel) {
         printf("Multithreading enabled\n");
@@ -278,6 +290,9 @@ int main(int argc, char *argv[]) {
             case SQUARE_ROOT:
                 printSquareRoot(computeNumberArgument1, computeNumberArgument2, outputRadix, output, outputFilename, infoInOutputFile);
                 break;
+            case PI:
+                printPi(computeNumberArgument1, outputRadix, output, outputFilename, infoInOutputFile);
+                break;
             case UNKNOWN_OPERATION:
                 printf("No operation selected\n");
                 break;
@@ -299,6 +314,8 @@ enum computeOperation getComputeOperation(char *token) {
         return GOLDEN_RATIO;
     } else if (strcmp(token, "square-root") == 0) {
         return SQUARE_ROOT;
+    } else if (strcmp(token, "pi") == 0) {
+        return PI;
     } else {
         return UNKNOWN_OPERATION;
     }

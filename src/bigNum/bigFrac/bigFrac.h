@@ -59,4 +59,6 @@ void printBigFracDec(const bigFrac *x, bool exactPrecision);
 //higherFunctions
 bigFrac* goldenRatio(size_t binaryDigits);
 
+bigFrac *pi(size_t binaryDigits);
+
 #endif

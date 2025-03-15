@@ -6,6 +6,7 @@
 
 typedef struct {
     bool verbose;
+    bool superVerbose;
     bool parallel;
     size_t mulDepth;
     size_t convertDepth;

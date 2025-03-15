@@ -57,16 +57,12 @@ bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
     // Initialize x
     bigFrac *x = sqrtInitialGuess(radicand);
 
-    printf("Initial Guess:");
-    printBigFracDec(x, false);
-
     size_t bufferBlocks = 5;
 
     while (true) {
         // Compute n/x
         bigFrac *quotient = divideBigFrac(radicand, x, wantedFractionBlocks + bufferBlocks);
 
-        printf("hi");
         // Compute (x + quotient)
         bigFrac *sum = addBigFrac(x, quotient);
         freeBigFrac(quotient);

@@ -78,7 +78,7 @@ bigInt *divideModMultiThread(bigInt *dividend, bigInt *divisor, bigInt **reminde
 }
 
 bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler, bool multithread, size_t mulDepth, bool freeArguments) {
-    if(isZero(divisor)) {
+    if (isZero(divisor)) {
         fprintf(stderr, "Division by zero!\n");
         exit(EXIT_FAILURE);
     }
@@ -412,10 +412,11 @@ bigInt *divide3n2n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, si
         quotient = divide2n1n(a12, b1, &r, multithread, mulDepth);
 
         // step 4: d=quotient*b2
-        if (multithread)
+        if (multithread) {
             d = mulParallel(quotient, b2, mulDepth);
-        else
+        } else {
             d = mulSingleThread(quotient, b2);
+        }
     } else {
         // step 3b: if a1>=b1, let quotient=beta^n-1 and r=a12-b1*2^n+b1
         quotient = newBigInt(n);

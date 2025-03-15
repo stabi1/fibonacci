@@ -7,6 +7,8 @@
 #include <string.h>
 #include <math.h>
 
+//TODO: reduce clutter
+
 void convertNumber(const char inputRadix, const char *inputFilename, const char outputRadix, const char *outputFilename) {
     if (inputRadix == outputRadix) {
         printf("WARNING: Input-radix and output-radix are the same\n");
@@ -160,6 +162,7 @@ void printGoldenRatio(const uint64_t digits, const char radix, const char output
             fprintf(stderr, "Not enough digits calculated\n");
             exit(EXIT_FAILURE);
         }
+        if (global_config.verbose) printf("Digits to much: %zu\n", strSizeInBytes - digits + 2);
         resString[digits + 2] = '\0'; //cut of the too many digits
 
         if (output == 'f') {
@@ -226,6 +229,7 @@ void printSquareRoot(const uint64_t n, const uint64_t digits, const char radix, 
 
     bigFrac* radicand = getBigFracFromUnsignedInteger(n);
     bigFrac *res = sqrt2(radicand, wantedFractionBlocks);
+    freeBigFrac(radicand);
 
     if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
     double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
@@ -252,6 +256,7 @@ void printSquareRoot(const uint64_t n, const uint64_t digits, const char radix, 
             fprintf(stderr, "Not enough digits calculated\n");
             exit(EXIT_FAILURE);
         }
+        if (global_config.verbose) printf("Digits to much: %zu\n", strSizeInBytes - digits + 2);
         resString[digits + 2] = '\0'; //cut of the too many digits
 
         if (output == 'f') {
@@ -259,6 +264,97 @@ void printSquareRoot(const uint64_t n, const uint64_t digits, const char radix, 
             if (infoInOutputFile) {
                 char infoStr[200];
                 sprintf(infoStr, "Result for %zu %s digits of the square root of %ld | length of string=%zu:\n", digits, radixStr, n, strSizeInBytes);
+                if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
+                if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
+            } else {
+                if (writeFile(filename, resString, false) == -1) exit(EXIT_FAILURE);
+            }
+
+            if (global_config.verbose) printf("Result written into file %s\n", filename);
+        } else {
+            // Terminal output: output == 't'
+            printf("Result: %s\n", resString);
+        }
+
+        struct timespec end2;
+        if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
+        double timeToOutput = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
+
+        double sizeInKB = ((double) sizeInBytes) / 1000;
+        double sizeInMB = ((double) sizeInBytes) / 1000000;
+
+        double sizeStrInKB = ((double) strSizeInBytes) / 1000;
+        double sizeStrInMB = ((double) strSizeInBytes) / 1000000;
+
+        printf("Time to calculate: %f s | Time to output: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n"
+               "ResultString size in B:%zu KB:%.2f MB:%.2f\n",
+               timeToCalc, timeToOutput,
+               sizeInBytes, sizeInKB, sizeInMB, strSizeInBytes, sizeStrInKB, sizeStrInMB);
+        free(resString);
+    } else {
+        freeBigFrac(res);
+        printf("No output\n");
+        double sizeInKB = ((double) sizeInBytes) / 1000;
+        double sizeInMB = ((double) sizeInBytes) / 1000000;
+        printf("Time to calculate: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n", timeToCalc, sizeInBytes, sizeInKB,
+               sizeInMB);
+    }
+    return;
+}
+
+void printPi(const uint64_t digits, const char radix, const char output, const char *filename, const bool infoInOutputFile) {
+    size_t binaryDigits;
+    char *radixStr;
+    if (radix == 'd') {
+        binaryDigits = ceil((double) digits * log2(10));
+        radixStr = "decimal";
+    } else {
+        binaryDigits = digits * 4;
+        radixStr = "hexadecimal";
+    }
+    binaryDigits += 64;
+
+    printf("Starting calculation for %zu %s digits of pi\n", digits, radixStr);
+
+    // calculation
+    struct timespec start, end;
+    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+
+    bigFrac *res = pi(binaryDigits);
+
+    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
+    double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+
+    size_t sizeInBytes = (res->bigIntPart->end - res->bigIntPart->start) * 8;
+    if (output == 't' || output == 'f') {
+        struct timespec start2;
+        if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
+        size_t strSizeInBytes;
+        char *resString;
+        char *localTime = getCurrentDateTime();
+        if (global_config.verbose) printf("Starting conversion to %s; %s\n", radixStr, localTime);
+        free(localTime);
+        if (radix == 'd') {
+            resString = bigFracToDecString(res, false);
+            freeBigFrac(res);
+            strSizeInBytes = strlen(resString);
+        } else {
+            resString = bigFracToHexString(res);
+            freeBigFrac(res);
+            strSizeInBytes = strlen(resString);
+        }
+        if (strSizeInBytes < digits + 2) {
+            fprintf(stderr, "Not enough digits calculated\n");
+            exit(EXIT_FAILURE);
+        }
+        if (global_config.verbose) printf("Digits to much: %zu\n", strSizeInBytes - digits + 2);
+        resString[digits + 2] = '\0'; //cut of the too many digits
+
+        if (output == 'f') {
+            // File output
+            if (infoInOutputFile) {
+                char infoStr[200];
+                sprintf(infoStr, "Result for %zu %s digits of pi | length of string=%zu:\n", digits, radixStr, strSizeInBytes);
                 if (writeFile(filename, infoStr, false) == -1) exit(EXIT_FAILURE);
                 if (writeFile(filename, resString, true) == -1) exit(EXIT_FAILURE);
             } else {

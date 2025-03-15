@@ -168,7 +168,7 @@ bigInt *shiftLeft(const bigInt *x, const size_t n) {
     }
     size_t xLen = x->end - x->start;
     bigInt *resTmp = newBigInt(xLen + toShift64);
-    memcpy(resTmp->bigIntArray + toShift64, x->bigIntArray, xLen * 8);
+    memcpy(resTmp->bigIntArray + toShift64, x->bigIntArray + x->start, xLen * 8);
     if (n % 64 == 0) {
         resTmp->negative = x->negative;
         return resTmp;
@@ -195,7 +195,7 @@ bigInt *shiftRight(const bigInt *x, const size_t n) {
         return getZeroBigInt();
     }
     bigInt *resTmp = newBigInt(xLen - toShift64);
-    memcpy(resTmp->bigIntArray, x->bigIntArray + toShift64, (xLen - toShift64) * 8);
+    memcpy(resTmp->bigIntArray, x->bigIntArray +  + x->start + toShift64, (xLen - toShift64) * 8);
     if (n % 64 == 0) {
         resTmp->negative = x->negative;
         return resTmp;

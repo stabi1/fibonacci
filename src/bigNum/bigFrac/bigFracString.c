@@ -151,7 +151,7 @@ bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wan
     bigInt *resBigInt = newBigIntNotZeroed(wantedPrecisionInBlocks);
 
     // Build numerator from the decimal string (using your decStringToBigIntHelper)
-    bigInt *numerator = decStringToBigInt(decStrFraction);
+    bigInt *numerator = decStringToBigInt(decStrFraction); //TODO, allow string to start with 0 so I can do 4.001
 
     // Build denominator = 10^decStrLen as a big integer.
     bigInt *denominator = getBigIntFromUnsignedInteger(1);
@@ -181,7 +181,6 @@ bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wan
         freeBigInt(quotient);
 
         // Update numerator to be the remainder for next iteration.
-
         freeBigInt(numerator);
         numerator = reminder;
         if (isZero(numerator)) {

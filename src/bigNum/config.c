@@ -5,6 +5,7 @@
 
 Config global_config = {
         .verbose = false,
+        .superVerbose = false,
         .parallel = false,
         .mulDepth = 0,
         .convertDepth = 0,
