@@ -18,8 +18,9 @@ void printHelpMenu();
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-
+// TODO: caching for the bigFrac struct
 // TODO: implement swapping for goldenRation and Pi, check bigFrac for swapping potential
+// TODO: better root algorithm (Karatsuba Square Root)
 // TODO: Use linter and fix code, docu with comments
 // TODO: run more tests in valgrind
 // TODO: make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
@@ -263,7 +264,7 @@ int main(int argc, char *argv[]) {
         strncpy(outputFilename, DEFAULT_FILENAME, len + 1);
     }
     if (global_config.verbose && output == 'f') {
-        printf("Writing result in file: %s\n", outputFilename);
+        printf("Result will be written in file: %s\n", outputFilename);
     }
 
     if (do_test) {

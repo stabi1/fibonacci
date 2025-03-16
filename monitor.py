@@ -85,7 +85,8 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool, start_t
             try:
                 swap_size: int = int(get_swap_storage_size())
             except Exception as e:
-                print(f"{str(e)}")
+                if "No such file or directory" not in str(e):
+                    print(f"{str(e)}")
                 swap_size = -1
 
             # get time

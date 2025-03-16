@@ -39,7 +39,7 @@ bigFrac *hexStringToBigFrac(const char *decStr) {
     bigInt *fractionPart = hexStringToBigIntLength(ptr + 1, strlen(ptr + 1), true);
     size_t nibbles = strlen(ptr + 1);
     size_t nibblesToShift = (16 - (nibbles % 16)) % 16;
-    bigInt *fractionPartShifted = shiftLeft(fractionPart, nibblesToShift*4);
+    bigInt *fractionPartShifted = shiftLeft(fractionPart, nibblesToShift * 4);
     freeBigInt(fractionPart);
 
     bigInt *resBigInt = newBigIntNotZeroed(getLen(holePart) + getLen(fractionPartShifted));
@@ -101,7 +101,7 @@ char *bigFracToHexString(const bigFrac *x) {
 
     //remove trailing Zeros
     size_t end = holePartLength + fractionPartLength;
-    while(finalString[end] == '0') {
+    while (finalString[end] == '0') {
         end--;
     }
     finalString[end + 1] = '\0';
@@ -245,9 +245,8 @@ char *bigFracToDecString(const bigFrac *x, bool exactPrecision) {
     return finalString;
 }
 
-char *bigFracToDecStringFractionPart(const bigFrac *x, bool exactPrecision) {
-    const char *zeros = "00000000000000000000";
 
+char *bigFracToDecStringFractionPart(const bigFrac *x, bool exactPrecision) {
     bigInt *bigIntPart = x->bigIntPart;
 
     size_t xLen = getLen(bigIntPart);
@@ -259,81 +258,18 @@ char *bigFracToDecStringFractionPart(const bigFrac *x, bool exactPrecision) {
     size_t decimalDigits = exactPrecision ? realFractionBits : (size_t) ((double) realFractionBits * log10(2));
     decimalDigits = decimalDigits == 0 ? 1 : decimalDigits;
 
-    char **digitGroup = malloc(sizeof(char **) * ((decimalDigits / DEC_DIGITS_PER_UINT64) + 3));
-    mallocCheck(digitGroup);
-
-    // Translate number to string, a digit group at a time
-    size_t numGroups = 0;
     bigFrac *tmp = newBigFracFromBigInt(bigIntPart, true);
     tmp->fractionBlocks = getLen(tmp->bigIntPart);
-    bigFrac *d = getBigFracFromUnsignedInteger(0x8AC7230489E80000); // 10^DEC_DIGITS_PER_UINT64 = 8AC7230489E80000
-    for (size_t i = 0; i < (decimalDigits / DEC_DIGITS_PER_UINT64); i++) {
-        if (isZero(tmp->bigIntPart)) { break; }
-        bigFrac *mulRes = mulBigFracNoResize(tmp, d);
-        if (getLen(tmp->bigIntPart) == getLen(mulRes->bigIntPart)) {
-            digitGroup[numGroups++] = getZeroString();
-        } else {
-            digitGroup[numGroups++] = uint64_t_toDecString(mulRes->bigIntPart->bigIntArray[mulRes->bigIntPart->end - 1]);
-            mulRes->bigIntPart->end -= 1;
-        }
-        if (getLen(mulRes->bigIntPart) > 1 && mulRes->bigIntPart->bigIntArray[mulRes->bigIntPart->start] == 0) {
-            mulRes->bigIntPart->start++;
-            mulRes->fractionBlocks--;
-        }
-        freeBigFrac(tmp);
-        tmp = mulRes;
-    }
-    if (decimalDigits % DEC_DIGITS_PER_UINT64 != 0 || !isZero(tmp->bigIntPart)) {
-        freeBigFrac(d);
-        d = getBigFracFromUnsignedInteger(10);
-        char *buf = malloc(DEC_DIGITS_PER_UINT64 + 1);
-        mallocCheck(buf);
-        size_t j = 0;
-        for (; j < (decimalDigits % DEC_DIGITS_PER_UINT64); j++) {
-            if (isZero(tmp->bigIntPart)) { break; }
-            bigFrac *mulRes = mulBigFracNoResize(tmp, d);
-
-            // Extract the integer part from the upper 64 bits.
-            int digit = 0; // not if -> was already resized by mul because digit is zero
-            if (getLen(tmp->bigIntPart) != getLen(mulRes->bigIntPart)) {
-                digit = (int) (mulRes->bigIntPart->bigIntArray[mulRes->bigIntPart->end - 1]);
-                // Remove the integer part leaving the fractional remainder.
-                mulRes->bigIntPart->end -= 1;
-            }
-            buf[j] = decLookup[digit];
-            if (getLen(mulRes->bigIntPart) > 1 && mulRes->bigIntPart->bigIntArray[mulRes->bigIntPart->start] == 0) {
-                mulRes->bigIntPart->start++;
-                mulRes->fractionBlocks--;
-            }
-            freeBigFrac(tmp);
-            tmp = mulRes;
-        }
-        buf[j] = '\0';
-        digitGroup[numGroups++] = buf;
-    }
+    bigInt *ten = getBigIntFromUnsignedInteger(10);
+    bigInt *dInt = powBigInt(ten, decimalDigits); // 10^decimalDigits
+    freeBigInt(ten);
+    bigFrac *d = newBigFracFromBigInt(dInt, false);
+    bigFrac *mulRes = mulBigFracNoResize(tmp, d);
     freeBigFrac(tmp);
     freeBigFrac(d);
 
-    char *res = malloc(numGroups * DEC_DIGITS_PER_UINT64 + 2);
-    mallocCheck(res);
-    size_t resCounter = 0;
-    // Append remaining digit groups padded with leading zeros
-    for (size_t i = 0; i < numGroups - 1; i++) {
-        // Prepend (any) leading zeros for this digit group
-        size_t numLeadingZeros = DEC_DIGITS_PER_UINT64 - strlen(digitGroup[i]);
-        if (numLeadingZeros != 0) {
-            memcpy(res + resCounter, zeros, numLeadingZeros);
-            resCounter += numLeadingZeros;
-        }
-        memcpy(res + resCounter, digitGroup[i], strlen(digitGroup[i]));
-        resCounter += strlen(digitGroup[i]);
-        free(digitGroup[i]);
-    }
-    memcpy(res + resCounter, digitGroup[numGroups - 1], strlen(digitGroup[numGroups - 1]));
-    resCounter += strlen(digitGroup[numGroups - 1]);
-    free(digitGroup[numGroups - 1]);
-
-    res[resCounter] = '\0';
-    free(digitGroup);
+    mulRes->bigIntPart->start += mulRes->fractionBlocks;
+    char *res = bigIntToDecString(mulRes->bigIntPart, true);
+    free(mulRes);
     return res;
 }

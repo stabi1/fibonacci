@@ -395,7 +395,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     size_t depth = ((struct schoenhageArgs *) input)->depth;
 
     size_t xLen = getLen(x);
-    if (global_config.verbose) {
+    if (global_config.superVerbose) {
         char *localTime = getCurrentDateTime();
         printf("Convert-Depth: %lu;  %s\n", depth, localTime);
         free(localTime);
@@ -420,7 +420,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
         freeBigInt(v);
         v = vNew;
     }
-    if (global_config.verbose && depth == global_config.convertDepth) {
+    if (global_config.superVerbose && depth == global_config.convertDepth) {
         char *localTime = getCurrentDateTime();
         printf("First muls from conversion finished  %s\n", localTime);
         free(localTime);
@@ -430,7 +430,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     bigInt *q;
     if (depth == global_config.convertDepth) {
         q = divideModMultiThread(x, v, &r, global_config.mulDepth, true);
-        if (global_config.verbose) {
+        if (global_config.superVerbose) {
             char *localTime = getCurrentDateTime();
             printf("First div from conversion finished;  %s\n", localTime);
             free(localTime);
@@ -493,7 +493,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     free(res1);
     free(res2);
 
-    if (global_config.verbose) {
+    if (global_config.superVerbose) {
         char *localTime = getCurrentDateTime();
         printf("Thread with Depth: %lu finished;  %s\n", depth, localTime);
         free(localTime);
