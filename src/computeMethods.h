@@ -10,6 +10,7 @@ enum computeOperation {
     FIBONACCI,
     SQUARE_ROOT,
     PI,
+    E,
     UNKNOWN_OPERATION
 };
 
@@ -22,6 +23,8 @@ void printGoldenRatio(uint64_t digits, char radix, char output, const char *file
 void printSquareRoot(uint64_t n, uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
 
 void printPi(uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
+
+void print_e(uint64_t digits, char radix, char output, const char *filename, bool infoInOutputFile);
 
 void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char *radixStr, double timeToCalc, uint64_t digits, char radix, char output,
                               const char *filename, bool infoInOutputFile);

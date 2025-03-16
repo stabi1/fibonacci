@@ -1,5 +1,7 @@
 #include "bigIntPower.h"
 
+
+// base^exponent using binary exponentiation
 bigInt *powBigInt(const bigInt *base, uint64_t exponent) {
     if (isZero(base)) return getBigIntFromUnsignedInteger(1);
 

@@ -199,6 +199,33 @@ void printPi(const uint64_t digits, const char radix, const char output, const c
     return;
 }
 
+void print_e(const uint64_t digits, const char radix, const char output, const char *filename, const bool infoInOutputFile) {
+    size_t binaryDigits;
+    char *radixStr;
+    if (radix == 'd') {
+        binaryDigits = ceil((double) digits * log2(10));
+        radixStr = "decimal";
+    } else {
+        binaryDigits = digits * 4;
+        radixStr = "hexadecimal";
+    }
+    binaryDigits += 64;
+
+    printf("Starting calculation for %zu %s digits of e\n", digits, radixStr);
+
+    // calculation
+    struct timespec start, end;
+    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+
+    bigFrac *res = e(binaryDigits);
+
+    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
+    double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+
+    conversionAndPrintHelper(res, "of e", radixStr, timeToCalc, digits, radix, output, filename, infoInOutputFile);
+    return;
+}
+
 void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char *radixStr, double timeToCalc, const uint64_t digits, const char radix, const char output,
                               const char *filename, const bool infoInOutputFile) {
     size_t sizeInBytes = (res->bigIntPart->end - res->bigIntPart->start) * 8;

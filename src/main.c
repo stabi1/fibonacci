@@ -44,6 +44,7 @@ const size_t numOfArgsComputeOperation[] = {
         [FIBONACCI]         = 1,
         [SQUARE_ROOT]       = 2,
         [PI]                = 1,
+        [E]                 = 1,
         [UNKNOWN_OPERATION] = 0,
 };
 
@@ -229,7 +230,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if(global_config.superVerbose) {
+    if (global_config.superVerbose) {
         printf("Super Verbose activated\n");
     }
     if (global_config.verbose && global_config.deactivateCaches) {
@@ -296,6 +297,9 @@ int main(int argc, char *argv[]) {
             case PI:
                 printPi(computeNumberArgument1, outputRadix, output, outputFilename, infoInOutputFile);
                 break;
+            case E:
+                print_e(computeNumberArgument1, outputRadix, output, outputFilename, infoInOutputFile);
+                break;
             case UNKNOWN_OPERATION:
                 printf("No operation selected\n");
                 break;
@@ -319,6 +323,8 @@ enum computeOperation getComputeOperation(char *token) {
         return SQUARE_ROOT;
     } else if (strcmp(token, "pi") == 0) {
         return PI;
+    } else if (strcmp(token, "e") == 0) {
+        return E;
     } else {
         return UNKNOWN_OPERATION;
     }

@@ -61,4 +61,6 @@ bigFrac* goldenRatio(size_t binaryDigits);
 
 bigFrac *pi(size_t binaryDigits);
 
+bigFrac *e(size_t binaryDigits);
+
 #endif
