@@ -1,0 +1,6 @@
+#ifndef FIBONACCI_BIGINTPOWER_H
+#define FIBONACCI_BIGINTPOWER_H
+
+# include "bigInt.h"
+
+#endif //FIBONACCI_BIGINTPOWER_H

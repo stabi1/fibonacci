@@ -157,15 +157,8 @@ bigFrac *fractionDecStringToBigFrac(const char *decStrFraction, const size_t wan
     bigInt *numerator = decStringToBigIntLength(decStrFraction, strlen(decStrFraction), true);
 
     // Build denominator = 10^decStrLen as a big integer.
-    bigInt *denominator = getBigIntFromUnsignedInteger(1);
     bigInt *ten = getBigIntFromUnsignedInteger(10);
-    // Set denominator to 1, then multiply by 10 decStrLen times.
-    for (size_t i = 0; i < strlen(decStrFraction); i++) { //TODO: Binary Exponentiation
-        // Multiply denominator by 10
-        bigInt *tmp = mul(denominator, ten);
-        freeBigInt(denominator);
-        denominator = tmp;
-    }
+    bigInt *denominator = powBigInt(ten, strlen(decStrFraction));
     freeBigInt(ten);
 
     size_t blockDone = 0;

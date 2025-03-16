@@ -20,10 +20,10 @@ const char *DEFAULT_FILENAME = "output.txt";
 
 
 // TODO: implement swapping for goldenRation and Pi, check bigFrac for swapping potential
-// TODO: Use linter and fix code
-// TODO run more tests in valgrind
-// TODO make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
-// TODO docu with comments, update readme, update help-message
+// TODO: Use linter and fix code, docu with comments
+// TODO: run more tests in valgrind
+// TODO: make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
+// TODO: update readme, update help-message
 
 enum {
     OPT_MAX_THREADS = 1001,

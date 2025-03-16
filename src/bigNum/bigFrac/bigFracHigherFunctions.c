@@ -51,6 +51,7 @@ bigFrac *goldenRatio(size_t binaryDigits) {
     return res;
 }
 
+// Pi algorithm adapted from https://www.craig-wood.com/nick/articles/pi-chudnovsky/
 struct chudnovskyBinarySplittingReturn {
     bigInt *P;
     bigInt *Q;

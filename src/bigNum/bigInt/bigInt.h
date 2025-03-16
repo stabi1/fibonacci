@@ -73,6 +73,8 @@ bigInt *divide(const bigInt *dividend, const bigInt *divisor);
 
 bigInt *divideMod(const bigInt *dividend, const bigInt *divisor, bigInt **reminder);
 
+bigInt *powBigInt(const bigInt *base, uint64_t exponent);
+
 // String methods
 bigInt *hexStringToBigInt(const char *hex);
 
