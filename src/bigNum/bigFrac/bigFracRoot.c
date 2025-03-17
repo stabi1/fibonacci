@@ -3,11 +3,21 @@
 #include "bigFracMethods.h"
 
 #include <stdio.h>
+#include <math.h>
 
 bigFrac *sqrtInitialGuess(const bigFrac *radicand) {
     radicand->bigIntPart->start += radicand->fractionBlocks;
     size_t bitLen = bitLength(radicand->bigIntPart);
+    size_t holeLenBlocks = getLen(radicand->bigIntPart);
     radicand->bigIntPart->start -= radicand->fractionBlocks;
+
+    if(holeLenBlocks == 1) {
+        double estimateDouble = sqrt(radicand->bigIntPart->bigIntArray[radicand->bigIntPart->end - 1]);
+        char estimate[200];
+        sprintf(estimate, "%f",estimateDouble);
+        bigFrac *refinedEstimate = decStringToBigFrac(estimate, true, 1);
+        return refinedEstimate;
+    }
 
     size_t approxExponent = bitLen / 2;
 
@@ -57,9 +67,13 @@ bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
     // Initialize x
     bigFrac *x = sqrtInitialGuess(radicand);
 
-    size_t bufferBlocks = 5;
+    size_t approxIterations = 4 + (size_t) log2(wantedFractionBlocks);
+    approxIterations -= getLen(radicand->bigIntPart) - radicand->fractionBlocks == 1 ? log2(5) : 0; //5 correct
 
+    size_t bufferBlocks = 5;
+    size_t i = 0;
     while (true) {
+        i++;
         // Compute n/x
         bigFrac *quotient = divideBigFrac(radicand, x, wantedFractionBlocks + bufferBlocks);
 
@@ -72,7 +86,7 @@ bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
         freeBigFrac(sum);
 
         // Check convergence
-        if (fractionBlocksEqual(xNew, x, wantedFractionBlocks)) {
+        if (i >= approxIterations && fractionBlocksEqual(xNew, x, wantedFractionBlocks)) {
             freeBigFrac(x);
             xNew->bigIntPart->start += bufferBlocks;
             xNew->fractionBlocks -= bufferBlocks;

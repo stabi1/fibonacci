@@ -26,6 +26,9 @@ const char *DEFAULT_FILENAME = "output.txt";
 // TODO: make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
 // TODO: update readme, update help-message
 
+// Target time for ./fib -o f -r d -c pi 1000000 -v = 0.5s
+// is 5.5
+
 enum {
     OPT_MAX_THREADS = 1001,
     OPT_NUM_CORES,
