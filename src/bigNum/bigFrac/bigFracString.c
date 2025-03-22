@@ -75,7 +75,7 @@ char *bigFracToHexString(const bigFrac *x) {
             holePart = getZeroString();
         }
     } else {
-        holePart = bigIntToHexString(x->bigIntPart);
+        holePart = bigIntToHexString(x->bigIntPart, false);
     }
 
     x->bigIntPart->start -= fractionBlocks;
@@ -85,7 +85,10 @@ char *bigFracToHexString(const bigFrac *x) {
     if (getLen(x->bigIntPart) == 0) {
         fractionPart = getZeroString();
     } else {
-        fractionPart = bigIntToHexString(x->bigIntPart);
+        bool sign = x->bigIntPart->negative;
+        x->bigIntPart->negative = false;
+        fractionPart = bigIntToHexString(x->bigIntPart, true);
+        x->bigIntPart->negative = sign;
     }
     x->bigIntPart->end = originalEnd;
 
@@ -259,6 +262,7 @@ char *bigFracToDecStringFractionPart(const bigFrac *x, bool exactPrecision) {
     decimalDigits = decimalDigits == 0 ? 1 : decimalDigits;
 
     bigFrac *tmp = newBigFracFromBigInt(bigIntPart, true);
+    tmp->bigIntPart->negative = false;
     tmp->fractionBlocks = getLen(tmp->bigIntPart);
     bigInt *ten = getBigIntFromUnsignedInteger(10);
     bigInt *dInt = powBigInt(ten, decimalDigits); // 10^decimalDigits
@@ -270,6 +274,20 @@ char *bigFracToDecStringFractionPart(const bigFrac *x, bool exactPrecision) {
 
     mulRes->bigIntPart->start += mulRes->fractionBlocks;
     char *res = bigIntToDecString(mulRes->bigIntPart, true);
+
+    // bigIntToDecString does not do leading zeros, add in front if missing
+    size_t resLen = strlen(res);
+    if (resLen < decimalDigits) {
+        size_t missingDigits = decimalDigits - resLen;
+        char *tmpRes = malloc(decimalDigits + 1);
+        mallocCheck(tmpRes);
+        memset(tmpRes, '0', missingDigits);
+        memcpy(tmpRes + missingDigits, res, resLen);
+        tmpRes[decimalDigits] = '\0';
+        free(res);
+        res = tmpRes;
+    }
+
     free(mulRes);
     return res;
 }

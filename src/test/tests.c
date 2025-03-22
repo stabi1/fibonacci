@@ -20,11 +20,14 @@ void testTmp();
 
 void customTest() {
 
-    bigFrac *radicand = getBigFracFromUnsignedInteger(10005);
-    bigFrac *sqrtC = sqrt2(radicand, 10000);
-    freeBigFrac(radicand);
-    printf("Len: %zu\n", getLen(sqrtC->bigIntPart));
-    freeBigFrac(sqrtC);
+    bigFrac *tmp1 = hexStringToBigFrac("0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000065066631FBFB49CF2F");
+    printBigFracHex(tmp1);
+    printBigFracDec(tmp1, false);
+    bigFrac *res = mulBigFrac(tmp1, tmp1);
+    freeBigFrac(tmp1);
+    printBigFracHex(res);
+    printBigFracDec(res, false);
+    freeBigFrac(res);
 
     //testTmp();
 }
@@ -212,8 +215,8 @@ void bruteForceDebug() {
             if (compareBigInt(fibMinus1, res2) != 0) {
                 printf("Failed at %lu for single-thread\n", i + 1);
 
-                printf("%s\n", bigIntToHexString(fibMinus1));
-                printf("%s\n", bigIntToHexString(res2));
+                printf("%s\n", bigIntToHexString(fibMinus1, false));
+                printf("%s\n", bigIntToHexString(res2, false));
 
                 freeBigInt(fibMinus2);
                 freeBigInt(fibMinus1);

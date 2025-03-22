@@ -82,7 +82,7 @@ bigInt *decStringToBigInt(const char *dec);
 
 char *bigIntToDecString(bigInt *x, bool doFree);
 
-char *bigIntToHexString(const bigInt *x);
+char *bigIntToHexString(const bigInt *x, bool getLeadingZeros);
 
 //misc
 size_t bitLength(const bigInt *x);

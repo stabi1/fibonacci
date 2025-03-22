@@ -68,7 +68,7 @@ void printFibonacci(const uint64_t n, const char radix, const char output, const
             resString = bigIntToDecString(res, true);
             strSizeInBytes = strlen(resString);
         } else {
-            resString = bigIntToHexString(res);
+            resString = bigIntToHexString(res, false);
             freeBigInt(res);
             strSizeInBytes = strlen(resString);
         }
@@ -230,13 +230,14 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
                               const char *filename, const bool infoInOutputFile) {
     size_t sizeInBytes = (res->bigIntPart->end - res->bigIntPart->start) * 8;
     if (output == 't' || output == 'f') {
-        struct timespec start2;
-        if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
         size_t strSizeInBytes;
         char *resString;
         char *localTime = getCurrentDateTime();
         if (global_config.verbose) printf("Starting conversion to %s; %s\n", radixStr, localTime);
         free(localTime);
+
+        struct timespec start2;
+        if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
         if (radix == 'd') {
             resString = bigFracToDecString(res, false);
             freeBigFrac(res);
@@ -246,6 +247,11 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
             freeBigFrac(res);
             strSizeInBytes = strlen(resString);
         }
+        struct timespec end2;
+        if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
+        double timeToConvert = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
+
+
         if (strSizeInBytes < digits + 2) {
             fprintf(stderr, "Not enough digits calculated\n");
             exit(EXIT_FAILURE);
@@ -253,6 +259,8 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
         if (global_config.verbose) printf("Digits to much: %zu\n", strSizeInBytes - digits + 2);
         resString[digits + 2] = '\0'; //cut of the too many digits
 
+        struct timespec start3;
+        if (clock_gettime(CLOCK_MONOTONIC, &start3) == -1) perror("Error measuring time!");
         if (output == 'f') { // File output
             if (infoInOutputFile) {
                 char infoStr[200];
@@ -267,9 +275,9 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
             printf("Result: %s\n", resString);
         }
 
-        struct timespec end2;
-        if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
-        double timeToOutput = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
+        struct timespec end3;
+        if (clock_gettime(CLOCK_MONOTONIC, &end3) == -1) perror("Error measuring time!");
+        double timeToOutput = (double) end3.tv_sec - (double) start3.tv_sec + 1e-9 * (double) (end3.tv_nsec - start3.tv_nsec);
 
         double sizeInKB = ((double) sizeInBytes) / 1000;
         double sizeInMB = ((double) sizeInBytes) / 1000000;
@@ -277,9 +285,9 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
         double sizeStrInKB = ((double) strSizeInBytes) / 1000;
         double sizeStrInMB = ((double) strSizeInBytes) / 1000000;
 
-        printf("Time to calculate: %f s | Time to output: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n"
+        printf("Time to calculate: %f s | Time to convert %f s | Time to output: %f s\nResultNumber size in B:%zu KB:%.2f MB:%.2f\n"
                "ResultString size in B:%zu KB:%.2f MB:%.2f\n",
-               timeToCalc, timeToOutput,
+               timeToCalc, timeToConvert, timeToOutput,
                sizeInBytes, sizeInKB, sizeInMB, strSizeInBytes, sizeStrInKB, sizeStrInMB);
         free(resString);
     } else {

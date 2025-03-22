@@ -33,18 +33,18 @@ struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t dig
 
 
 //fills the char array with the hex presentation of the bigInt
-char *bigIntToHexString(const bigInt *x) {
+char *bigIntToHexString(const bigInt *x, const bool getLeadingZeros) {
     size_t lzcnt = custom_lzcnt(x->bigIntArray[x->end - 1]);
     size_t xLen = x->end - x->start;
     // error handling
     if (lzcnt == 64 && xLen == 1) {
         return getZeroString();
-    } else if (lzcnt == 64 && xLen > 1) {
+    } else if (!getLeadingZeros && lzcnt == 64 && xLen > 1) {
         fprintf(stderr, "BigInt not printable, has leading zero block\n");
         exit(EXIT_FAILURE);
     }
 
-    size_t lenInNibbles = xLen * 16 - (lzcnt / 4);
+    size_t lenInNibbles = getLeadingZeros ?  xLen * 16 : xLen * 16 - (lzcnt / 4);
     char *resStr = uint64tArrayToHexString(x->bigIntArray, lenInNibbles, x->start, x->negative);
     return resStr;
 }

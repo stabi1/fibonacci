@@ -1,6 +1,7 @@
 #include "bigFracRoot.h"
 
 #include "bigFracMethods.h"
+#include "../bigInt/bigIntMethods.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -11,10 +12,10 @@ bigFrac *sqrtInitialGuess(const bigFrac *radicand) {
     size_t holeLenBlocks = getLen(radicand->bigIntPart);
     radicand->bigIntPart->start -= radicand->fractionBlocks;
 
-    if(holeLenBlocks == 1) {
+    if (holeLenBlocks == 1) {
         double estimateDouble = sqrt(radicand->bigIntPart->bigIntArray[radicand->bigIntPart->end - 1]);
         char estimate[200];
-        sprintf(estimate, "%f",estimateDouble);
+        sprintf(estimate, "%f", estimateDouble);
         bigFrac *refinedEstimate = decStringToBigFrac(estimate, true, 1);
         return refinedEstimate;
     }
@@ -41,7 +42,7 @@ bigFrac *sqrtInitialGuess(const bigFrac *radicand) {
 }
 
 
-bool fractionBlocksEqual(bigFrac *a, bigFrac *b, size_t wantedFractionBlocks) {
+bool fractionBlocksEqualOld(bigFrac *a, bigFrac *b, size_t wantedFractionBlocks) {
     if (a->fractionBlocks < wantedFractionBlocks || b->fractionBlocks < wantedFractionBlocks) {
         return false;
     }
@@ -57,7 +58,7 @@ bool fractionBlocksEqual(bigFrac *a, bigFrac *b, size_t wantedFractionBlocks) {
 }
 
 
-bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
+bigFrac *sqrt2Old(const bigFrac *radicand, const size_t wantedFractionBlocks) {
     if (isZero(radicand->bigIntPart)) return getBigFracFromUnsignedInteger(0);
     if (radicand->bigIntPart->negative) {
         fprintf(stderr, "No root of negative numbers allowed\n");
@@ -66,9 +67,6 @@ bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
 
     // Initialize x
     bigFrac *x = sqrtInitialGuess(radicand);
-
-    size_t approxIterations = 4 + (size_t) log2(wantedFractionBlocks);
-    approxIterations -= getLen(radicand->bigIntPart) - radicand->fractionBlocks == 1 ? log2(5) : 0; //5 correct
 
     size_t bufferBlocks = 5;
     size_t i = 0;
@@ -81,12 +79,12 @@ bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
         bigFrac *sum = addBigFrac(x, quotient);
         freeBigFrac(quotient);
 
-        // Divide by 2: could use right-shift if your representation allows
+        // Divide by 2
         bigFrac *xNew = shiftRightBigFrac(sum, 1);
         freeBigFrac(sum);
 
         // Check convergence
-        if (i >= approxIterations && fractionBlocksEqual(xNew, x, wantedFractionBlocks)) {
+        if (fractionBlocksEqualOld(xNew, x, wantedFractionBlocks)) {
             freeBigFrac(x);
             xNew->bigIntPart->start += bufferBlocks;
             xNew->fractionBlocks -= bufferBlocks;
@@ -97,5 +95,53 @@ bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
         freeBigFrac(x);
         // Update x for next iteration
         x = xNew;
+    }
+}
+
+
+bigFrac *sqrt2(const bigFrac *radicand, const size_t wantedFractionBlocks) {
+    if (isZero(radicand->bigIntPart)) return getBigFracFromUnsignedInteger(0);
+    if (radicand->bigIntPart->negative) {
+        fprintf(stderr, "No root of negative numbers allowed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize x with 1 block of correct fraction bits
+    bigFrac *x = sqrt2Old(radicand, 1);
+
+    size_t neededIterations = ceil(log2((double) wantedFractionBlocks));
+
+    size_t iteration = 1;
+    size_t currentSize = 1;
+
+    while (true) {
+        currentSize *= 2;
+
+        // Compute n/x
+        bigFrac *quotient;
+        if (iteration == neededIterations) {
+            quotient = divideBigFrac(radicand, x, wantedFractionBlocks);
+        } else {
+            quotient = divideBigFrac(radicand, x, currentSize);
+        }
+
+        // Compute (x + quotient)
+        bigFrac *sum = addBigFrac(x, quotient);
+        freeBigFrac(quotient);
+        freeBigFrac(x);
+
+        // Divide by 2
+        bigFrac *xNew = shiftRightBigFrac(sum, 1);
+        freeBigFrac(sum);
+
+        // Convergence reached
+        if (iteration == neededIterations) {
+            removeLeadingAndTrailingZeroBlocks(xNew);
+            return xNew;
+        }
+
+        // Update x for next iteration
+        x = xNew;
+        iteration++;
     }
 }

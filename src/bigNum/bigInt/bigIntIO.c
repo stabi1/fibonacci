@@ -75,7 +75,7 @@ char *getFilename() {
 
 //prints bigInt in Hex
 void printBigIntHex(const bigInt *x) {
-    char *tmp = bigIntToHexString(x);
+    char *tmp = bigIntToHexString(x, false);
     printf("%s\n", tmp);
     free(tmp);
 }
@@ -89,7 +89,7 @@ void printBigIntDec(const bigInt *x) {
 }
 
 void writeBigIntHexToFile(const bigInt *x, const char *path) {
-    char *tmp = bigIntToHexString(x);
+    char *tmp = bigIntToHexString(x, false);
     writeFile(path, tmp, false);
     free(tmp);
 }
