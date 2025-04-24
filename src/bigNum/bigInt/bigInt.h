@@ -38,6 +38,8 @@ int compareBigInt(const bigInt *a, const bigInt *b);
 bool isZero(const bigInt *x);
 
 // I/O methods
+void printBigIntBinary(const bigInt *x);
+
 void printBigIntHex(const bigInt *x);
 
 void printBigIntDec(const bigInt *x);
@@ -83,6 +85,8 @@ bigInt *decStringToBigInt(const char *dec);
 char *bigIntToDecString(bigInt *x, bool doFree);
 
 char *bigIntToHexString(const bigInt *x, bool getLeadingZeros);
+
+char *bigIntToBinaryString(const bigInt *x, bool getLeadingZeros);
 
 //misc
 size_t bitLength(const bigInt *x);

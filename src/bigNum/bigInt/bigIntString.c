@@ -18,21 +18,65 @@ struct schoenhageReturn {
     size_t resLen;
 };
 
+char *uint64tArrayToBinaryString(const uint64_t *array, size_t lenInBit, size_t start, size_t end, bool negative);
+
 size_t decCharToValue(char dec);
 
 uint64_t decString19CharsTo_uint64_t(const char *dexStr, size_t strLen);
 
 void inplaceMulAddForConversion(uint64_t *array, size_t arrayLen, uint64_t z, size_t digetsDone);
 
-void
-bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter, bool beginning);
+void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter, bool beginning);
 
 void *bigIntToDecStringSchoenhageMultithreadHelper(void *input);
 
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning);
 
+//fills the char array with the binary representation of the bigInt
+char *bigIntToBinaryString(const bigInt *x, const bool getLeadingZeros) {
+    size_t lzcnt = custom_lzcnt(x->bigIntArray[x->end - 1]);
+    size_t xLen = x->end - x->start;
+    // error handling
+    if (lzcnt == 64 && xLen == 1) {
+        return getZeroString();
+    } else if (!getLeadingZeros && lzcnt == 64 && xLen > 1) {
+        fprintf(stderr, "BigInt not printable, has leading zero block\n");
+        exit(EXIT_FAILURE);
+    }
 
-//fills the char array with the hex presentation of the bigInt
+    size_t lenInBit = getLeadingZeros ? xLen * 64 : bitLength(x);
+    char *resStr = uint64tArrayToBinaryString(x->bigIntArray, lenInBit, x->start, x->end, x->negative);
+    return resStr;
+}
+
+char *uint64tArrayToBinaryString(const uint64_t *array, size_t lenInBit, size_t start, size_t end, bool negative) {
+    size_t strLength = sizeof(char) * (lenInBit + 1);
+    if (negative) strLength++;
+    char *str = malloc(strLength);
+    mallocCheck(str);
+    str[strLength - 1] = '\0';
+
+    long j = (long) lenInBit - 1; // string counter
+    if (negative) {
+        j++; // start one later to make space for negative sign
+    }
+    for (size_t i = start; i < end; i++) {
+        for (size_t k = 0; k < 64 && j >= 0; k++) {
+            uint64_t mask = 1ULL << k;
+            if (array[i] & mask) {
+                str[j] = '1';
+            } else {
+                str[j] = '0';
+            }
+            j--;
+        }
+    }
+    if (negative) str[0] = '-';
+    return str;
+}
+
+
+//fills the char array with the hex representation of the bigInt
 char *bigIntToHexString(const bigInt *x, const bool getLeadingZeros) {
     size_t lzcnt = custom_lzcnt(x->bigIntArray[x->end - 1]);
     size_t xLen = x->end - x->start;
@@ -44,7 +88,7 @@ char *bigIntToHexString(const bigInt *x, const bool getLeadingZeros) {
         exit(EXIT_FAILURE);
     }
 
-    size_t lenInNibbles = getLeadingZeros ?  xLen * 16 : xLen * 16 - (lzcnt / 4);
+    size_t lenInNibbles = getLeadingZeros ? xLen * 16 : xLen * 16 - (lzcnt / 4);
     char *resStr = uint64tArrayToHexString(x->bigIntArray, lenInNibbles, x->start, x->negative);
     return resStr;
 }
@@ -173,7 +217,7 @@ void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char 
 void inplaceMulAddForConversion(uint64_t *array, const size_t arrayLen, uint64_t z, size_t digetsDone) {
     // Perform the multiplication word by word
     size_t num_blocks = (long) (((double) digetsDone * 3.32193f) / 64.0f + 1);
-    uint128_t  yLong = 10000000000000000000ULL;
+    uint128_t yLong = 10000000000000000000ULL;
     uint128_t zLong = z;
 
     uint128_t product = 0;

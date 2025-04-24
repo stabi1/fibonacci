@@ -26,6 +26,6 @@ int compareBigIntArrays(const bigInt *a, const bigInt *b);
 
 bool isValidBigInt(const bigInt *x);
 
-bigInt *stripLeadingZeroBlocks(bigInt *x);
+bigInt *stripLeadingZeros(bigInt *x);
 
 #endif //FIBONACCI_BIGINTMETHODS_H

@@ -73,6 +73,13 @@ char *getFilename() {
     return filename;
 }
 
+//prints bigInt in Binary
+void printBigIntBinary(const bigInt *x) {
+    char *tmp = bigIntToBinaryString(x, false);
+    printf("%s\n", tmp);
+    free(tmp);
+}
+
 //prints bigInt in Hex
 void printBigIntHex(const bigInt *x) {
     char *tmp = bigIntToHexString(x, false);
