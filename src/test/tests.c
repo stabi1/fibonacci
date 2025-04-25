@@ -11,6 +11,7 @@
 
 #include "../bigNum/bigFrac/bigFracString.h"
 #include "../bigNum/bigFrac/bigFrac.h"
+#include "../bigNum/bigInt/SSA/ssa.h"
 
 char *randomHex(uint64_t n);
 
@@ -20,40 +21,64 @@ void testTmp();
 
 void customTest() {
 
-    bigFrac *tmp1 = hexStringToBigFrac("0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000065066631FBFB49CF2F");
-    printBigFracHex(tmp1);
-    printBigFracDec(tmp1, false);
-    bigFrac *res = mulBigFrac(tmp1, tmp1);
-    freeBigFrac(tmp1);
-    printBigFracHex(res);
-    printBigFracDec(res, false);
-    freeBigFrac(res);
+    //bigInt *tmp1 = hexStringToBigInt(randomHex(64*16));
+    //bigInt *tmp2 = hexStringToBigInt(randomHex(64*16));
+    bigInt *tmp1 = getBigIntFromSignedInteger(11830);
+    bigInt *tmp2 = getBigIntFromSignedInteger(8955);
+    //bigInt *tmp1 = getBigIntFromSignedInteger(1435351830);
+    //bigInt *tmp2 = getBigIntFromSignedInteger(8345345345955);
+
+    //printBigIntBinary(tmp1);
+    //printBigIntBinary(tmp2);
+
+    bigInt *res1 = mulSingleThread(tmp1, tmp2);
+    bigInt *res2 = SSA_modular(tmp1, tmp2);
+
+    printf("\n\n");
+    if (compareBigInt(res1, res2) != 0) {
+        printBigIntHex(res1);
+        printBigIntHex(res2);
+        printBigIntBinary(res1);
+        printBigIntBinary(res2);
+        printf("NOT EQUAL\n");
+    } else {
+        printf("Equal\n");
+    }
+    freeBigInt(tmp1);
+    freeBigInt(tmp2);
+    freeBigInt(res1);
+    freeBigInt(res2);
 
     //testTmp();
 }
 
 void testTmp() {
-    char *rand = randomHex(15001 * 16);
-    bigInt *a = hexStringToBigInt(rand);
-    free(rand);
-    char *res1 = bigIntToDecString(a, false);
+    size_t n = 3;
+    bigInt *fermatBase = getBigIntFromUnsignedInteger(1);
+    bigInt *power = shiftLeft(fermatBase, (1ULL << n)); // 2^(2^n)
+    bigInt *F_n = add(power, fermatBase);            // +1
+    freeBigInt(fermatBase);
+    freeBigInt(power);
 
-    global_config.parallel = true;
-    global_config.mulDepth = 1;
-    global_config.convertDepth = 2;
-    global_config.swap = true;
-    global_config.swapThreshold = 1;
-    printf("Second one\n");
-    char *res2 = bigIntToDecString(a, false);
+    // Beispiel‑Array a der Länge 16
+    //  a0=6, a1=3, a2=14, a15=2 a4..a15 = 0,
+    bigInt* a[16];
+    for (int i = 4; i < 16; ++i) a[i] = getBigIntFromUnsignedInteger(0);
+    a[3] = getBigIntFromUnsignedInteger(2);
+    a[2] = getBigIntFromUnsignedInteger(14);
+    a[1] = getBigIntFromUnsignedInteger(3);
+    a[0] = getBigIntFromUnsignedInteger(6);
 
-    if (strcmp(res1, res2) != 0) {
-        printf("Strings not equal!!!!\n");
-    } else {
-        printf("Strings are equal\n");
+    bigInt** odd = FFT_modF(a, 16, n);
+    // Ausgabe der acht ungeraden Einträge:
+    for (int k = 0; k < 8; k += 1) {
+        printf("â%2d = ", 1 + k*2);
+        printf("%s\n", bigIntToBinaryString(odd[k], true));
+        freeBigInt(odd[k]);
     }
-    free(res1);
-    free(res2);
-    freeBigInt(a);
+    free(odd);
+    for (int i = 0; i < 16; ++i) freeBigInt(a[i]);
+    freeBigInt(F_n);
 }
 
 void findBestValues() {

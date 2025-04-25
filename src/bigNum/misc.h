@@ -20,4 +20,6 @@ size_t max(size_t a, size_t b);
 
 size_t min(size_t a, size_t b);
 
+uint64_t bit_reverse(uint64_t x, uint64_t bits);
+
 #endif //FIBONACCI_MISC_H

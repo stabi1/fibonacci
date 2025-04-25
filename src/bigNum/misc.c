@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+
+// Check if the passed pointer is NULL. If p==NULL print error message and call exit()
 void mallocCheck(void *p) {
     if (p == NULL) {
         fprintf(stderr, "An error occurred: Malloc returned null. Program terminated\n");
@@ -56,6 +58,7 @@ char *getCurrentDateTime() {
     return dateTimeString;
 }
 
+// leading zero count, returns 64 if n==0
 size_t custom_lzcnt(uint64_t n) {
     if (n == 0) {
         return 64;
@@ -63,6 +66,7 @@ size_t custom_lzcnt(uint64_t n) {
     return __builtin_clzll(n);
 }
 
+// trailing zero count, returns 64 if n==0
 size_t custom_tzcnt(uint64_t n) {
     if (n == 0) {
         return 64;
@@ -76,4 +80,15 @@ size_t max(size_t a, size_t b) {
 
 size_t min(size_t a, size_t b) {
     return (a < b) ? a : b;
+}
+
+// Function to reverse the lowest 'bits' bits of x -> x<=64
+uint64_t bit_reverse(uint64_t x, uint64_t bits) {
+    uint64_t r = 0;
+    for (uint64_t i = 0; i < bits; ++i) {
+        if (x & (1u << i)) {
+            r |= 1u << (bits - 1 - i);
+        }
+    }
+    return r;
 }

@@ -181,6 +181,9 @@ bigInt *shiftLeft(const bigInt *x, const size_t n) {
 
 //shifts bigInt to the right
 bigInt *shiftRight(const bigInt *x, const size_t n) {
+    if (isZero(x)) {
+        return getZeroBigInt();
+    }
     if (n == 0) {
         return copyBigInt(x);
     }
@@ -311,6 +314,9 @@ bigInt *add(const bigInt *x, const bigInt *y) {
         addBigger = addSmaller;
         addSmaller = tmp;
     }
+    if(isZero(addSmaller)) {
+        return copyBigInt(addBigger);
+    }
 
     if (x->negative == y->negative) {
         return add_helper(addBigger, addSmaller, addBigger->negative);
@@ -336,6 +342,9 @@ bigInt *sub(const bigInt *x, const bigInt *y) {
         const bigInt *tmp = subBigger;
         subBigger = subSmaller;
         subSmaller = tmp;
+    }
+    if(isZero(subSmaller)) {
+        return copyBigInt(subBigger);
     }
 
     if (x->negative != y->negative) {
