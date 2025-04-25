@@ -44,7 +44,7 @@ char *bigIntToBinaryString(const bigInt *x, const bool getLeadingZeros) {
         exit(EXIT_FAILURE);
     }
 
-    size_t lenInBit = getLeadingZeros ? xLen * 16 : bitLength(x);
+    size_t lenInBit = getLeadingZeros ? xLen * 64 : bitLength(x);
     char *resStr = uint64tArrayToBinaryString(x->bigIntArray, lenInBit, x->start, x->end, x->negative);
     return resStr;
 }

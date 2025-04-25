@@ -27,13 +27,13 @@ bigInt *sliceBigInt(const bigInt *x, size_t offset, size_t chunkSize) {
 // computes the minimal positive remainder of x mod F, where F is the fermatIndex-th fermat number
 bigInt *reduceModF(const bigInt *x, const bigInt *fermatNumber, size_t fermatIndex) {
     size_t totalBits = 1ULL << (fermatIndex + 1);
-    size_t k = totalBits/2;
+    size_t k = totalBits / 2;
 
     bigInt *v = shiftRight(x, totalBits - k); // high bits
     bigInt *u = getFirstNBits(x, totalBits - k); // low bits
     bigInt *res;
 
-    if(compareBigInt(v, u) == 1) { // v > u
+    if (compareBigInt(v, u) == 1) { // v > u
         bigInt *tmp = sub(u, v);
         res = add(tmp, fermatNumber);
         freeBigInt(tmp);
@@ -47,7 +47,7 @@ bigInt *reduceModF(const bigInt *x, const bigInt *fermatNumber, size_t fermatInd
 
 // rotates x left by k bits. totalBits is the number of bits of x to where the rotation is applied.
 bigInt *rotateLeftModF(const bigInt *x, size_t k, size_t totalBits) {
-    if(k == 0) {
+    if (k == 0) {
         return copyBigInt(x);
     }
     k = k % totalBits;
@@ -64,12 +64,12 @@ bigInt *rotateLeftModF(const bigInt *x, size_t k, size_t totalBits) {
 
 // rotates x right by k bits. totalBits is the number of bits of x to where the rotation is applied.
 bigInt *rotateRightModF(const bigInt *x, size_t k, size_t totalBits) {
-    if(k == 0) {
+    if (k == 0) {
         return copyBigInt(x);
     }
     k = k % totalBits;
 
-    bigInt *high = shiftRight(x,  k);
+    bigInt *high = shiftRight(x, k);
     bigInt *low = getFirstNBits(x, k);
     bigInt *tmp = shiftLeft(low, totalBits - k);
     freeBigInt(low);

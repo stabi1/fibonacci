@@ -21,10 +21,10 @@ void testTmp();
 
 void customTest() {
 
-    //bigInt *tmp1 = hexStringToBigInt(randomHex(64*16));
-    //bigInt *tmp2 = hexStringToBigInt(randomHex(64*16));
-    bigInt *tmp1 = getBigIntFromSignedInteger(11830);
-    bigInt *tmp2 = getBigIntFromSignedInteger(8955);
+    bigInt *tmp1 = hexStringToBigInt(randomHex(2*16));
+    bigInt *tmp2 = hexStringToBigInt(randomHex(2*16));
+    //bigInt *tmp1 = getBigIntFromSignedInteger(11830);
+    //bigInt *tmp2 = getBigIntFromSignedInteger(8955);
     //bigInt *tmp1 = getBigIntFromSignedInteger(1435351830);
     //bigInt *tmp2 = getBigIntFromSignedInteger(8345345345955);
 

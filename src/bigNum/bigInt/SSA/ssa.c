@@ -171,7 +171,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     }
 
     // 1) Parameter
-    uint64_t m = ceil(log2(2 * M)); //TODO *64
+    uint64_t m = floor(log2(2 * M - 1)) + 1; //TODO *64
     uint64_t n = m % 2 == 0 ? (m + 2) / 2 : (m + 1) / 2;
     uint64_t paddedLengthBits = 1ULL << (m + 1);
     uint64_t paddedLength = paddedLengthBits / 64;
@@ -179,8 +179,8 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     uint64_t numChunks = m % 2 == 0 ? 1ULL << n : 1ULL << (n + 1);
     uint64_t chunkLength = chunkLengthBits / 64;
 
-    //printf("M: %lu, m: %lu, n: %lu, paddedLengthBits: %lu, chunkLengthBits: %lu, paddedLength: %lu, chunkLength: %lu, numChunks: %lu\n", M, m, n, paddedLengthBits,
-           //chunkLengthBits, paddedLength, chunkLength, numChunks);
+    printf("M: %lu, m: %lu, n: %lu, paddedLengthBits: %lu, chunkLengthBits: %lu, paddedLength: %lu, chunkLength: %lu, numChunks: %lu\n", M, m, n, paddedLengthBits,
+           chunkLengthBits, paddedLength, chunkLength, numChunks);
 
     // Build: F_n = 2^(2^n) + 1
     bigInt *fermatBase = getBigIntFromUnsignedInteger(1);
@@ -206,14 +206,14 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         b[i] = sliceBigIntBits(B, i, chunkLengthBits);
     }
 
-    /*for (long i = numChunks - 1; i >= 0; --i) {
+    for (long i = numChunks - 1; i >= 0; --i) {
         printf("%s|", bigIntToBinaryString(a[i], false));
     }
     printf("\n");
     for (long i = numChunks - 1; i >= 0; --i) {
         printf("%s|", bigIntToBinaryString(b[i], false));
     }
-    printf("\n");*/
+    printf("\n");
 
 
     // 3) integer convolution for z_j mod 2^(n+2)
@@ -230,8 +230,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
 
     // Numbers u, v to the convolution product
     size_t gap = 3 * n + 5;
-    size_t jMax = 1ULL << n;
-    //printf("gap: %lu, jMax: %lu\n", gap, jMax);
+    //printf("gap: %lu\n", gap);
 
     bigInt *u = getZeroBigInt();
     bigInt *v = getZeroBigInt();
@@ -259,7 +258,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     freeBigInt(v);
     //printBigIntBinary(uv);
 
-    // split in  γ[0..2K-2], chunk size = gap
+    // split in γ[0..2K-2], chunk size = gap
     size_t gammaSize = 2 * numChunks;
     bigInt **gamma = malloc(gammaSize * sizeof(bigInt *));
     mallocCheck(gamma);
@@ -278,18 +277,18 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
 
 
     // z2[i] = (γ[i] + γ[i+2*2^n] - γ[i+2^n] - γ[i+3*2^n]) mod 2^(n+2)
-    bigInt **z2 = malloc(jMax * sizeof(bigInt *));
+    bigInt **z2 = malloc(numChunks / 2 * sizeof(bigInt *));
     mallocCheck(z2);
-    uint64_t TwoPowN = 1ULL << n;
-    for (size_t j = 0; j < jMax; ++j) {
+    uint64_t TwoPowN = numChunks / 2;
+    for (size_t j = 0; j < numChunks / 2; ++j) {
         // pure integer sub/add, then mod (by cutting of the high bits)
         bigInt *sum1 = add(gamma[j], gamma[j + 2 * TwoPowN]);
         bigInt *sum2 = add(gamma[j + TwoPowN], gamma[j + 3 * TwoPowN]);
         bigInt *diff = sub(sum1, sum2);
-        // mod 2^(n+2):
-        z2[j] = getFirstNBits(diff, mod2_bits);
         freeBigInt(sum1);
         freeBigInt(sum2);
+        // mod 2^(n+2):
+        z2[j] = getFirstNBits(diff, mod2_bits);
         freeBigInt(diff);
     }
     for (size_t i = 0; i < 2 * numChunks; ++i) {
@@ -298,7 +297,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     free(gamma);
 
     /*printf("Z2:\n");
-    for (size_t i = 0; i < jMax; ++i) {
+    for (size_t i = 0; i < numChunks / 2; ++i) {
         //printf("%s\n", bigIntToBinaryString(z2[i], false));
     }*/
 
@@ -308,7 +307,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     for (size_t i = 0; i < numChunks / 2; ++i) {
         printBigIntBinary(Ahat[i]);
     }*/
-    for(size_t i = 0; i < numChunks; ++i) {
+    for (size_t i = 0; i < numChunks; ++i) {
         freeBigInt(a[i]);
     }
     free(a);
@@ -318,7 +317,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     for (size_t i = 0; i < numChunks / 2; ++i) {
         printBigIntBinary(Bhat[i]);
     }*/
-    for(size_t i = 0; i < numChunks; ++i) {
+    for (size_t i = 0; i < numChunks; ++i) {
         freeBigInt(b[i]);
     }
     free(b);
@@ -375,7 +374,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         printBigIntBinary(zF[i]);
     }*/
 
-    // 5) CRT‑Combination: z[j] = combine(z2[j] mod 2^(n+2), zF[j] mod F)
+    // 5) CRT‑Combination: z[j] = combine(z2[j] mod 2^(n+2), zF[j] mod F_n)
     bigInt **z = malloc(numChunks / 2 * sizeof(bigInt *));
     mallocCheck(z);
     for (size_t j = 0; j < numChunks / 2; ++j) {
@@ -386,12 +385,12 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         freeBigInt(tmp);
 
         // z[j] = zF[j] + δ * F
-        bigInt *shift = rotateLeftModF(delta, 1ULL<<n, 1ULL<<(m+1)); // shift and add equals mul by fermat number
+        bigInt *shift = rotateLeftModF(delta, 1ULL << n, 1ULL << (m + 1)); // shift and add equals mul by fermat number
         bigInt *t_mul = addModF(shift, delta, m);
         freeBigInt(shift);
         freeBigInt(delta);
 
-        z[j] = addModF(zF[j], t_mul, n);
+        z[j] = addModF(zF[j], t_mul, m);
         freeBigInt(t_mul);
         freeBigInt(zF[j]);
     }
@@ -407,7 +406,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     // 6) assembling the result
     bigInt *result = getZeroBigInt();
     for (size_t j = 0; j < numChunks / 2; ++j) {
-        // normaler Linksshift um j*(2n-1) Bits
+        // rotate by j * 2^(n-1) bits
         bigInt *t = rotateLeftModF(z[j], j * 1ULL << (n - 1), 1ULL << (m + 1));
         freeBigInt(z[j]);
         bigInt *tmp = add(result, t);

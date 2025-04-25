@@ -13,7 +13,7 @@ bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative);
 bigInt *sub_helper(const bigInt *x, const bigInt *y, bool negative);
 
 bool isValidBigInt(const bigInt *x) {
-    if(x == NULL || x->bigIntArray == NULL) return false;
+    if (x == NULL || x->bigIntArray == NULL) return false;
     if (isZero(x)) return true;
     if (x->start >= x->end) return false;
     if (x->bigIntArray[x->end - 1] == 0) return false;
@@ -37,15 +37,15 @@ bigInt *getZeroBigInt() {
     return newBigInt(1);
 }
 
-bigInt* getBigIntFromUnsignedInteger(uint64_t integer) {
-    bigInt* res = newBigIntNotZeroed(1);
+bigInt *getBigIntFromUnsignedInteger(uint64_t integer) {
+    bigInt *res = newBigIntNotZeroed(1);
     res->bigIntArray[0] = integer;
     return res;
 }
 
-bigInt* getBigIntFromSignedInteger(int64_t integer) {
-    bigInt* res = newBigIntNotZeroed(1);
-    if(integer<0) {
+bigInt *getBigIntFromSignedInteger(int64_t integer) {
+    bigInt *res = newBigIntNotZeroed(1);
+    if (integer < 0) {
         res->negative = true;
         integer = -integer;
     }
@@ -83,15 +83,15 @@ size_t getOccupiedBlocks(const bigInt *x) {
 
 size_t getTrailingZeroBlocks(const bigInt *x) {
     size_t i = 0;
-    for(; i<x->end; i++) {
-        if(x->bigIntArray[x->start + i] != 0){
+    for (; i < x->end; i++) {
+        if (x->bigIntArray[x->start + i] != 0) {
             break;
         }
     }
     return i;
 }
 
-void negateBigInt(bigInt* x) {
+void negateBigInt(bigInt *x) {
     x->negative = !x->negative;
 }
 
@@ -314,7 +314,7 @@ bigInt *add(const bigInt *x, const bigInt *y) {
         addBigger = addSmaller;
         addSmaller = tmp;
     }
-    if(isZero(addSmaller)) {
+    if (isZero(addSmaller)) {
         return copyBigInt(addBigger);
     }
 
@@ -343,7 +343,7 @@ bigInt *sub(const bigInt *x, const bigInt *y) {
         subBigger = subSmaller;
         subSmaller = tmp;
     }
-    if(isZero(subSmaller)) {
+    if (isZero(subSmaller)) {
         return copyBigInt(subBigger);
     }
 
