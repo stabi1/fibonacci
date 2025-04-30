@@ -12,6 +12,7 @@
 #include "../bigNum/bigFrac/bigFracString.h"
 #include "../bigNum/bigFrac/bigFrac.h"
 #include "../bigNum/bigInt/SSA/ssa.h"
+#include "../bigNum/bigInt/SSA/ssaHelper.h"
 
 char *randomHex(uint64_t n);
 
@@ -19,14 +20,11 @@ void testDivision();
 
 void testTmp();
 
-void customTest() {
-
-    bigInt *tmp1 = hexStringToBigInt(randomHex(2*16));
-    bigInt *tmp2 = hexStringToBigInt(randomHex(2*16));
+void testSSA() {
+    bigInt *tmp1 = hexStringToBigInt(randomHex(3*16));
+    bigInt *tmp2 = hexStringToBigInt(randomHex(3*16));
     //bigInt *tmp1 = getBigIntFromSignedInteger(11830);
     //bigInt *tmp2 = getBigIntFromSignedInteger(8955);
-    //bigInt *tmp1 = getBigIntFromSignedInteger(1435351830);
-    //bigInt *tmp2 = getBigIntFromSignedInteger(8345345345955);
 
     //printBigIntBinary(tmp1);
     //printBigIntBinary(tmp2);
@@ -36,6 +34,8 @@ void customTest() {
 
     printf("\n\n");
     if (compareBigInt(res1, res2) != 0) {
+        printBigIntDec(res1);
+        printBigIntDec(res2);
         printBigIntHex(res1);
         printBigIntHex(res2);
         printBigIntBinary(res1);
@@ -49,36 +49,54 @@ void customTest() {
     freeBigInt(res1);
     freeBigInt(res2);
 
+}
+
+void customTest() {
+    testSSA();
     //testTmp();
 }
 
 void testTmp() {
-    size_t n = 3;
+    bigInt *tmp1 = hexStringToBigInt("-699D8900");
+    printBigIntHex(tmp1);
+
+    size_t n = 5;
+    // Build: F_n = 2^(2^n) + 1
     bigInt *fermatBase = getBigIntFromUnsignedInteger(1);
     bigInt *power = shiftLeft(fermatBase, (1ULL << n)); // 2^(2^n)
-    bigInt *F_n = add(power, fermatBase);            // +1
+    bigInt *F_n = add(power, fermatBase); // +1
     freeBigInt(fermatBase);
     freeBigInt(power);
 
-    // Beispiel‑Array a der Länge 16
-    //  a0=6, a1=3, a2=14, a15=2 a4..a15 = 0,
-    bigInt* a[16];
-    for (int i = 4; i < 16; ++i) a[i] = getBigIntFromUnsignedInteger(0);
-    a[3] = getBigIntFromUnsignedInteger(2);
-    a[2] = getBigIntFromUnsignedInteger(14);
-    a[1] = getBigIntFromUnsignedInteger(3);
-    a[0] = getBigIntFromUnsignedInteger(6);
+    // bigInt *res = reduceModF(tmp1, F_n, 5);
+    // bigInt *res = getFirstNBits(tmp1, n);
+    bigInt *res = reduceModF(tmp1, F_n, 5);
+    res = reduceModF(res, F_n, 5);
+    printBigIntHex(res);
 
-    bigInt** odd = FFT_modF(a, 16, n);
-    // Ausgabe der acht ungeraden Einträge:
-    for (int k = 0; k < 8; k += 1) {
-        printf("â%2d = ", 1 + k*2);
-        printf("%s\n", bigIntToBinaryString(odd[k], true));
-        freeBigInt(odd[k]);
+    bigInt* TwoPowNPlus2 = getBigIntFromUnsignedInteger(1ULL << (n + 2));
+    bigInt *res2 = tmp1;
+    while(tmp1->negative) {
+        bigInt *tmp = add(res2, TwoPowNPlus2);
+        freeBigInt(res2);
+        res2 = tmp;
     }
-    free(odd);
-    for (int i = 0; i < 16; ++i) freeBigInt(a[i]);
-    freeBigInt(F_n);
+    printBigIntHex(res2);
+
+
+    size_t k = n+2;
+    bigInt* low = getFirstNBits(tmp1, k);
+
+    // Now low ≡ x (mod 2^k) but lies in [−(D−1) … D−1].
+    // If it’s negative, add one D to push it into [0…D−1]:
+    if (compareBigInt(low, getBigIntFromUnsignedInteger(0)) != 1) {
+        bigInt* TwoPowNPlus22 = getBigIntFromUnsignedInteger(1ULL << (n + 2));
+        low = add(low, TwoPowNPlus22);   // add D = 2^k
+    }
+    printBigIntHex(low);
+
+    // 1699D8901
+    // 80
 }
 
 void findBestValues() {
@@ -277,7 +295,9 @@ char *randomHex(uint64_t n) {
     char hex[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
     char *str = malloc(n + 1);
     uint64_t i = 0;
-    for (; i < n; ++i) {
+    str[i] = hex[(random() % 15) + 1]; // no leading zero
+    i++;
+    for (; i < n - 1; ++i) {
         str[i] = hex[random() % 16];
     }
     str[i] = '\0';

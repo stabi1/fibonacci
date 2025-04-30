@@ -114,29 +114,27 @@ bigInt *getFirstNBits(const bigInt *x, size_t n) {
     size_t remainingBits = n % 64;
 
     // Calculate how many words we actually have available
-    size_t availableWords = x->end - x->start;
+    size_t availableWords = getLen(x);
 
     // Determine how many words we'll actually use
     size_t wordsNeeded = completeWords + (remainingBits > 0 ? 1 : 0);
-    size_t actualWords = wordsNeeded < availableWords ? wordsNeeded : availableWords;
+    size_t actualWords = completeWords < availableWords ? wordsNeeded : availableWords;
 
     // Create new bigInt with the required size
     bigInt *result = newBigInt(actualWords);
 
     // Copy the complete words
     size_t i;
-    for (i = 0; i < actualWords - 1; i++) {
+    for (i = 0; i < actualWords; i++) {
         result->bigIntArray[i] = x->bigIntArray[x->start + i];
     }
+    i--;
 
     // Handle the last word
-    if (remainingBits > 0 && i < availableWords) {
+    if (completeWords < availableWords && remainingBits > 0) {
         // Create mask for remaining bits: (1 << remainingBits) - 1
         uint64_t mask = (1ULL << remainingBits) - 1;
         result->bigIntArray[i] = x->bigIntArray[x->start + i] & mask;
-    } else if (i < availableWords) {
-        // Copy the last complete word
-        result->bigIntArray[i] = x->bigIntArray[x->start + i];
     }
 
     // Strip any leading zeros that might have been created by masking

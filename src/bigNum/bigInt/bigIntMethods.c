@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 
 bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative);
 
@@ -97,14 +98,22 @@ void negateBigInt(bigInt *x) {
 
 // Returns -1, 0 or 1 as a is numerically less than, equal to, or greater than b
 int compareBigInt(const bigInt *a, const bigInt *b) {
-    if (isZero(a) && isZero(b))
+    if (isZero(a) && isZero(b)) {
         return 0;
+    }
+    if(isZero(a)) {
+        return b->negative ? 1 : -1;
+    }
+    if(isZero(b)) {
+        return a->negative ? -1 : 1;
+    }
 
     if (a->negative == b->negative) {
-        if (a->negative)
+        if (a->negative) {
             return compareBigIntArrays(b, a);
-        else
+        } else {
             return compareBigIntArrays(a, b);
+        }
     }
     return a->negative ? 1 : -1;
 }
@@ -124,10 +133,12 @@ int compareBigIntArrays(const bigInt *a, const bigInt *b) {
     for (long i = (long) a->end - 1, j = (long) b->end - 1; i >= (long) a->start; i--, j--) {
         uint64_t aVal = a->bigIntArray[i];
         uint64_t bVal = b->bigIntArray[j];
-        if (aVal < bVal)
+        if (aVal < bVal) {
             return -1;
-        if (aVal > bVal)
+        }
+        if (aVal > bVal) {
             return 1;
+        }
     }
     return 0;
 }
@@ -191,7 +202,7 @@ bigInt *shiftRight(const bigInt *x, const size_t n) {
     if (toShift64 == 0) {
         bigInt *resTmp = shiftRight_Asm(x, n);
         resTmp->negative = x->negative;
-        return resTmp;
+        return stripLeadingZeros(resTmp);
     }
     size_t xLen = x->end - x->start;
     if (xLen <= toShift64) {
@@ -206,7 +217,7 @@ bigInt *shiftRight(const bigInt *x, const size_t n) {
     bigInt *res = shiftRight_Asm(resTmp, n % 64);
     freeBigInt(resTmp);
     res->negative = x->negative;
-    return res;
+    return stripLeadingZeros(res);
 }
 
 bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
