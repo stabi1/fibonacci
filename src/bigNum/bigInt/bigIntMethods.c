@@ -355,19 +355,25 @@ bigInt *sub(const bigInt *x, const bigInt *y) {
         subSmaller = tmp;
     }
     if (isZero(subSmaller)) {
-        return copyBigInt(subBigger);
+        bigInt *res = copyBigInt(subBigger);
+        if(subBigger == y) {
+            res->negative = !y->negative;
+        }
+        return res;
     }
 
     if (x->negative != y->negative) {
-        if (x == subBigger)
+        if (x == subBigger){
             return add_helper(subBigger, subSmaller, subBigger->negative);
-        else
+        }else{
             return add_helper(subBigger, subSmaller, subSmaller->negative);
+        }
     } else {
-        if (x == subBigger)
+        if (x == subBigger){
             return sub_helper(subBigger, subSmaller, subBigger->negative);
-        else
+        } else {
             return sub_helper(subBigger, subSmaller, !subBigger->negative);
+        }
     }
 }
 

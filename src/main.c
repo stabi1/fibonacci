@@ -18,9 +18,10 @@ void printHelpMenu();
 
 const char *DEFAULT_FILENAME = "output.txt";
 
+// TODO: look at add/sub if signs and size are optimal
 // TODO: caching for the bigFrac struct
 // TODO: implement swapping for goldenRation and Pi, check bigFrac for swapping potential
-// TODO: better root algorithm (Karatsuba Square Root)
+// TODO: better root algorithm (Karatsuba Square Root), root for bigInt
 // TODO: Use linter and fix code, docu with comments
 // TODO: run more tests in valgrind
 // TODO: make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)

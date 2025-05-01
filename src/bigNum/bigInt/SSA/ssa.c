@@ -181,14 +181,11 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     uint64_t m = floor(log2(2 * M - 1)) + 1; //TODO *64
     bool mOdd = m % 2 == 1;
     uint64_t n = mOdd ? (m + 1) / 2 : (m + 2) / 2;
-    uint64_t paddedLengthBits = 1ULL << (m + 1);
-    uint64_t paddedLength = paddedLengthBits / 64;
+    // uint64_t paddedLengthBits = 1ULL << (m + 1);
+    // uint64_t paddedLength = paddedLengthBits / 64;
     uint64_t chunkLengthBits = 1ULL << (n - 1);
     uint64_t numChunks = mOdd ? 1ULL << (n + 1) : 1ULL << n;
-    uint64_t chunkLength = chunkLengthBits / 64;
-
-    printf("M: %lu, m: %lu, n: %lu, paddedLengthBits: %lu, chunkLengthBits: %lu, paddedLength: %lu, chunkLength: %lu, numChunks: %lu\n", M, m, n, paddedLengthBits,
-           chunkLengthBits, paddedLength, chunkLength, numChunks);
+    // uint64_t chunkLength = chunkLengthBits / 64;
 
     // Build: F_n = 2^(2^n) + 1
     bigInt *fermatBase = getBigIntFromUnsignedInteger(1);
@@ -214,18 +211,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         b[i] = sliceBigIntBits(B, i, chunkLengthBits);
     }
 
-    for (long i = numChunks - 1; i >= 0; --i) {
-        // printf("%s|", bigIntToBinaryString(a[i], false));
-        printf("%s, ", bigIntToDecString(a[i], false));
-    }
-    printf("\n");
-    for (long i = numChunks - 1; i >= 0; --i) {
-        // printf("%s|", bigIntToBinaryString(b[i], false));
-        printf("%s, ", bigIntToDecString(b[i], false));
-    }
-    printf("\n");
-
-
     // 3) integer convolution for z_j mod 2^(n+2)
     size_t mod2_bits = n + 2;
     // a_i mod 2^(n+2), b_i mod 2^(n+2)
@@ -240,7 +225,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
 
     // Numbers u, v to the convolution product
     size_t gap = 3 * n + 5;
-    //printf("gap: %lu\n", gap);
 
     bigInt *u = getZeroBigInt();
     bigInt *v = getZeroBigInt();
@@ -260,13 +244,10 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     }
     free(alpha);
     free(beta);
-    //printBigIntBinary(u);
-    //printBigIntBinary(v);
     // u * v
     bigInt *uv = mulSingleThread(u, v); //TODO Recursion?
     freeBigInt(u);
     freeBigInt(v);
-    //printBigIntBinary(uv);
 
     // split in γ[0..2K-2], chunk size = gap
     size_t gammaSize = 2 * numChunks;
@@ -279,12 +260,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         uv = tmp;
     }
     freeBigInt(uv);
-
-    /*for (long i = numChunks - 1; i >= 0; --i) {
-        printf("%s|", bigIntToBinaryString(gamma[i], false));
-    }
-    printf("\n");*/
-
 
     // z2[i] = (γ[i] + γ[i+2*2^n] - γ[i+2^n] - γ[i+3*2^n]) mod 2^(n+2)
     bigInt **z2 = malloc(numChunks / 2 * sizeof(bigInt *));
@@ -306,30 +281,14 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     }
     free(gamma);
 
-    /*printf("Z2:\n");
-    for (size_t i = 0; i < numChunks / 2; ++i) {
-        //printf("%s\n", bigIntToBinaryString(z2[i], false));
-    }*/
-
     // 4) FFT in Z_F_n, to calculate z_j mod F_n
     bigInt **Ahat = FFT_modF(a, numChunks, n, mOdd);
-    printf("Ahat:\n");
-    for (size_t i = 0; i < numChunks / 2; ++i) {
-        // printBigIntBinary(Ahat[i]);
-        printf("%s, ", bigIntToDecString(Ahat[i], false));
-    }
-    printf("\n");
     for (size_t i = 0; i < numChunks; ++i) {
         freeBigInt(a[i]);
     }
     free(a);
 
     bigInt **Bhat = FFT_modF(b, numChunks, n, mOdd);
-    printf("Bhat:\n");
-    for (size_t i = 0; i < numChunks / 2; ++i) {
-        printf("%s, ", bigIntToDecString(Bhat[i], false));
-    }
-    printf("\n");
     for (size_t i = 0; i < numChunks; ++i) {
         freeBigInt(b[i]);
     }
@@ -344,10 +303,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         bigInt *BhatReduced = reduceModF(Bhat[i], F_n, n);
         freeBigInt(Bhat[i]);
 
-        /*printf("\n--Reduced: index %lu\n", 2 * i + 1);
-        printBigIntBinary(AhatReduced);
-        printBigIntBinary(BhatReduced);*/
-
         Chat[i] = mulSingleThread(AhatReduced, BhatReduced);  // mod F because reduced beforehand TODO recursion
         freeBigInt(AhatReduced);
         freeBigInt(BhatReduced);
@@ -355,24 +310,12 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     free(Ahat);
     free(Bhat);
 
-    printf("\nChat:\n");
-    for (size_t i = 0; i < numChunks / 2; ++i) {
-        printf("%s, ", bigIntToDecString(Chat[i], false));
-    }
-    printf("\n");
-
     // Inverse FFT
     bigInt **c = iFFT_modF(Chat, numChunks / 2, n, mOdd);
     for (size_t i = 0; i < numChunks / 2; ++i) {
         freeBigInt(Chat[i]);
     }
     free(Chat);
-
-    printf("c:\n");
-    for (size_t i = 0; i < numChunks / 2; ++i) {
-        printf("%s, ", bigIntToDecString(c[i], false));
-    }
-    printf("\n");
 
     // reduce c mod F_n to get the zF
     bigInt **zF = malloc(numChunks / 2 * sizeof(bigInt *));
@@ -382,12 +325,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         freeBigInt(c[i]);
     }
     free(c);
-
-    printf("zF:\n");
-    for (size_t i = 0; i < numChunks / 2; ++i) {
-        printf("%s, ", bigIntToDecString(zF[i], false));
-    }
-    printf("\n");
 
     // 5) CRT‑Combination: z[j] = combine(z2[j] mod 2^(n+2), zF[j] mod F_n)
     bigInt **z = malloc(numChunks / 2 * sizeof(bigInt *));
@@ -408,11 +345,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
                 freeBigInt(deltaNoMod);
                 deltaNoMod = tmp;
             }
-            /*while(deltaNoMod->negative) {
-                bigInt *tmp = add(deltaNoMod, TwoPowNPlus2);
-                freeBigInt(deltaNoMod);
-                deltaNoMod = tmp;
-            }*/
         }
 
         freeBigInt(z2[j]);
@@ -436,17 +368,12 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     free(z2);
     free(zF);
 
-    printf("z_j:\n");
-    for (size_t i = 0; i < numChunks / 2; ++i) {
-        printf("%s, ", bigIntToDecString(z[i], false));
-    }
-    printf("\n");
-
     // 6) assembling the result
     bigInt *result = getZeroBigInt();
     for (size_t j = 0; j < numChunks / 2; ++j) {
         // rotate by j * 2^(n-1) bits
         bigInt *t = rotateLeftModF(z[j], j * 1ULL << (n - 1), 1ULL << (m + 1));
+        freeBigInt(z[j]);
         bigInt *tmp = add(result, t);
         freeBigInt(result);
         freeBigInt(t);
@@ -454,9 +381,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     }
     free(z);
 
-
     // final reduce by F_m
-    //printBigIntHex(result);
     bigInt *resultMod = reduceModF(result, F_m, m);
     freeBigInt(F_m);
     freeBigInt(result);
