@@ -115,9 +115,17 @@ def bigint_to_python_hex_string(big_int_instance: ctypes.POINTER(BigInt)) -> str
     hex_str = big_int_lib.bigIntToHexString(big_int_instance)
     return hex_str.decode()
 
+positive_test_numbers_small: List[str] = [
+    "0",
+    "1",
+    random_hex_string(15),
+    random_hex_string(100),
+    random_hex_string(60 * 16)
+]
 
-zero = ["0"]
-positive_test_numbers_no_zero: List[str] = [
+
+positive_test_numbers: List[str] = [
+    "0",
     "1",
     random_hex_string(1),
     random_hex_string(2),
@@ -144,15 +152,17 @@ positive_test_numbers_no_zero: List[str] = [
     "1" + "0" * 16 * 15 + "0" * 5
 ]
 
-positive_test_numbers = positive_test_numbers_no_zero + zero
-
-negative_test_numbers = ["-" + s for s in positive_test_numbers_no_zero]
+negative_test_numbers = ["-" + s for s in positive_test_numbers]
+negative_test_numbers_small = ["-" + s for s in positive_test_numbers_small]
 
 all_test_numbers = positive_test_numbers + negative_test_numbers
+all_test_numbers_small = positive_test_numbers_small + negative_test_numbers_small
 
 all_test_number_pairs = [(a, b) for a in all_test_numbers for b in all_test_numbers]
+all_test_number_pairs_small = [(a, b) for a in all_test_numbers_small for b in all_test_numbers_small]
 
 positive_test_number_pairs = [(a, b) for a in positive_test_numbers for b in positive_test_numbers]
+positive_test_number_pairs_small = [(a, b) for a in positive_test_numbers_small for b in positive_test_numbers_small]
 
 
 def create_partial_bigints() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
@@ -173,3 +183,8 @@ def create_partial_bigints() -> List[Tuple[ctypes.POINTER(BigInt), str]]:
 partial_bigInts = create_partial_bigints()
 
 partial_bigInts_pairs = [(a, b) for a in partial_bigInts for b in partial_bigInts]
+
+
+def add_partial_big_int_to_filename(filename: str, under: int = 20, over: int = 20) -> str:
+    delimiter: str = ":"
+    return f"{filename}{delimiter}{under}{delimiter}{over}"

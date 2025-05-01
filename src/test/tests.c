@@ -21,8 +21,13 @@ void testDivision();
 void testTmp();
 
 void testSSA() {
-    bigInt *tmp1 = hexStringToBigInt(randomHex(3*16));
-    bigInt *tmp2 = hexStringToBigInt(randomHex(3*16));
+
+    char* c1 = randomHex(1000*16);
+    char* c2 = randomHex(500*16);
+    bigInt *tmp1 = hexStringToBigInt(c1);
+    bigInt *tmp2 = hexStringToBigInt(c2);
+    free(c1);
+    free(c2);
     //bigInt *tmp1 = getBigIntFromSignedInteger(11830);
     //bigInt *tmp2 = getBigIntFromSignedInteger(8955);
 

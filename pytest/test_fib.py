@@ -12,6 +12,7 @@ n_list = [0, 1, 2, 5, 10, 42, 69, 102, 999, 10000, 1000000]
 command_list_permuted = [x + " " + y for x in command_list for y in command_list if x != y]
 test_list = [(n, flags) for n in n_list for flags in command_list_permuted]
 
+
 @pytest.mark.valgrind_test
 @pytest.mark.parametrize("n, flags", test_list)
 def test_fib_correctness(tmp_path: Path, n: int, flags: str):
@@ -31,29 +32,6 @@ def test_fib_correctness(tmp_path: Path, n: int, flags: str):
     python_res_string = str(reference_implementation(n))
 
     assert res_string == python_res_string.upper(), f"Command: {command}"
-
-
-'''def test_fib_correctness_big(tmp_path: Path):
-    n = 10000000
-    flags = "-v --do-swap --swap-threshold 1 -m --max-threads 8"
-    output_file = "out.txt"
-
-    sys.set_int_max_str_digits(2500000)
-
-    src = LOCAL_DIR.joinpath("fib")
-    dest = tmp_path.joinpath("fib")
-    shutil.copy(src, dest)
-    command = f"./fib -o f -r d --output-filename {output_file} -n {n} {flags}"
-    run_command_in_valgrind(command, tmp_path)
-
-    with open(tmp_path.joinpath(output_file), 'r') as f:
-        res_string = f.read()
-    tmp_path.joinpath(output_file).unlink()
-
-    python_res_string = str(reference_implementation(n))
-
-    assert res_string == python_res_string.upper(), f"Command: {command}"
-'''
 
 
 def reference_implementation(n: int) -> int:

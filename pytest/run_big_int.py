@@ -25,7 +25,8 @@ def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000):
 
     result_valgrind: subprocess.CompletedProcess | None = None
     try:
-        result_valgrind: subprocess.CompletedProcess = subprocess.run(opt, capture_output=True, cwd=path, timeout=timeout)
+        minimal_env = {"PATH": os.environ["PATH"]}
+        result_valgrind: subprocess.CompletedProcess = subprocess.run(opt, capture_output=True, cwd=path, timeout=timeout, env=minimal_env)
     except subprocess.TimeoutExpired:
         pytest.skip(f"Valgrind call timed out")
     except Exception as e:

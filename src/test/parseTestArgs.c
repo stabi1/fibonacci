@@ -37,12 +37,13 @@ void selectTest(char *args) {
     argsCpy[argLen] = '\0';
 
     // extract arguments
-    char *testType = strtok(argsCpy, ",");
-    char *arg1 = strtok(NULL, ",");
-    char *arg2 = strtok(NULL, ",");
-    char *arg3 = strtok(NULL, ",");
-    char *arg4 = strtok(NULL, ",");
-    char *overflow = strtok(NULL, ",");
+    char *delim = ",";
+    char *testType = strtok(argsCpy, delim);
+    char *arg1 = strtok(NULL, delim);
+    char *arg2 = strtok(NULL, delim);
+    char *arg3 = strtok(NULL, delim);
+    char *arg4 = strtok(NULL, delim);
+    char *overflow = strtok(NULL, delim);
 
     // determine test type
     enum TestType type;
