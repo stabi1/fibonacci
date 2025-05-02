@@ -6,4 +6,8 @@
 
 uint64_t parseUINT64(char *str, uint64_t max, uint64_t min);
 
+void getCurrentTime(struct timespec *toFill);
+
+double calcTimeDiff(struct timespec *start, struct timespec *end);
+
 #endif //FIBONACCI_UTIL_H

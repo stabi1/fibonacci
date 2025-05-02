@@ -1,6 +1,7 @@
 #include "bigFracHigherFunctions.h"
 
 #include "../misc.h"
+#include "../../util.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -14,22 +15,22 @@ bigFrac *goldenRatio(size_t binaryDigits) {
     nFib += 10; // to be safe
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     bigInt *fibN = fibonacci(nFib);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForFibN = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForFibN = calcTimeDiff(&start, &end);
         printf("Time for fibN: %f s\n", timeForFibN);
     }
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     bigInt *fibNMinus1 = fibonacci(nFib - 1);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForFibNMinus1 = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForFibNMinus1 = calcTimeDiff(&start, &end);
         printf("Time for fibNMinus1: %f s\n", timeForFibNMinus1);
     }
 
@@ -37,12 +38,12 @@ bigFrac *goldenRatio(size_t binaryDigits) {
     bigFrac *fibNMinus1Frac = newBigFracFromBigInt(fibNMinus1, false);
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     bigFrac *res = divideBigFrac(fibNFrac, fibNMinus1Frac, getLen(fibNMinus1));
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForDivision = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForDivision = calcTimeDiff(&start, &end);
         printf("Time for the division: %f s\n", timeForDivision);
     }
 
@@ -164,12 +165,12 @@ bigFrac *pi(size_t binaryDigits) {
     size_t n = (size_t) ((double) binaryDigits / bitsPerTerm) + 1;
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     struct chudnovskyBinarySplittingReturn *binarySplittingRes = chudnovskyBinarySplitting(0, n, C3Over24);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForBinarySplitting = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForBinarySplitting = calcTimeDiff(&start, &end);
         printf("Time for Binary Splitting: %f s\n", timeForBinarySplitting);
     }
 
@@ -179,18 +180,18 @@ bigFrac *pi(size_t binaryDigits) {
     bigFrac *radicand = getBigFracFromUnsignedInteger(10005);
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     bigFrac *sqrtC = sqrt2(radicand, wantedFractionBlocks);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForRoot = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForRoot = calcTimeDiff(&start, &end);
         printf("Time for root calculation: %f s\n", timeForRoot);
     }
     freeBigFrac(radicand);
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     tmp = getBigIntFromUnsignedInteger(426880);
     bigInt *tmp2 = mul(binarySplittingRes->Q, tmp);
@@ -200,8 +201,8 @@ bigFrac *pi(size_t binaryDigits) {
 
     bigFrac *tmpFrac2 = mulBigFrac(tmpFrac, sqrtC);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForMuls = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForMuls = calcTimeDiff(&start, &end);
         printf("Time for timeForMuls: %f s\n", timeForMuls);
     }
 
@@ -210,12 +211,12 @@ bigFrac *pi(size_t binaryDigits) {
 
     bigFrac *T_Frac = newBigFracFromBigInt(binarySplittingRes->T, false);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     bigFrac *res = divideBigFrac(tmpFrac2, T_Frac, wantedFractionBlocks);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForDivision = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForDivision = calcTimeDiff(&start, &end);
         printf("Time for division: %f s\n", timeForDivision);
     }
 
@@ -289,12 +290,12 @@ bigFrac *e(size_t binaryDigits) {
 
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     struct eTaylorBinarySplittingReturn *binarySplittingRes = eTaylorBinarySplitting(0, n);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForDivision = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForDivision = calcTimeDiff(&start, &end);
         printf("Time for binary splitting: %f s\n", timeForDivision);
     }
 
@@ -303,12 +304,12 @@ bigFrac *e(size_t binaryDigits) {
     free(binarySplittingRes);
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
     bigFrac *res = divideBigFrac(P_Frac, Q_Frac, wantedFractionBlocks);
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double timeForDivision = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double timeForDivision = calcTimeDiff(&start, &end);
         printf("Time for division: %f s\n", timeForDivision);
     }
 

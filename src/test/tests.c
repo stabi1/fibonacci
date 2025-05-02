@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <float.h>
 
+#include "../util.h"
+
 #include "../bigNum/bigInt/bigIntString.h"
 #include "../bigNum/bigInt/bigIntDiv.h"
 #include "../bigNum/bigInt/bigIntHigherFunctions.h"
@@ -83,14 +85,13 @@ void findBestValues() {
             printf("\rTesting %lu %lu", n, k);
             //naiveMulFaster = n;
             //karatsubaFaster = k;
-            struct timespec start;
-            if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+            struct timespec start, end;
+            getCurrentTime(&start);
 
             bigInt *res = fibonacci(fibN);
 
-            struct timespec end;
-            if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            getCurrentTime(&end);
+            double time = calcTimeDiff(&start, &end);
             if (time < bestTime) {
                 bestTime = time;
                 nFast = n;
@@ -119,27 +120,29 @@ void benchMark() {
     //code1
     struct timespec start;
     bigInt *res1;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
     for (size_t i = 0; i < iterations; i++) {
         res1 = mulSingleThread(tmp1, tmp2);
         //res1 = getBigIntFromUnsignedInteger(1);
     }
     struct timespec end;
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    double time = calcTimeDiff(&start, &end);
     printf("Time in code 1: %f\n", time);
     printf("----------------------------------------------\n");
 
     //code2
     struct timespec start2;
     bigInt *res2;
-    if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
+    getCurrentTime(&start2);
     for (size_t i = 0; i < iterations; i++) {
         res2 = SSA_modular(tmp1, tmp2);
     }
     struct timespec end2;
-    if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
-    double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
+    getCurrentTime(&end2);
+    double time2 = calcTimeDiff(&start2, &end2);
+    printf("Time in code 2: %f\n", time2);
+    printf("----------------------------------------------\n");
     printf("Time in code 2: %f\n", time2);
 
     if (compareBigInt(res1, res2) != 0) {

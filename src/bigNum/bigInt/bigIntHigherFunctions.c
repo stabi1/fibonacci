@@ -1,6 +1,7 @@
 #include "bigIntHigherFunctions.h"
 
 #include "../misc.h"
+#include "../../util.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -29,13 +30,13 @@ bigInt *fibExpFastDoubling(uint64_t n) {
     struct timespec start, end;
     if (global_config.verbose) {
         printf("\n");
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+        getCurrentTime(&start);
     }
 
     for (; nBinary != 0; nBinary >>= 1) {
         if (global_config.verbose) {
-            if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            getCurrentTime(&end);
+            double time = calcTimeDiff(&start, &end);
             size_t sizeInBytes = (a->end - a->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
             char *localTime = getCurrentDateTime();
@@ -43,7 +44,7 @@ bigInt *fibExpFastDoubling(uint64_t n) {
                    counter, iterations, sizeInMB, time, localTime);
             free(localTime);
             counter++;
-            if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+            getCurrentTime(&start);
         }
         bigInt *temp1 = shiftLeft(b, 1);
         bigInt *temp2 = sub(temp1, a);
@@ -102,8 +103,8 @@ bigInt *fibExpFastDoubling(uint64_t n) {
     freeBigInt(b);
 
     if (global_config.verbose) {
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-        double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+        getCurrentTime(&end);
+        double time = calcTimeDiff(&start, &end);
         printf("Time needed for last Iteration: %fs\n\n", time);
     }
     return a;
@@ -150,7 +151,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         result = fibLuc(n, depth + 1);
         if (global_config.superVerbose) {
             printf("Calculating case n<0 | depth: %zu; n=%ld\n", depth, n);
-            if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+            getCurrentTime(&start);
         }
         // k = (n % 2) * 2 - 1  → if n is even, k = -1; if odd, k = 1.
         int64_t k = ((n % 2) * 2) - 1;
@@ -160,10 +161,10 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         }
         // If k is 1, no change is needed.
         if (global_config.superVerbose) {
-            if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
+            getCurrentTime(&end);
             size_t sizeInBytes = (result->fib->end - result->fib->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
-            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            double time = calcTimeDiff(&start, &end);
             char *localTime = getCurrentDateTime();
             printf("Done calculating case n<0 | depth: %zu; n=%ld | Current size: %fMB; Time needed: %fs; timestamp: %s\n", depth, n, sizeInMB, time, localTime);
             free(localTime);
@@ -177,7 +178,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         FibLucPair *prev = fibLuc(n - 1, depth + 1);
         if (global_config.superVerbose) {
             printf("Calculating case n&1==1 | depth: %zu; n=%ld\n", depth, n);
-            if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+            getCurrentTime(&start);
         }
 
         bigInt *sum_fib = add(prev->fib, prev->luc);
@@ -202,10 +203,10 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         result->luc = luc_new;
 
         if (global_config.superVerbose) {
-            if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
+            getCurrentTime(&end);
             size_t sizeInBytes = (result->fib->end - result->fib->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
-            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            double time = calcTimeDiff(&start, &end);
             char *localTime = getCurrentDateTime();
             printf("Done calculating case n&1==1 | depth: %zu; n=%ld | Current size: %fMB; Time needed: %fs; timestamp: %s\n", depth, n, sizeInMB, time, localTime);
             free(localTime);
@@ -221,7 +222,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         FibLucPair *half = fibLuc(n, depth + 1);
         if (global_config.superVerbose) {
             printf("Calculating case n&1==0 | depth: %zu; n=%ld\n", depth, n);
-            if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+            getCurrentTime(&start);
         }
         bigInt *fib_new = mul(half->fib, half->luc);
         char *filename_fib_new = storeBigIntInSwap(fib_new);
@@ -238,10 +239,10 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         result->luc = luc_new;
 
         if (global_config.superVerbose) {
-            if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
+            getCurrentTime(&end);
             size_t sizeInBytes = (result->fib->end - result->fib->start) * 8;
             double sizeInMB = ((double) sizeInBytes) / 1000000;
-            double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+            double time = calcTimeDiff(&start, &end);
             char *localTime = getCurrentDateTime();
             printf("Done calculating case n&1==0 | depth: %zu; n=%ld | Current size: %fMB; Time needed: %fs; timestamp: %s\n", depth, n, sizeInMB, time, localTime);
             free(localTime);

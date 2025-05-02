@@ -1,6 +1,7 @@
 #include "computeMethods.h"
 
 #include "bigNum/misc.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -17,25 +18,25 @@ void convertNumber(const char inputRadix, const char *inputFilename, const char 
 
     bigInt *tmp;
     struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
     if (inputRadix == 'd') {
         tmp = readBigIntDecFromFile(inputFilename);
     } else {
         tmp = readBigIntHexFromFile(inputFilename);
     }
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    double time = calcTimeDiff(&start, &end);
     printf("Reading from file %s and converting to bigInt done, took %.2f seconds\n", inputFilename, time);
 
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
     if (outputRadix == 'd') {
         writeBigIntDecToFile(tmp, outputFilename, true);
     } else {
         writeBigIntHexToFile(tmp, outputFilename);
         freeBigInt(tmp);
     }
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    time = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    time = calcTimeDiff(&start, &end);
     printf("Finished conversion, result in %s, took %.2f seconds\n", outputFilename, time);
 }
 
@@ -47,18 +48,18 @@ void printFibonacci(const uint64_t n, const char radix, const char output, const
            sizeInMBEst);
 
     struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
 
     bigInt *res = fibonacci(n);
 
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    double timeToCalc = calcTimeDiff(&start, &end);
 
     size_t sizeInBytes = (res->end - res->start) * 8;
 
     if (output == 't' || output == 'f') {
         struct timespec start2;
-        if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
+        getCurrentTime(&start2);
         size_t strSizeInBytes;
         char *resString;
         char *localTime = getCurrentDateTime();
@@ -89,8 +90,8 @@ void printFibonacci(const uint64_t n, const char radix, const char output, const
         }
 
         struct timespec end2;
-        if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
-        double timeToOutput = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
+        getCurrentTime(&end2);
+        double timeToOutput = calcTimeDiff(&start2, &end2);
 
         double sizeInKB = ((double) sizeInBytes) / 1000;
         double sizeInMB = ((double) sizeInBytes) / 1000000;
@@ -129,12 +130,12 @@ void printGoldenRatio(const uint64_t digits, const char radix, const char output
 
     // calculation
     struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
 
     bigFrac *res = goldenRatio(binaryDigits);
 
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    double timeToCalc = calcTimeDiff(&start, &end);
 
     conversionAndPrintHelper(res, "of the golden ratio", radixStr, timeToCalc, digits, radix, output, filename, infoInOutputFile);
     return;
@@ -157,14 +158,14 @@ void printSquareRoot(const uint64_t n, const uint64_t digits, const char radix, 
 
     // calculation
     struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
 
     bigFrac *radicand = getBigFracFromUnsignedInteger(n);
     bigFrac *res = sqrt2(radicand, wantedFractionBlocks);
     freeBigFrac(radicand);
 
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    double timeToCalc = calcTimeDiff(&start, &end);
 
     char computeName[200];
     sprintf(computeName, "of the square root of %ld",n);
@@ -188,12 +189,12 @@ void printPi(const uint64_t digits, const char radix, const char output, const c
 
     // calculation
     struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
 
     bigFrac *res = pi(binaryDigits);
 
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    double timeToCalc = calcTimeDiff(&start, &end);
 
     conversionAndPrintHelper(res, "of pi", radixStr, timeToCalc, digits, radix, output, filename, infoInOutputFile);
     return;
@@ -215,12 +216,12 @@ void print_e(const uint64_t digits, const char radix, const char output, const c
 
     // calculation
     struct timespec start, end;
-    if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
+    getCurrentTime(&start);
 
     bigFrac *res = e(binaryDigits);
 
-    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
-    double timeToCalc = (double) end.tv_sec - (double) start.tv_sec + 1e-9 * (double) (end.tv_nsec - start.tv_nsec);
+    getCurrentTime(&end);
+    double timeToCalc = calcTimeDiff(&start, &end);
 
     conversionAndPrintHelper(res, "of e", radixStr, timeToCalc, digits, radix, output, filename, infoInOutputFile);
     return;
@@ -237,7 +238,7 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
         free(localTime);
 
         struct timespec start2;
-        if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
+        getCurrentTime(&start2);
         if (radix == 'd') {
             resString = bigFracToDecString(res, false);
             freeBigFrac(res);
@@ -248,8 +249,8 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
             strSizeInBytes = strlen(resString);
         }
         struct timespec end2;
-        if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
-        double timeToConvert = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
+        getCurrentTime(&end2);
+        double timeToConvert = calcTimeDiff(&start2, &end2);
 
 
         if (strSizeInBytes < digits + 2) {
@@ -260,7 +261,7 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
         resString[digits + 2] = '\0'; //cut of the too many digits
 
         struct timespec start3;
-        if (clock_gettime(CLOCK_MONOTONIC, &start3) == -1) perror("Error measuring time!");
+        getCurrentTime(&start3);
         if (output == 'f') { // File output
             if (infoInOutputFile) {
                 char infoStr[200];
@@ -276,8 +277,8 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
         }
 
         struct timespec end3;
-        if (clock_gettime(CLOCK_MONOTONIC, &end3) == -1) perror("Error measuring time!");
-        double timeToOutput = (double) end3.tv_sec - (double) start3.tv_sec + 1e-9 * (double) (end3.tv_nsec - start3.tv_nsec);
+        getCurrentTime(&end3);
+        double timeToOutput = calcTimeDiff(&start3, &end3);
 
         double sizeInKB = ((double) sizeInBytes) / 1000;
         double sizeInMB = ((double) sizeInBytes) / 1000000;

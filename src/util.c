@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
 
 uint64_t parseUINT64(char *str, uint64_t max, uint64_t min) {
     errno = 0;
@@ -25,4 +26,16 @@ uint64_t parseUINT64(char *str, uint64_t max, uint64_t min) {
         exit(EXIT_FAILURE);
     }
     return value;
+}
+
+void getCurrentTime(struct timespec *toFill) {
+    int returnCode = clock_gettime(CLOCK_MONOTONIC, toFill);
+    if (returnCode == -1) {
+        perror("Error measuring time!");
+    }
+}
+
+double calcTimeDiff(struct timespec *start, struct timespec *end) {
+    double time = (double) end->tv_sec - (double) start->tv_sec + 1e-9 * (double) (end->tv_nsec - start->tv_nsec);
+    return time;
 }
