@@ -3,15 +3,18 @@
 #include "../bigIntAlloc.h"
 #include "../bigIntMethods.h"
 
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
+
 
 //TODO overlap with getBlock
 
-// return a bigInt (NOT array owner) where offset is the offset of (offset * chunkSize) in x
+// return a bigInt (NOT array owner) where offset is the offset in x
 // and chunkSize is the size of the slice.
 // If the slice is out of bounds, return a zero bigInt.
 bigInt *sliceBigInt(const bigInt *x, size_t offset, size_t chunkSize) {
-    size_t resStart = x->start + offset * chunkSize;
+    size_t resStart = x->start + offset;
     if (resStart >= x->end) {
         return getZeroBigInt();
     }
@@ -20,7 +23,8 @@ bigInt *sliceBigInt(const bigInt *x, size_t offset, size_t chunkSize) {
     if (resStart + thisSliceSize >= x->end) {
         thisSliceSize = x->end - resStart;
     }
-    bigInt *result = stripLeadingZeros(newBigIntStruct(resStart, resStart + thisSliceSize, x->bigIntArray));
+    bigInt *result = newBigIntStruct(resStart, resStart + thisSliceSize, x->bigIntArray);
+    stripLeadingZeros(result);
     return result;
 }
 
@@ -50,15 +54,29 @@ bigInt *rotateLeftModF(const bigInt *x, size_t k, size_t totalBits) {
     if (k == 0) {
         return copyBigInt(x);
     }
-    k = k % totalBits;
+    if (totalBits == 0) {
+        return getZeroBigInt();
+    }
 
-    bigInt *high = shiftRight(x, totalBits - k);
-    bigInt *low = getFirstNBits(x, totalBits - k);
-    bigInt *tmp = shiftLeft(low, k);
-    freeBigInt(low);
-    bigInt *res = add(tmp, high);
-    freeBigInt(tmp);
-    freeBigInt(high);
+    k = k % totalBits;
+    bigInt *res;
+    if (k % 64 == 0 && totalBits % 64 == 0) {
+        size_t lowLength = totalBits/64 - k/64;
+        bigInt *low = sliceBigInt(x, 0, lowLength);
+        bigInt *high = sliceBigInt(x, lowLength, getLen(x) - lowLength);
+        res = shiftAdd(high, low, k/64);
+        freeBigInt(low);
+        freeBigInt(high);
+    } else {
+        bigInt *high = shiftRight(x, totalBits - k);
+        bigInt *low = getFirstNBits(x, totalBits - k);
+        bigInt *tmp = shiftLeft(low, k);
+        freeBigInt(low);
+        res = add(tmp, high);
+        freeBigInt(tmp);
+        freeBigInt(high);
+    }
+
     return res;
 }
 
@@ -67,15 +85,29 @@ bigInt *rotateRightModF(const bigInt *x, size_t k, size_t totalBits) {
     if (k == 0) {
         return copyBigInt(x);
     }
-    k = k % totalBits;
+    if (totalBits == 0) {
+        return getZeroBigInt();
+    }
 
-    bigInt *high = shiftRight(x, k);
-    bigInt *low = getFirstNBits(x, k);
-    bigInt *tmp = shiftLeft(low, totalBits - k);
-    freeBigInt(low);
-    bigInt *res = add(tmp, high);
-    freeBigInt(high);
-    freeBigInt(tmp);
+    k = k % totalBits;
+    bigInt *res;
+    if (k % 64 == 0 && totalBits % 64 == 0) {
+        size_t lowLength = k/64;
+        bigInt *low = sliceBigInt(x, 0, lowLength);
+        bigInt *high = sliceBigInt(x, lowLength, getLen(x) - lowLength);
+        res = shiftAdd(high, low, totalBits/64 - k/64);
+        freeBigInt(low);
+        freeBigInt(high);
+    }else {
+        bigInt *high = shiftRight(x, k);
+        bigInt *low = getFirstNBits(x, k);
+        bigInt *tmp = shiftLeft(low, totalBits - k);
+        freeBigInt(low);
+        res = add(tmp, high);
+        freeBigInt(high);
+        freeBigInt(tmp);
+    }
+
     return res;
 }
 
@@ -85,12 +117,22 @@ bigInt *addModF(const bigInt *a, const bigInt *b, size_t fermatIndex) {
 
     size_t maxBitlength = 1ULL << (fermatIndex + 1);
     while (bitLength(s) > maxBitlength) {
-        bigInt *low = getFirstNBits(s, maxBitlength);
-        bigInt *high = shiftRight(s, maxBitlength);
+        bigInt *low;
+        bigInt *high;
+        if (maxBitlength >= 64) {
+            size_t maxlength = maxBitlength / 64;
+            low = sliceBigInt(s, 0, maxlength);
+            high = sliceBigInt(s, maxlength, getLen(s) - maxlength);
+        } else {
+            low = getFirstNBits(s, maxBitlength);
+            high = shiftRight(s, maxBitlength);
+        }
+
+        bigInt *tmp = add(low, high);
         freeBigInt(s);
-        s = add(low, high);
         freeBigInt(low);
         freeBigInt(high);
+        s = tmp;
     }
     return s;
 }
@@ -124,12 +166,9 @@ bigInt *getFirstNBits(const bigInt *x, size_t n) {
     bigInt *result = newBigInt(actualWords);
 
     // Copy the complete words
-    size_t i;
-    for (i = 0; i < actualWords; i++) {
-        result->bigIntArray[i] = x->bigIntArray[x->start + i];
-    }
-    i--;
+    memcpy(result->bigIntArray, x->bigIntArray + x->start, actualWords * 8);
 
+    size_t i = actualWords - 1;
     // Handle the last word
     if (completeWords < availableWords && remainingBits > 0) {
         // Create mask for remaining bits: (1 << remainingBits) - 1
@@ -138,7 +177,35 @@ bigInt *getFirstNBits(const bigInt *x, size_t n) {
     }
 
     // Strip any leading zeros that might have been created by masking
-    result = stripLeadingZeros(result);
-
+    stripLeadingZeros(result);
     return result;
+}
+
+void reduceToFirstNBits(bigInt *x, size_t n) {
+    // Calculate how many complete 64-bit words we need
+    size_t completeWords = n / 64;
+    size_t remainingBits = n % 64;
+
+    // Calculate how many words we actually have available
+    size_t availableWords = getLen(x);
+
+    // Determine how many words we'll actually use
+    size_t wordsNeeded = completeWords + (remainingBits > 0 ? 1 : 0);
+    size_t actualWords = completeWords < availableWords ? wordsNeeded : availableWords;
+
+    // Copy the complete words
+    size_t i = actualWords - 1;
+
+    // Handle the last word
+    if (completeWords < availableWords && remainingBits > 0) {
+        // Create mask for remaining bits: (1 << remainingBits) - 1
+        uint64_t mask = (1ULL << remainingBits) - 1;
+        x->bigIntArray[x->start + i] = x->bigIntArray[x->start + i] & mask;
+    }
+    x->end = x->start + actualWords;
+
+    // Strip any leading zeros that might have been created by masking
+    stripLeadingZeros(x);
+
+    return;
 }

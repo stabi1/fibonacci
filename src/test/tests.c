@@ -57,51 +57,19 @@ void testSSA() {
 }
 
 void customTest() {
-    testSSA();
-    //testTmp();
+    // testSSA();
+    testTmp();
 }
 
 void testTmp() {
-    bigInt *tmp1 = hexStringToBigInt("-699D8900");
-    printBigIntHex(tmp1);
+    bigInt *x = hexStringToBigInt(randomHex(10*16));
+    bigInt *toShift = hexStringToBigInt(randomHex(3*16));
+    size_t n = 2;
 
-    size_t n = 5;
-    // Build: F_n = 2^(2^n) + 1
-    bigInt *fermatBase = getBigIntFromUnsignedInteger(1);
-    bigInt *power = shiftLeft(fermatBase, (1ULL << n)); // 2^(2^n)
-    bigInt *F_n = add(power, fermatBase); // +1
-    freeBigInt(fermatBase);
-    freeBigInt(power);
+    printBigIntHex(x);
+    shiftAddSameNumber(x, toShift, n);
+    printBigIntHex(x);
 
-    // bigInt *res = reduceModF(tmp1, F_n, 5);
-    // bigInt *res = getFirstNBits(tmp1, n);
-    bigInt *res = reduceModF(tmp1, F_n, 5);
-    res = reduceModF(res, F_n, 5);
-    printBigIntHex(res);
-
-    bigInt* TwoPowNPlus2 = getBigIntFromUnsignedInteger(1ULL << (n + 2));
-    bigInt *res2 = tmp1;
-    while(tmp1->negative) {
-        bigInt *tmp = add(res2, TwoPowNPlus2);
-        freeBigInt(res2);
-        res2 = tmp;
-    }
-    printBigIntHex(res2);
-
-
-    size_t k = n+2;
-    bigInt* low = getFirstNBits(tmp1, k);
-
-    // Now low ≡ x (mod 2^k) but lies in [−(D−1) … D−1].
-    // If it’s negative, add one D to push it into [0…D−1]:
-    if (compareBigInt(low, getBigIntFromUnsignedInteger(0)) != 1) {
-        bigInt* TwoPowNPlus22 = getBigIntFromUnsignedInteger(1ULL << (n + 2));
-        low = add(low, TwoPowNPlus22);   // add D = 2^k
-    }
-    printBigIntHex(low);
-
-    // 1699D8901
-    // 80
 }
 
 void findBestValues() {
@@ -135,18 +103,26 @@ void findBestValues() {
 }
 
 void benchMark() {
-    size_t iterations = 1; //iterations
-    uint64_t n = 400000000;
-
+    size_t iterations = 20; //iterations
     printf("Benchmark with Iterations: %ld\n", iterations);
+
+    //size_t n = 2000000;
+    size_t n = 80000;
+
+    char* c1 = randomHex(n*16);
+    char* c2 = randomHex(n*16);
+    bigInt *tmp1 = hexStringToBigInt(c1);
+    bigInt *tmp2 = hexStringToBigInt(c2);
+    free(c1);
+    free(c2);
 
     //code1
     struct timespec start;
     bigInt *res1;
     if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) perror("Error measuring time!");
     for (size_t i = 0; i < iterations; i++) {
-        res1 = fibExpFastDoubling(n);
-        freeBigInt(res1);
+        res1 = mulSingleThread(tmp1, tmp2);
+        //res1 = getBigIntFromUnsignedInteger(1);
     }
     struct timespec end;
     if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) perror("Error measuring time!");
@@ -159,21 +135,22 @@ void benchMark() {
     bigInt *res2;
     if (clock_gettime(CLOCK_MONOTONIC, &start2) == -1) perror("Error measuring time!");
     for (size_t i = 0; i < iterations; i++) {
-        res2 = fibWithLucas(n);
-        freeBigInt(res2);
+        res2 = SSA_modular(tmp1, tmp2);
     }
     struct timespec end2;
     if (clock_gettime(CLOCK_MONOTONIC, &end2) == -1) perror("Error measuring time!");
     double time2 = (double) end2.tv_sec - (double) start2.tv_sec + 1e-9 * (double) (end2.tv_nsec - start2.tv_nsec);
     printf("Time in code 2: %f\n", time2);
 
-    /*if (compareBigInt(res1, res2) != 0) {
+    if (compareBigInt(res1, res2) != 0) {
         printf("Numbers not equal!\n");
     } else {
         printf("Numbers equal\n");
     }
     freeBigInt(res1);
-    freeBigInt(res2);*/
+    freeBigInt(res2);
+    free(tmp1);
+    free(tmp2);
 }
 
 void bruteForceDebug() {

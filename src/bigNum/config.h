@@ -5,6 +5,12 @@
 #include <stdlib.h>
 
 typedef struct {
+    size_t NAIVE_MUL_FASTER; // Size when naiveMul is faster than karatsuba
+    size_t KARATSUBA_FASTER; // Size when karatsuba is faster than toom-cook
+    size_t TOOM_COOK_FASTER; // Size when toom-cook is faster than SSA
+} MulThresholds;
+
+typedef struct {
     bool verbose;
     bool superVerbose;
     bool parallel;
@@ -14,6 +20,7 @@ typedef struct {
     size_t swapThreshold; // in MB
     bool deactivateCaches;
     size_t maxThreads;
+    MulThresholds mulThresholds;
 } Config;
 
 extern Config global_config;

@@ -17,5 +17,6 @@ bigInt *subModF(const bigInt *a, const bigInt *b, size_t fermatIndex);
 
 bigInt *getFirstNBits(const bigInt *x, size_t n);
 
+void reduceToFirstNBits(bigInt *x, size_t n);
 
 #endif //FIBONACCI_SSAHELPER_H

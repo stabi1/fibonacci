@@ -5,14 +5,13 @@
 #include "bigIntDiv.h"
 #include "../misc.h"
 #include "bigIntIO.h"
+#include "SSA/ssa.h"
 
 #include <stddef.h>
 #include <pthread.h>
 
-size_t NAIVEMUL_FASTER = 100; //Size when naiveMul is faster than karatsuba
-size_t KARATSUBA_FASTER = 400; //Size when karatsuba is faster than toom-cook
-size_t PARALLEL_MUL_FASTER_DEPTH_1 = 2000; //Size when toom-cook-multithread is faster than toom-cook
-size_t PARALLEL_MUL_FASTER_DEPTH_2 = 10000;
+size_t PARALLEL_MUL_FASTER_DEPTH_1 = 2000; //Size when toom-cook-multithread is faster than toom-cook (5 Threads)
+size_t PARALLEL_MUL_FASTER_DEPTH_2 = 10000; //Size when toom-cook-multithread is faster than toom-cook (25 Threads)
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
@@ -57,12 +56,14 @@ bigInt *mulExecute(const bigInt *x, const bigInt *y) {
     }
 
     size_t yLen = getLen(y);
-    if (yLen <= NAIVEMUL_FASTER) {
+    if (yLen <= global_config.mulThresholds.NAIVE_MUL_FASTER) {
         return naiveMul_Asm(x, y);
-    } else if (yLen <= KARATSUBA_FASTER) {
+    } else if (yLen <= global_config.mulThresholds.KARATSUBA_FASTER) {
         return karatsuba(x, y);
-    } else {
+    } else if (yLen <= global_config.mulThresholds.TOOM_COOK_FASTER) {
         return multiplyToomCook3(x, y);
+    } else {
+        return SSA_modular(x, y);
     }
 }
 
@@ -72,9 +73,9 @@ bigInt *mulParallelExecute(const bigInt *x, const bigInt *y, size_t depth) {
     }
 
     size_t yLen = getLen(y);
-    if (yLen <= NAIVEMUL_FASTER) {
+    if (yLen <= global_config.mulThresholds.NAIVE_MUL_FASTER) {
         return naiveMul_Asm(x, y);
-    } else if (yLen <= KARATSUBA_FASTER) {
+    } else if (yLen <= global_config.mulThresholds.KARATSUBA_FASTER) {
         return karatsuba(x, y);
     } else if (yLen <= PARALLEL_MUL_FASTER_DEPTH_1) {
         return multiplyToomCook3(x, y);

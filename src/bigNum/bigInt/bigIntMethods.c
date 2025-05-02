@@ -22,15 +22,11 @@ bool isValidBigInt(const bigInt *x) {
 }
 
 // Can modify and change bigInt/pointer
-bigInt *stripLeadingZeros(bigInt *x) {
-    if (getLen(x) == 0) {
-        freeBigInt(x);
-        return getZeroBigInt();
-    }
+void stripLeadingZeros(bigInt *x) {
     size_t blocks = getOccupiedBlocks(x);
     blocks = blocks == 0 ? 1 : blocks;
     x->end = x->start + blocks;
-    return x;
+    return;
 }
 
 //Returns the bigInt with value 0
@@ -202,7 +198,8 @@ bigInt *shiftRight(const bigInt *x, const size_t n) {
     if (toShift64 == 0) {
         bigInt *resTmp = shiftRight_Asm(x, n);
         resTmp->negative = x->negative;
-        return stripLeadingZeros(resTmp);
+        stripLeadingZeros(resTmp);
+        return resTmp;
     }
     size_t xLen = x->end - x->start;
     if (xLen <= toShift64) {
@@ -217,7 +214,8 @@ bigInt *shiftRight(const bigInt *x, const size_t n) {
     bigInt *res = shiftRight_Asm(resTmp, n % 64);
     freeBigInt(resTmp);
     res->negative = x->negative;
-    return stripLeadingZeros(res);
+    stripLeadingZeros(res);
+    return res;
 }
 
 bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
@@ -230,12 +228,24 @@ bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
     return shiftAdd_Asm(x, toShift, n);
 }
 
+// adds toShift to x; with toShift shifted n blocks to the left, the result will be in x after the call
+// the caller must guarantee that x is big enough to hold the result
+// if x had leading zero blocks, if not filled by the addition they will remain
+void shiftAddSameNumber(const bigInt *x, const bigInt *toShift, const size_t n) {
+    if (isZero(toShift)) {
+        return;
+    }
+    shiftAddSameNumber_Asm(x, toShift, n);
+    return;
+}
+
 //get the lower half of the bigInt (same array, new Struct with different pointers)
 bigInt *getLowerFrom(const bigInt *x, size_t n) {
     if (x->end < x->start + n) {
         n = getLen(x);
     }
-    bigInt *res = stripLeadingZeros(newBigIntStruct(x->start, x->start + n, x->bigIntArray));
+    bigInt *res =newBigIntStruct(x->start, x->start + n, x->bigIntArray);
+    stripLeadingZeros(res);
     return res;
 }
 
@@ -244,7 +254,8 @@ bigInt *getUpperFrom(const bigInt *x, size_t n) {
     if (x->start + n >= x->end) {
         return getZeroBigInt();
     }
-    bigInt *res = stripLeadingZeros(newBigIntStruct(x->start + n, x->end, x->bigIntArray));
+    bigInt *res = newBigIntStruct(x->start + n, x->end, x->bigIntArray);
+    stripLeadingZeros(res);
     return res;
 }
 
@@ -290,11 +301,14 @@ void getToomSlice(const bigInt *x, size_t lowerSize, size_t upperSize, size_t fu
         size2 = (end2 - start2) + 1;
     }
 
-    bigInt *s0 = stripLeadingZeros(newBigIntStruct(x->start, x->start + size2, x->bigIntArray));
+    bigInt *s0 = newBigIntStruct(x->start, x->start + size2, x->bigIntArray);
+    stripLeadingZeros(s0);
     erg[0] = s0;
-    bigInt *s1 = stripLeadingZeros(newBigIntStruct(x->start + size2, x->start + size2 + size1, x->bigIntArray));
+    bigInt *s1 = newBigIntStruct(x->start + size2, x->start + size2 + size1, x->bigIntArray);
+    stripLeadingZeros(s1);
     erg[1] = s1;
-    bigInt *s2 = stripLeadingZeros(newBigIntStruct(x->start + size2 + size1, x->start + size2 + size1 + size0, x->bigIntArray));
+    bigInt *s2 = newBigIntStruct(x->start + size2 + size1, x->start + size2 + size1 + size0, x->bigIntArray);
+    stripLeadingZeros(s2);
     erg[2] = s2;
 }
 
@@ -314,7 +328,9 @@ bigInt *getBlock(const bigInt *x, size_t index, size_t numBlocks, size_t blockLe
     if (blockEnd > xLen) {
         return getZeroBigInt();
     }
-    return stripLeadingZeros(newBigIntStruct(x->start + blockStart, x->start + blockEnd, x->bigIntArray));
+    bigInt *res = newBigIntStruct(x->start + blockStart, x->start + blockEnd, x->bigIntArray);
+    stripLeadingZeros(res);
+    return res;
 }
 
 bigInt *add(const bigInt *x, const bigInt *y) {

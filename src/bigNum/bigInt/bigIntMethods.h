@@ -10,6 +10,8 @@ bigInt *getLowerFrom(const bigInt *x, size_t n);
 
 bigInt *getUpperFrom(const bigInt *x, size_t n);
 
+void shiftAddSameNumber(const bigInt *x, const bigInt *toShift, const size_t n);
+
 bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, size_t n);
 
 void getToomSlice(const bigInt *x, size_t lowerSize, size_t upperSize, size_t fullSize, bigInt *erg[]);
@@ -26,6 +28,6 @@ int compareBigIntArrays(const bigInt *a, const bigInt *b);
 
 bool isValidBigInt(const bigInt *x);
 
-bigInt *stripLeadingZeros(bigInt *x);
+void stripLeadingZeros(bigInt *x);
 
 #endif //FIBONACCI_BIGINTMETHODS_H

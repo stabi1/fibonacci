@@ -3,6 +3,8 @@
 
 #include "bigInt.h"
 
+void shiftAddSameNumber_Asm(const bigInt *x, const bigInt *toShift, size_t n);
+
 bigInt *do_add_asm(const bigInt *x, const bigInt *y, bigInt *res);
 
 bigInt *do_sub_asm(const bigInt *x, const bigInt *y, bigInt *res);

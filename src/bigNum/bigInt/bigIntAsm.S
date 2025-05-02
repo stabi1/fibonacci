@@ -1,12 +1,137 @@
 .intel_syntax noprefix
+.global shiftAddSameNumber_Asm
 .global do_add_asm
 .global do_sub_asm
 .global shiftAdd_Asm
 .global shiftLeft_Asm
 .global shiftRight_Asm
 
+// void shiftAddSameNumber_Asm(const bigInt *x, const bigInt *toShift, size_t n)
+shiftAddSameNumber_Asm:
+    //rdi = x, rsi = toShift, rdx = n
+    push r14
+    push r15
+    push rbx
 
-//bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, size_t n); uses SSE
+    mov r9, [rdi + 8] //r9 := x->end
+    mov r10, [rsi + 8] //r10 := toShift->end
+    mov r11, [rdi + 24] //r11 = x->bigIntArray
+    mov r15, [rsi + 24] //r15 = toShift->bigIntArray
+    mov rdi, [rdi] //rdi := x->start
+    mov rsi, [rsi] //rsi := toShift->start
+    lea r11, [r11 + r9*8]
+    lea r15, [r15 + r10*8]
+
+    // xCount = rcx, toShiftCount = r8
+    mov rcx, r9
+    sub rcx, rdi
+    neg rcx
+
+    mov r8, r10
+    sub r8, rsi
+    neg r8
+
+    lea rcx, [rcx + rdx] // add n to xCount
+
+    xor rbx, rbx
+
+    add r8, 12
+    jge .LSASMLoopMultipleEnd
+.LSASMLoopMultiple:
+    sub r8, 12
+    add bl, -1
+
+    //1
+    mov r10, [r15 + r8*8]
+    adc [r11 + rcx*8], r10
+
+    //2
+    mov r10, [r15 + r8*8 + 8]
+    adc [r11 + rcx*8 + 8], r10
+
+    //3
+    mov r10, [r15 + r8*8 + 16]
+    adc [r11 + rcx*8 + 16], r10
+
+    //4
+    mov r10, [r15 + r8*8 + 24]
+    adc [r11 + rcx*8 + 24], r10
+
+    //5
+    mov r10, [r15 + r8*8 + 32]
+    adc [r11 + rcx*8 + 32], r10
+
+    //6
+    mov r10, [r15 + r8*8 + 40]
+    adc [r11 + rcx*8 + 40], r10
+
+    //7
+    mov r10, [r15 + r8*8 + 48]
+    adc [r11 + rcx*8 + 48], r10
+
+    //8
+    mov r10, [r15 + r8*8 + 56]
+    adc [r11 + rcx*8 + 56], r10
+
+    //9
+    mov r10, [r15 + r8*8 + 64]
+    adc [r11 + rcx*8 + 64], r10
+
+    //10
+    mov r10, [r15 + r8*8 + 72]
+    adc [r11 + rcx*8 + 72], r10
+
+    //11
+    mov r10, [r15 + r8*8 + 80]
+    adc [r11 + rcx*8 + 80], r10
+
+    //12
+    mov r10, [r15 + r8*8 + 88]
+    adc [r11 + rcx*8 + 88], r10
+
+    setc bl
+    add rcx, 12
+    add r8, 24
+    jl .LSASMLoopMultiple
+
+    //Add multiple loop ende
+.LSASMLoopMultipleEnd:
+    sub r8, 12
+    jz .LSASMLoopSingeEnd
+.LSASMLoopSingle:
+    add bl, -1
+
+    mov r10, [r15 + r8*8]
+    adc [r11 + rcx*8], r10
+
+    setc bl
+    add rcx, 1
+    add r8, 1
+    jnz .LSASMLoopSingle
+
+.LSASMLoopSingeEnd:
+    //Add single loop ende
+    test bl, bl
+    jz .LSASMEnd
+.LSASMCopyCarryLoop:
+    adc qword ptr [r11 + rcx*8], 1
+    setc bl
+    add rcx, 1
+    test bl, bl
+    jnz .LSASMCopyCarryLoop
+
+.LSASMEnd:
+    pop rbx
+    pop r15
+    pop r14
+    ret
+
+
+
+
+
+
+//bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, size_t n)
 shiftAdd_Asm:
     //rdi = x, rsi = toShift, rdx = n
     push r12 //free

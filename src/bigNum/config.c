@@ -12,7 +12,12 @@ Config global_config = {
         .swap = false,
         .swapThreshold = 100,
         .deactivateCaches = false,
-        .maxThreads = 1
+        .maxThreads = 1,
+        .mulThresholds = {
+            .NAIVE_MUL_FASTER = 100,
+            .KARATSUBA_FASTER = 400,
+            .TOOM_COOK_FASTER = 100000
+        }
 };
 
 void cleanupBigIntLib() {
