@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <float.h>
+#include <unistd.h>
 
 #include "../util.h"
 
@@ -104,11 +105,11 @@ void findBestValues() {
 }
 
 void benchMark() {
-    size_t iterations = 20; //iterations
+    size_t iterations = 1; //iterations
     printf("Benchmark with Iterations: %ld\n", iterations);
 
     //size_t n = 2000000;
-    size_t n = 80000;
+    size_t n = 8000000;
 
     char* c1 = randomHex(n*16);
     char* c2 = randomHex(n*16);
@@ -121,29 +122,31 @@ void benchMark() {
     struct timespec start;
     bigInt *res1;
     getCurrentTime(&start);
+    global_config.mulThresholds.TOOM_COOK_FASTER = 0xFFFFFFFFFFFFFFFF;
     for (size_t i = 0; i < iterations; i++) {
-        res1 = mulSingleThread(tmp1, tmp2);
-        //res1 = getBigIntFromUnsignedInteger(1);
+        //res1 = mulSingleThread(tmp1, tmp2);
+        res1 = getBigIntFromUnsignedInteger(1);
     }
+    global_config.mulThresholds.TOOM_COOK_FASTER = 100000;
     struct timespec end;
     getCurrentTime(&end);
     double time = calcTimeDiff(&start, &end);
     printf("Time in code 1: %f\n", time);
     printf("----------------------------------------------\n");
+    sleep(2);
 
     //code2
     struct timespec start2;
     bigInt *res2;
     getCurrentTime(&start2);
     for (size_t i = 0; i < iterations; i++) {
-        res2 = SSA_modular(tmp1, tmp2);
+        res2 = mulSingleThread(tmp1, tmp2);
     }
     struct timespec end2;
     getCurrentTime(&end2);
     double time2 = calcTimeDiff(&start2, &end2);
     printf("Time in code 2: %f\n", time2);
     printf("----------------------------------------------\n");
-    printf("Time in code 2: %f\n", time2);
 
     if (compareBigInt(res1, res2) != 0) {
         printf("Numbers not equal!\n");
@@ -152,8 +155,8 @@ void benchMark() {
     }
     freeBigInt(res1);
     freeBigInt(res2);
-    free(tmp1);
-    free(tmp2);
+    freeBigInt(tmp1);
+    freeBigInt(tmp2);
 }
 
 void bruteForceDebug() {
