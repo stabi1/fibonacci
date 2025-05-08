@@ -1,7 +1,36 @@
 import pytest
-import ctypes
+import shutil
+import time
 
-# @pytest.fixture(scope="session", name="big_int_lib")
-# def get_big_int_lib() -> ctypes.CDLL:
-# big_int_lib = ctypes.CDLL('./test/bigInt.so')
-# return big_int_lib
+from pathlib import Path
+
+from big_int_helper import NUMER_FILES_PATH, all_test_numbers
+
+@pytest.fixture(scope="session", autouse=True)
+def number_test_files(worker_id):
+    base_dir: Path = NUMER_FILES_PATH
+    sentinel = base_dir / ".init_done"
+    is_primary = worker_id in ("master", "gw0")
+
+    if is_primary:
+        # primary: create & populate, then touch sentinel
+        base_dir.mkdir(parents=True, exist_ok=True)
+        for number_hex, filename in all_test_numbers:
+            (base_dir / filename).write_text(number_hex)
+        sentinel.write_text("ready")  # signal to everyone else
+    else:
+        # other workers: wait for sentinel
+        # (timeout after, say, 30s to avoid infinite hang)
+        waited = 0
+        while not sentinel.exists():
+            time.sleep(0.1)
+            waited += 0.1
+            if waited > 30:
+                pytest.exit("Timed out waiting for test‐data init")
+
+    # at this point ALL workers have the files
+    yield
+
+    # only primary should do cleanup
+    if is_primary:
+        shutil.rmtree(str(base_dir))
