@@ -30,7 +30,7 @@ void convertNumber(const char inputRadix, const char *inputFilename, const char 
 
     getCurrentTime(&start);
     if (outputRadix == 'd') {
-        writeBigIntDecToFile(tmp, outputFilename, true);
+        writeBigIntDecToFileAndFree(tmp, outputFilename);
     } else {
         writeBigIntHexToFile(tmp, outputFilename);
         freeBigInt(tmp);

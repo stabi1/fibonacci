@@ -323,6 +323,11 @@ size_t calculateDecStringSpace(const bigInt *x) {
 
 //fills the char array with the dec presentation of the bigInt
 char *bigIntToDecString(bigInt *x, bool doFree) {
+    if (isZero(x)) {
+        freeBigInt(x);
+        return getZeroString();
+    }
+
     bigInt *convertX = doFree ? x : copyBigInt(x);
     if (global_config.parallel) {
         return bigIntToDecStringSchoenhageMultithread(convertX);

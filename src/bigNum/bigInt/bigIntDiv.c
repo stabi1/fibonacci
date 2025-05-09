@@ -88,7 +88,7 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
     const uint64_t *u = dividend->bigIntArray + dividend->start;
     const uint64_t *v = divisor->bigIntArray + divisor->start;
 
-    int comp = compareBigInt(dividend, divisor);
+    int comp = compareBigIntArrays(dividend, divisor);
     if (comp < 0) {
         bigInt *quotient = getZeroBigInt();
         if (reminder != NULL) {

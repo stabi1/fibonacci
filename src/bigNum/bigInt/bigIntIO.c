@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <stdatomic.h>
+#include <errno.h>
 #include "../misc.h"
 
 const char *NOT_STORED = "NOT_STORED";
@@ -101,8 +102,14 @@ void writeBigIntHexToFile(const bigInt *x, const char *path) {
     free(tmp);
 }
 
-void writeBigIntDecToFile(bigInt *x, const char *path, bool doFree) {
-    char *tmp = bigIntToDecString(x, doFree);
+void writeBigIntDecToFile(const bigInt *x, const char *path) {
+    char *tmp = bigIntToDecString((bigInt *) x, false);
+    writeFile(path, tmp, false);
+    free(tmp);
+}
+
+void writeBigIntDecToFileAndFree(bigInt *x, const char *path) {
+    char *tmp = bigIntToDecString(x, true);
     writeFile(path, tmp, false);
     free(tmp);
 }
@@ -176,7 +183,7 @@ char *readFile(const char *path) {
     char *string = NULL;
     FILE *file;
     if (!(file = fopen(path, "r"))) {
-        perror("Error opening file");
+        fprintf(stderr,"Error opening file '%s': %s\n", path, strerror(errno));
         return NULL;
     }
 
@@ -214,7 +221,7 @@ int writeFile(const char *path, const char *string, bool append) {
     FILE *file;
     char *mode = append ? "a" : "w";
     if (!(file = fopen(path, mode))) {
-        perror("Error opening file");
+        fprintf(stderr,"Error opening file '%s': %s\n", path, strerror(errno));
         return -1;
     }
     const size_t stringLen = strlen(string);
@@ -230,7 +237,7 @@ int writeFile(const char *path, const char *string, bool append) {
 bigInt *readBigIntFromFile(const char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        perror("Error opening file");
+        fprintf(stderr,"Error opening file '%s': %s\n", filename, strerror(errno));
         return NULL;
     }
 
@@ -268,7 +275,7 @@ bigInt *readBigIntFromFile(const char *filename) {
 int writeBigIntToFile(const char *filename, const bigInt *b) {
     FILE *file = fopen(filename, "wb");
     if (!file) {
-        perror("Error opening file");
+        fprintf(stderr,"Error opening file '%s': %s\n", filename, strerror(errno));
         return -1;
     }
 
@@ -355,7 +362,7 @@ int delete_files_in_folder(const char *folder_path) {
 
         // Attempt to delete the file
         if (unlink(file_path) == -1) {
-            perror(file_path);
+            fprintf(stderr,"Error deleting file '%s': %s\n", file_path, strerror(errno));
             error = true;
         }
     }

@@ -28,9 +28,9 @@ bigInt *copyBigInt(const bigInt *x);
 
 bigInt *getZeroBigInt();
 
-bigInt* getBigIntFromUnsignedInteger(uint64_t integer);
+bigInt *getBigIntFromUnsignedInteger(uint64_t integer);
 
-bigInt* getBigIntFromSignedInteger(int64_t integer);
+bigInt *getBigIntFromSignedInteger(int64_t integer);
 
 //compare
 int compareBigInt(const bigInt *a, const bigInt *b);
@@ -46,7 +46,9 @@ void printBigIntDec(const bigInt *x);
 
 void writeBigIntHexToFile(const bigInt *x, const char *path);
 
-void writeBigIntDecToFile(bigInt *x, const char *path, bool doFree);
+void writeBigIntDecToFile(const bigInt *x, const char *path);
+
+void writeBigIntDecToFileAndFree(bigInt *x, const char *path);
 
 bigInt *readBigIntHexFromFile(const char *path);
 
@@ -93,7 +95,7 @@ size_t bitLength(const bigInt *x);
 
 size_t getLen(const bigInt *x);
 
-void negateBigInt(bigInt* x);
+void negateBigInt(bigInt *x);
 
 //misc utility
 char *readFile(const char *path);

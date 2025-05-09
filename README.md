@@ -27,3 +27,4 @@ Run all non valgrind tests (fast): `pytest -m "not valgrind_test"`
 ## Misc
 * Max length = ~2000 petabytes (64bit bit-length counter)
 * Max ssaMax length = ~576 petabytes (log2(2*bitlength)<63)
+* BigInt Division uses truncating division

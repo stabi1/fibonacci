@@ -14,19 +14,28 @@ enum TestType {
     ADD,
     SUB,
     SHIFT_LEFT,
-    SHIFT_RIGHT
+    SHIFT_RIGHT,
+    PRINT_HEX,
+    PRINT_DEC
 };
 
 const size_t numOfArgs[] = {
         [CUSTOM_TEST] = 0,
         [MUL]         = 3,
         [DIV]         = 3,
-        [DIV_MOD]     = 3,
+        [DIV_MOD]     = 4,
         [ADD]         = 3,
         [SUB]         = 3,
-        [SHIFT_LEFT]  = 2,
-        [SHIFT_RIGHT] = 2,
+        [SHIFT_LEFT]  = 3,
+        [SHIFT_RIGHT] = 3,
+        [PRINT_HEX]   = 2,
+        [PRINT_DEC]   = 2,
 };
+
+void onError(char *argsCpy) {
+    free(argsCpy);
+    exit(EXIT_FAILURE);
+}
 
 void selectTest(char *args) {
     //copy args
@@ -63,43 +72,48 @@ void selectTest(char *args) {
         type = SHIFT_LEFT;
     } else if (strcmp(testType, "shiftRight") == 0) {
         type = SHIFT_RIGHT;
+    } else if (strcmp(testType, "printHex") == 0) {
+        type = PRINT_HEX;
+    } else if (strcmp(testType, "printDec") == 0) {
+        type = PRINT_DEC;
     } else {
         fprintf(stderr, "Unknown test type\n");
-        goto close;
+        free(argsCpy);
+        exit(EXIT_FAILURE);
     }
 
     size_t numArgs = numOfArgs[type];
     if (numArgs == 1) {
         if (arg1 == NULL) {
             fprintf(stderr, "Missing argument\n");
-            goto close;
+            onError(argsCpy);
         } else if (arg2 != NULL) {
-            fprintf(stderr, "To many argument\n");
-            goto close;
+            fprintf(stderr, "To many arguments\n");
+            onError(argsCpy);
         }
     } else if (numArgs == 2) {
         if (arg1 == NULL || arg2 == NULL) {
             fprintf(stderr, "Missing argument\n");
-            goto close;
+            onError(argsCpy);
         } else if (arg3 != NULL) {
-            fprintf(stderr, "To many argument\n");
-            goto close;
+            fprintf(stderr, "To many arguments\n");
+            onError(argsCpy);
         }
     } else if (numArgs == 3) {
         if (arg1 == NULL || arg2 == NULL || arg3 == NULL) {
-            fprintf(stderr, "Missing argument\n");
-            goto close;
+            fprintf(stderr, "Missing arguments\n");
+            onError(argsCpy);
         } else if (arg4 != NULL) {
-            fprintf(stderr, "To many argument\n");
-            goto close;
+            fprintf(stderr, "To many arguments\n");
+            onError(argsCpy);
         }
     } else if (numArgs == 4) {
         if (arg1 == NULL || arg2 == NULL || arg3 == NULL || arg4 == NULL) {
-            fprintf(stderr, "Missing argument\n");
-            goto close;
+            fprintf(stderr, "Missing arguments\n");
+            onError(argsCpy);
         } else if (overflow != NULL) {
-            fprintf(stderr, "To many argument\n");
-            goto close;
+            fprintf(stderr, "To many arguments\n");
+            onError(argsCpy);
         }
     }
 
@@ -128,8 +142,13 @@ void selectTest(char *args) {
         case DIV_MOD:
             testDivMod(arg1, arg2, arg3, arg4);
             break;
+        case PRINT_HEX:
+            testWriteBigIntHexToFile(arg1, arg2);
+            break;
+        case PRINT_DEC:
+            testWriteBigIntDecToFile(arg1, arg2);
+            break;
     }
 
-    close:
     free(argsCpy);
 }

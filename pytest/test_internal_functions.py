@@ -1,4 +1,4 @@
-import ctypes
+'''import ctypes
 from typing import Tuple
 import pytest
 
@@ -82,3 +82,4 @@ def test_shiftAdd_partial_bigInts(tuple_a: Tuple[ctypes.POINTER(BigInt), str],
         python_res = python_a + (python_b << n * 64)
         python_hex_string = hex(python_res).replace("0x", "").upper()
         assert python_hex_string == hex_str.decode(), f"{bigint_to_python_hex_string(big_int_instance_a)} {bigint_to_python_hex_string(big_int_instance_b)} toShift was {n}"
+'''

@@ -1,123 +1,56 @@
-import shutil
 from pathlib import Path
 
 import pytest
-from big_int_helper import all_test_number_pairs, FIB_DIR, add_partial_big_int_to_filename, all_test_number_pairs_small
+from big_int_helper import add_partial_big_int_to_filename, all_test_number_pairs_names, prepare_test_folder, arithmetic_test_helper, OpsTestArithmetic, \
+    all_test_number_pairs_small_names
 from run_big_int import run_command_in_valgrind
 
+
 @pytest.mark.valgrind_test
-@pytest.mark.parametrize("hex_string_a, hex_string_b", all_test_number_pairs)
-def test_add_sign_and_different_size_numbers(tmp_path: Path, hex_string_a: str, hex_string_b: str):
+@pytest.mark.parametrize("filename_a, filename_b", all_test_number_pairs_names)
+def test_add_sign_and_different_size_numbers_valgrind(tmp_path: Path, filename_a: str, filename_b: str):
     output_file = "out.txt"
-    input1_file = "input1.txt"
-    input2_file = "input2.txt"
+    prepare_test_folder(tmp_path, filename_a, filename_b)
 
-    src = FIB_DIR.joinpath("fib")
-    dest = tmp_path.joinpath("fib")
-    shutil.copy(src, dest)
-    with open(tmp_path.joinpath(input1_file), 'w') as f:
-        f.write(hex_string_a)
-    with open(tmp_path.joinpath(input2_file), 'w') as f:
-        f.write(hex_string_b)
-    command = f"./fib -t add,{input1_file},{input2_file},{output_file}"
-    run_command_in_valgrind(command, tmp_path)
+    command = f"./fib -t add,{filename_a},{filename_b},{output_file}"
+    program_error: bool = run_command_in_valgrind(command, tmp_path)
 
-    with open(tmp_path.joinpath(output_file), 'r') as f:
-        res_string = f.read()
-    tmp_path.joinpath(output_file).unlink()
-
-    python_a = int(hex_string_a, 16)
-    python_b = int(hex_string_b, 16)
-    python_res = python_a + python_b
-    python_res_string = hex(python_res).replace("0x", "").upper()
-
-    assert res_string == python_res_string.upper(), f"Command: {command}"
+    arithmetic_test_helper(OpsTestArithmetic.ADD, program_error, tmp_path, filename_a, output_file, command, filename_b=filename_b)
 
 
 @pytest.mark.valgrind_test
 @pytest.mark.partialBigInt_test
-@pytest.mark.parametrize("hex_string_a, hex_string_b", all_test_number_pairs_small)
-def test_add_partial_bigInts(tmp_path: Path, hex_string_a: str, hex_string_b: str):
+@pytest.mark.parametrize("filename_a, filename_b", all_test_number_pairs_small_names)
+def test_add_partial_bigints_valgrind(tmp_path: Path, filename_a: str, filename_b: str):
     output_file = "out.txt"
-    input1_file = "input1.txt"
-    input2_file = "input2.txt"
+    prepare_test_folder(tmp_path, filename_a, filename_b)
 
-    src = FIB_DIR.joinpath("fib")
-    dest = tmp_path.joinpath("fib")
-    shutil.copy(src, dest)
-    with open(tmp_path.joinpath(input1_file), 'w') as f:
-        f.write(hex_string_a)
-    with open(tmp_path.joinpath(input2_file), 'w') as f:
-        f.write(hex_string_b)
-    command = f"./fib -t add,{add_partial_big_int_to_filename(input1_file)},{add_partial_big_int_to_filename(input2_file)},{output_file}"
-    run_command_in_valgrind(command, tmp_path)
+    command = f"./fib -t add,{add_partial_big_int_to_filename(filename_a)},{add_partial_big_int_to_filename(filename_b)},{output_file}"
+    program_error: bool = run_command_in_valgrind(command, tmp_path)
 
-    with open(tmp_path.joinpath(output_file), 'r') as f:
-        res_string = f.read()
-    tmp_path.joinpath(output_file).unlink()
-
-    python_a = int(hex_string_a, 16)
-    python_b = int(hex_string_b, 16)
-    python_res = python_a + python_b
-    python_res_string = hex(python_res).replace("0x", "").upper()
-
-    assert res_string == python_res_string.upper(), f"Command: {command}"
+    arithmetic_test_helper(OpsTestArithmetic.ADD, program_error, tmp_path, filename_a, output_file, command, filename_b=filename_b)
 
 
 @pytest.mark.valgrind_test
-@pytest.mark.parametrize("hex_string_a, hex_string_b", all_test_number_pairs)
-def test_sub_sign_and_different_size_numbers(tmp_path: Path, hex_string_a: str, hex_string_b: str):
+@pytest.mark.parametrize("filename_a, filename_b", all_test_number_pairs_names)
+def test_sub_sign_and_different_size_numbers_valgrind(tmp_path: Path, filename_a: str, filename_b: str):
     output_file = "out.txt"
-    input1_file = "input1.txt"
-    input2_file = "input2.txt"
+    prepare_test_folder(tmp_path, filename_a, filename_b)
 
-    src = FIB_DIR.joinpath("fib")
-    dest = tmp_path.joinpath("fib")
-    shutil.copy(src, dest)
-    with open(tmp_path.joinpath(input1_file), 'w') as f:
-        f.write(hex_string_a)
-    with open(tmp_path.joinpath(input2_file), 'w') as f:
-        f.write(hex_string_b)
-    command = f"./fib -t sub,{input1_file},{input2_file},{output_file}"
-    run_command_in_valgrind(command, tmp_path)
+    command = f"./fib -t sub,{filename_a},{filename_b},{output_file}"
+    program_error: bool = run_command_in_valgrind(command, tmp_path)
 
-    with open(tmp_path.joinpath(output_file), 'r') as f:
-        res_string = f.read()
-    tmp_path.joinpath(output_file).unlink()
-
-    python_a = int(hex_string_a, 16)
-    python_b = int(hex_string_b, 16)
-    python_res = python_a - python_b
-    python_res_string = hex(python_res).replace("0x", "").upper()
-
-    assert res_string == python_res_string.upper(), f"Command: {command}"
+    arithmetic_test_helper(OpsTestArithmetic.SUB, program_error, tmp_path, filename_a, output_file, command, filename_b=filename_b)
 
 
 @pytest.mark.valgrind_test
 @pytest.mark.partialBigInt_test
-@pytest.mark.parametrize("hex_string_a, hex_string_b", all_test_number_pairs_small)
-def test_sub_partial_bigInts(tmp_path: Path, hex_string_a: str, hex_string_b: str):
+@pytest.mark.parametrize("filename_a, filename_b", all_test_number_pairs_small_names)
+def test_sub_partial_bigints_valgrind(tmp_path: Path, filename_a: str, filename_b: str):
     output_file = "out.txt"
-    input1_file = "input1.txt"
-    input2_file = "input2.txt"
+    prepare_test_folder(tmp_path, filename_a, filename_b)
 
-    src = FIB_DIR.joinpath("fib")
-    dest = tmp_path.joinpath("fib")
-    shutil.copy(src, dest)
-    with open(tmp_path.joinpath(input1_file), 'w') as f:
-        f.write(hex_string_a)
-    with open(tmp_path.joinpath(input2_file), 'w') as f:
-        f.write(hex_string_b)
-    command = f"./fib -t sub,{add_partial_big_int_to_filename(input1_file)},{add_partial_big_int_to_filename(input2_file)},{output_file}"
-    run_command_in_valgrind(command, tmp_path)
+    command = f"./fib -t sub,{add_partial_big_int_to_filename(filename_a)},{add_partial_big_int_to_filename(filename_b)},{output_file}"
+    program_error: bool = run_command_in_valgrind(command, tmp_path)
 
-    with open(tmp_path.joinpath(output_file), 'r') as f:
-        res_string = f.read()
-    tmp_path.joinpath(output_file).unlink()
-
-    python_a = int(hex_string_a, 16)
-    python_b = int(hex_string_b, 16)
-    python_res = python_a - python_b
-    python_res_string = hex(python_res).replace("0x", "").upper()
-
-    assert res_string == python_res_string.upper(), f"Command: {command}"
+    arithmetic_test_helper(OpsTestArithmetic.SUB, program_error, tmp_path, filename_a, output_file, command, filename_b=filename_b)

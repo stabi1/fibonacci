@@ -16,8 +16,8 @@ def format_args(args: List[str]) -> str:
     return args_str.strip()
 
 
-def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000):
-    valgrind_error = 7
+def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000) -> bool:
+    valgrind_error = 1000
     command = command.strip()
     opt = str(command).split(' ')
 
@@ -35,7 +35,12 @@ def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000):
     if result_valgrind.returncode < 0:
         pytest.fail(f"Valgrind CRASHED!!!{format_args(result_valgrind.args)}")
 
-    if result_valgrind.returncode != 0:
+    if result_valgrind.returncode == valgrind_error:
         os.write(sys.stderr.fileno(), result_valgrind.stderr)
         os.write(sys.stdout.fileno(), result_valgrind.stdout)
         pytest.fail(f"Valgrind error!{format_args(result_valgrind.args)}")
+    elif result_valgrind.returncode != 0:
+        os.write(sys.stderr.fileno(), result_valgrind.stderr)
+        os.write(sys.stdout.fileno(), result_valgrind.stdout)
+        return True
+    return False

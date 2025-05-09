@@ -49,20 +49,18 @@ bigInt *readBigIntHexFromFileTestHelper(char *path) {
     return res;
 }
 
-void test2InputInt1Output(bigInt *(*operation)(const bigInt *, size_t), char *inputFile1, char *inputFile2, char *outputFile) {
-    char *input1 = readFile(inputFile1);
-    size_t toShift = parseUINT64(input1, UINT64_MAX, 0);
-    free(input1);
+void test2InputInt1Output(bigInt *(*operation)(const bigInt *, size_t), char *inputFile1, char *intToShift, char *outputFile) {
+    bigInt *input = readBigIntHexFromFileTestHelper(inputFile1);
+    verifyBigInt(input);
 
-    bigInt *input2 = readBigIntHexFromFileTestHelper(inputFile2);
-    verifyBigInt(input2);
+    size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
 
-    bigInt *res = operation(input2, toShift);
+    bigInt *res = operation(input, toShift);
     verifyBigInt(res);
 
     writeBigIntHexToFile(res, outputFile);
 
-    freeBigInt(input2);
+    freeBigInt(input);
     freeBigInt(res);
 }
 
@@ -103,6 +101,15 @@ void test2Input2Output(bigInt *(*operation)(const bigInt *, const bigInt *, bigI
     freeBigInt(res2);
 }
 
+void test1InputZeroOutput(void (*operation)(const bigInt *, const char *), char *inputFile1,  char *outputFile) {
+    bigInt *input1 = readBigIntHexFromFileTestHelper(inputFile1);
+    verifyBigInt(input1);
+
+    operation(input1, outputFile);
+
+    freeBigInt(input1);
+}
+
 void testMul(char *inputFile1, char *inputFile2, char *outputFile) {
     test2Input1Output(mul, inputFile1, inputFile2, outputFile);
 }
@@ -128,6 +135,14 @@ void testShiftLeft(char *inputFile1, char *inputFile2, char *outputFile) {
 }
 
 void testShiftRight(char *inputFile1, char *inputFile2, char *outputFile) {
-    test2InputInt1Output(shiftLeft, inputFile1, inputFile2, outputFile);
+    test2InputInt1Output(shiftRight, inputFile1, inputFile2, outputFile);
+}
+
+void testWriteBigIntHexToFile(char *inputFile1, char *outputFile) {
+    test1InputZeroOutput(writeBigIntHexToFile, inputFile1, outputFile);
+}
+
+void testWriteBigIntDecToFile(char *inputFile1, char *outputFile) {
+    test1InputZeroOutput(writeBigIntDecToFile, inputFile1, outputFile);
 }
 
