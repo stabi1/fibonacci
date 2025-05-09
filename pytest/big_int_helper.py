@@ -132,7 +132,7 @@ def arithmetic_test_helper(operation: OpsTestArithmetic, program_error: bool, tm
 
     python_res_string = hex(python_res).replace("0x", "").upper()
 
-    assert res_string == python_res_string.upper(), f"Command: {command}\n{res_string[:100]}\n{python_res_string[:100]}\n{hex(python_a).upper()}\n{hex(python_b).upper() if filename_b is not None else ""}"
+    assert res_string == python_res_string.upper(), f"Command: {command}\n{res_string}\n{python_res_string}\n{hex(python_a).upper()}\n{hex(python_b).upper() if filename_b is not None else ""}"
 
     if output_file_2 is not None:
         python_res_string_2 = hex(python_res_2).replace("0x", "").upper()
@@ -212,7 +212,7 @@ def get_positive_dec_test_numbers() -> List[Tuple[str, str]]:
 
 
 def get_negative_test_numbers():
-    negative_test_numbers = [("-" + hexstr, "-" + name) for hexstr, name in get_positive_dec_test_numbers()]
+    negative_test_numbers = [("-" + hexstr, "-" + name) for hexstr, name in get_positive_test_numbers()]
     return negative_test_numbers
 
 

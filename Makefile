@@ -45,7 +45,7 @@ sanitize:
 
 test:
 	@$(MAKE) all-test OUTPUT_LIBNAME_TEST=$(OUTPUT_LIBNAME_TEST) CFLAGS="$(NEED_FLAGS) $(WARNING_FLAGS) $(TEST_FLAGS) $(PERFORMANCE_FLAGS)" BUILD_CONFIG=test
-	pytest
+	pytest -n auto
 
 # ===== Internal Targets =====
 .PHONY: all-target all-test

@@ -292,9 +292,16 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool mult
     long n64 = 64L * n;         // block length in bits
     long sigma = (long) max((long) 0, (long) (n64 - bitLength(B)));   // step 3: sigma = max{T | (2^T)*B < beta^n}
 
+    // make numbers positive because the algorithm is only for positive integers
+    bool bNegative = B->negative;
+    B->negative = false;
     bigInt *bShifted = shiftLeft(B, sigma);// step 4a: shift B so its length is a multiple of n
+    B->negative = bNegative;
     if (freeArguments) freeBigInt(B);
+    bool aNegative = A->negative;
+    A->negative = false;
     bigInt *aShifted = shiftLeft(A, sigma);    // step 4b: shift A by the same amount
+    A->negative = aNegative;
     if (freeArguments) freeBigInt(A);
 
     // step 5: t is the number of blocks needed to accommodate this plus one additional bit

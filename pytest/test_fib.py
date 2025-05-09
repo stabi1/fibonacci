@@ -22,7 +22,7 @@ def test_fib_correctness(tmp_path: Path, n: int, flags: str):
     src = FIB_DIR.joinpath("fib")
     dest = tmp_path.joinpath("fib")
     shutil.copy(src, dest)
-    command = f"./fib -o f -r d --output-filename {output_file} -n {n} {flags.strip()}"
+    command = f"./fib -o f -r d --output-filename {output_file} --compute fibonacci {n} {flags.strip()}"
     run_command_in_valgrind(command, tmp_path)
 
     with open(tmp_path.joinpath(output_file), 'r') as f:
