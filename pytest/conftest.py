@@ -41,4 +41,5 @@ def pytest_sessionfinish(session, exitstatus):
     # only the xdist master/controller has no 'workerinput' attribute
     if not hasattr(session.config, "workerinput"):
         # by now *all* workers have exited
-        shutil.rmtree(str(NUMER_FILES_PATH))
+        if NUMER_FILES_PATH.exists():
+            shutil.rmtree(str(NUMER_FILES_PATH))

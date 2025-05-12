@@ -2,7 +2,7 @@ import ctypes
 import random
 import shutil
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 from enum import Enum
 
 import pytest
@@ -17,6 +17,7 @@ command_list_permuted = [x + " " + y for x in command_list for y in command_list
 
 FIB_DIR = Path(__file__).parent
 NUMER_FILES_PATH = FIB_DIR.joinpath("numer_files")
+EXECUTABLE_NAME = "fib"
 
 
 def random_hex_string(length: int) -> str:
@@ -43,14 +44,14 @@ def remove_leading_zeros_str(s: str):
     return s.lstrip('0') or '0'
 
 
-def prepare_test_folder(tmp_path: Path, filename_a: str, filename_b: str = None):
+def prepare_test_folder(tmp_path: Path, filename_a: str = None, filename_b: str = None):
     # copy binary
-    src = FIB_DIR.joinpath("fib")
-    dest = tmp_path.joinpath("fib")
+    src = FIB_DIR.joinpath(EXECUTABLE_NAME)
+    dest = tmp_path.joinpath(EXECUTABLE_NAME)
     shutil.copy(src, dest)
 
     # copy numer files
-    if not tmp_path.joinpath(filename_a).exists():
+    if filename_a is not None and not tmp_path.joinpath(filename_a).exists():
         shutil.copy(NUMER_FILES_PATH.joinpath(filename_a), tmp_path.joinpath(filename_a))
     if filename_b is not None and not tmp_path.joinpath(filename_b).exists():
         shutil.copy(NUMER_FILES_PATH.joinpath(filename_b), tmp_path.joinpath(filename_b))
@@ -138,6 +139,16 @@ def arithmetic_test_helper(operation: OpsTestArithmetic, program_error: bool, tm
     if output_file_2 is not None:
         python_res_string_2 = hex(python_res_2).replace("0x", "").upper()
         assert res_string_2 == python_res_string_2.upper(), f"Res2 false; Command: {command}"
+
+
+def compute_test_helper(tmp_path: Path, output_file: str, command: str, reference_implementation: Callable, n: int):
+    with open(tmp_path.joinpath(output_file), 'r') as f:
+        res_string = f.read()
+    tmp_path.joinpath(output_file).unlink()
+
+    python_res_string = reference_implementation(n)
+
+    assert res_string == python_res_string.upper(), f"{res_string} != {python_res_string.upper()}; Command: {command}"
 
 
 tmp_hex = random_hex_string(500 * 16)
