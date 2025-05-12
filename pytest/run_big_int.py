@@ -30,7 +30,7 @@ def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000) -> 
     except subprocess.TimeoutExpired:
         pytest.skip(f"Valgrind call timed out")
     except Exception as e:
-        pytest.fail(f"Error occurred while trying to run valgrind on student submission; {repr(e)}{format_args(list(map(str, opt)))}")
+        pytest.fail(f"Error occurred while trying to run valgrind on program; {repr(e)}{format_args(list(map(str, opt)))}")
 
     if result_valgrind.returncode < 0:
         pytest.fail(f"Valgrind CRASHED!!!{format_args(result_valgrind.args)}")
@@ -42,5 +42,29 @@ def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000) -> 
     elif result_valgrind.returncode != 0:
         os.write(sys.stderr.fileno(), result_valgrind.stderr)
         os.write(sys.stdout.fileno(), result_valgrind.stdout)
+        return True
+    return False
+
+
+def run_command_non_valgrind(command: str, path: Path, timeout: int = 100000) -> bool:
+    valgrind_error = 1000
+    command = command.strip()
+    opt = str(command).split(' ')
+
+    result: subprocess.CompletedProcess | None = None
+    try:
+        minimal_env = {"PATH": os.environ["PATH"]}
+        result: subprocess.CompletedProcess = subprocess.run(opt, capture_output=True, cwd=path, timeout=timeout, env=minimal_env)
+    except subprocess.TimeoutExpired:
+        pytest.skip(f"Valgrind call timed out")
+    except Exception as e:
+        pytest.fail(f"Error occurred while trying to run program; {repr(e)}{format_args(list(map(str, opt)))}")
+
+    if result.returncode < 0:
+        pytest.fail(f"Program CRASHED!!!{format_args(result.args)}")
+
+    if result.returncode != 0:
+        os.write(sys.stderr.fileno(), result.stderr)
+        os.write(sys.stdout.fileno(), result.stdout)
         return True
     return False

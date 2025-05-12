@@ -6,10 +6,9 @@ from typing import Tuple
 import pytest
 
 from run_big_int import run_command_in_valgrind
-from big_int_helper import command_list, FIB_DIR
+from big_int_helper import command_list_permuted, FIB_DIR
 
 n_list = [0, 1, 2, 5, 10, 42, 69, 102, 999, 10000, 1000000]
-command_list_permuted = [x + " " + y for x in command_list for y in command_list if x != y]
 test_list = [(n, flags) for n in n_list for flags in command_list_permuted]
 
 
@@ -34,6 +33,7 @@ def test_fib_correctness(tmp_path: Path, n: int, flags: str):
     assert res_string == python_res_string.upper(), f"Command: {command}"
 
 
+# TODO: use gmpy2?
 def reference_implementation(n: int) -> int:
     if n < 0:
         raise ValueError("n must be greater than 0")

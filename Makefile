@@ -34,6 +34,8 @@ OBJECT_FILES = $(patsubst src/%.c, $(BUILD_DIR)/%.o, $(SOURCE_FILES_C)) \
 
 .PHONY: main debug sanitize test clean setup
 
+all: main
+
 main:
 	@$(MAKE) all-target OUTPUT_FILENAME=$(OUTPUT_FILENAME) CFLAGS="$(NEED_FLAGS) $(PERFORMANCE_FLAGS) $(WARNING_FLAGS)" BUILD_CONFIG=main
 
@@ -83,6 +85,7 @@ setup:
 	pip install psutil
 	pip install matplotlib
 	pip install pytest-xdist
+	pip install gmpy2
 
 clean:
 	rm -f $(OUTPUT_FILENAME)

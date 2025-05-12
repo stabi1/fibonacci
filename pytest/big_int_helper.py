@@ -13,6 +13,7 @@ random.seed(42)
 
 command_list = ["", "--do-swap --swap-threshold 0", "--deactivate-caches", "-m --max-threads 8", "-m --max-threads 10"]
 command_list_non_multithread = ["", "--do-swap --swap-threshold 0", "--deactivate-caches"]
+command_list_permuted = [x + " " + y for x in command_list for y in command_list if x != y]
 
 FIB_DIR = Path(__file__).parent
 NUMER_FILES_PATH = FIB_DIR.joinpath("numer_files")

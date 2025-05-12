@@ -258,7 +258,14 @@ void conversionAndPrintHelper(bigFrac *res, const char *computeName, const char 
             exit(EXIT_FAILURE);
         }
         if (global_config.verbose) printf("Digits to much: %zu\n", strSizeInBytes - digits + 2);
-        resString[digits + 2] = '\0'; //cut of the too many digits
+        //cut of the too many digits
+        if(digits == 0) {
+            resString[digits + 2] = '0'; // so that 3. turns unto 3.0
+            resString[digits + 3] = '\0';
+        } else {
+            resString[digits + 2] = '\0';
+        }
+
 
         struct timespec start3;
         getCurrentTime(&start3);
