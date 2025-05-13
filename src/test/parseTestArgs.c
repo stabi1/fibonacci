@@ -15,6 +15,7 @@ enum TestType {
     SUB,
     SHIFT_LEFT,
     SHIFT_RIGHT,
+    SHIFT_ADD,
     PRINT_HEX,
     PRINT_DEC
 };
@@ -28,6 +29,7 @@ const size_t numOfArgs[] = {
         [SUB]         = 3,
         [SHIFT_LEFT]  = 3,
         [SHIFT_RIGHT] = 3,
+        [SHIFT_ADD]   = 4,
         [PRINT_HEX]   = 2,
         [PRINT_DEC]   = 2,
 };
@@ -72,6 +74,8 @@ void selectTest(char *args) {
         type = SHIFT_LEFT;
     } else if (strcmp(testType, "shiftRight") == 0) {
         type = SHIFT_RIGHT;
+    } else if (strcmp(testType, "shiftAdd") == 0) {
+        type = SHIFT_ADD;
     } else if (strcmp(testType, "printHex") == 0) {
         type = PRINT_HEX;
     } else if (strcmp(testType, "printDec") == 0) {
@@ -141,6 +145,9 @@ void selectTest(char *args) {
             break;
         case DIV_MOD:
             testDivMod(arg1, arg2, arg3, arg4);
+            break;
+        case SHIFT_ADD:
+            testSHiftAdd(arg1, arg2, arg3, arg4);
             break;
         case PRINT_HEX:
             testWriteBigIntHexToFile(arg1, arg2);

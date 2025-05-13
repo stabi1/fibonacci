@@ -26,7 +26,6 @@ void stripLeadingZeros(bigInt *x) {
     size_t blocks = getOccupiedBlocks(x);
     blocks = blocks == 0 ? 1 : blocks;
     x->end = x->start + blocks;
-    return;
 }
 
 //Returns the bigInt with value 0
@@ -97,10 +96,10 @@ int compareBigInt(const bigInt *a, const bigInt *b) {
     if (isZero(a) && isZero(b)) {
         return 0;
     }
-    if(isZero(a)) {
+    if (isZero(a)) {
         return b->negative ? 1 : -1;
     }
-    if(isZero(b)) {
+    if (isZero(b)) {
         return a->negative ? -1 : 1;
     }
 
@@ -219,6 +218,10 @@ bigInt *shiftRight(const bigInt *x, const size_t n) {
 }
 
 bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
+    if ((x->negative && !isZero(x)) || (toShift->negative && !isZero(toShift))) {
+        fprintf(stderr, "shiftAdd is only defined for non negative integers\n");
+        exit(EXIT_FAILURE);
+    }
     if (isZero(toShift)) { // toShift == 0
         return copyBigInt(x);
     }
@@ -232,11 +235,15 @@ bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
 // the caller must guarantee that x is big enough to hold the result
 // if x had leading zero blocks, if not filled by the addition they will remain
 void shiftAddSameNumber(const bigInt *x, const bigInt *toShift, const size_t n) {
+    if ((x->negative && !isZero(x)) || (toShift->negative && !isZero(toShift))) {
+        fprintf(stderr, "shiftAddSameNumber is only defined for non negative integers\n");
+        exit(EXIT_FAILURE);
+    }
+
     if (isZero(toShift)) {
         return;
     }
     shiftAddSameNumber_Asm(x, toShift, n);
-    return;
 }
 
 //get the lower half of the bigInt (same array, new Struct with different pointers)
@@ -244,7 +251,7 @@ bigInt *getLowerFrom(const bigInt *x, size_t n) {
     if (x->end < x->start + n) {
         n = getLen(x);
     }
-    bigInt *res =newBigIntStruct(x->start, x->start + n, x->bigIntArray);
+    bigInt *res = newBigIntStruct(x->start, x->start + n, x->bigIntArray);
     stripLeadingZeros(res);
     return res;
 }
@@ -372,20 +379,20 @@ bigInt *sub(const bigInt *x, const bigInt *y) {
     }
     if (isZero(subSmaller)) {
         bigInt *res = copyBigInt(subBigger);
-        if(subBigger == y) {
+        if (subBigger == y) {
             res->negative = !y->negative;
         }
         return res;
     }
 
     if (x->negative != y->negative) {
-        if (x == subBigger){
+        if (x == subBigger) {
             return add_helper(subBigger, subSmaller, subBigger->negative);
-        }else{
+        } else {
             return add_helper(subBigger, subSmaller, subSmaller->negative);
         }
     } else {
-        if (x == subBigger){
+        if (x == subBigger) {
             return sub_helper(subBigger, subSmaller, subBigger->negative);
         } else {
             return sub_helper(subBigger, subSmaller, !subBigger->negative);

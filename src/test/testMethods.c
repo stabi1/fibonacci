@@ -49,7 +49,7 @@ bigInt *readBigIntHexFromFileTestHelper(char *path) {
     return res;
 }
 
-void test2InputInt1Output(bigInt *(*operation)(const bigInt *, size_t), char *inputFile1, char *intToShift, char *outputFile) {
+void test1Input1IntOutput(bigInt *(*operation)(const bigInt *, size_t), char *inputFile1, char *intToShift, char *outputFile) {
     bigInt *input = readBigIntHexFromFileTestHelper(inputFile1);
     verifyBigInt(input);
 
@@ -61,6 +61,24 @@ void test2InputInt1Output(bigInt *(*operation)(const bigInt *, size_t), char *in
     writeBigIntHexToFile(res, outputFile);
 
     freeBigInt(input);
+    freeBigInt(res);
+}
+
+void test2Input1IntOutput(bigInt *(*operation)(const bigInt *, const bigInt *, size_t), char *inputFile1, char *inputFile2, char *intToShift, char *outputFile) {
+    bigInt *input1 = readBigIntHexFromFileTestHelper(inputFile1);
+    bigInt *input2 = readBigIntHexFromFileTestHelper(inputFile2);
+    verifyBigInt(input1);
+    verifyBigInt(input2);
+
+    size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
+
+    bigInt *res = operation(input1, input2, toShift);
+    verifyBigInt(res);
+
+    writeBigIntHexToFile(res, outputFile);
+
+    freeBigInt(input1);
+    freeBigInt(input2);
     freeBigInt(res);
 }
 
@@ -101,7 +119,7 @@ void test2Input2Output(bigInt *(*operation)(const bigInt *, const bigInt *, bigI
     freeBigInt(res2);
 }
 
-void test1InputZeroOutput(void (*operation)(const bigInt *, const char *), char *inputFile1,  char *outputFile) {
+void test1InputZeroOutput(void (*operation)(const bigInt *, const char *), char *inputFile1, char *outputFile) {
     bigInt *input1 = readBigIntHexFromFileTestHelper(inputFile1);
     verifyBigInt(input1);
 
@@ -130,12 +148,16 @@ void testSub(char *inputFile1, char *inputFile2, char *outputFile) {
     test2Input1Output(sub, inputFile1, inputFile2, outputFile);
 }
 
-void testShiftLeft(char *inputFile1, char *inputFile2, char *outputFile) {
-    test2InputInt1Output(shiftLeft, inputFile1, inputFile2, outputFile);
+void testShiftLeft(char *inputFile1, char *toShiftInt, char *outputFile) {
+    test1Input1IntOutput(shiftLeft, inputFile1, toShiftInt, outputFile);
 }
 
-void testShiftRight(char *inputFile1, char *inputFile2, char *outputFile) {
-    test2InputInt1Output(shiftRight, inputFile1, inputFile2, outputFile);
+void testShiftRight(char *inputFile1, char *toShiftInt, char *outputFile) {
+    test1Input1IntOutput(shiftRight, inputFile1, toShiftInt, outputFile);
+}
+
+void testSHiftAdd(char *inputFile1, char *inputFile2, char *toShiftInt, char *outputFile) {
+    test2Input1IntOutput(shiftAdd, inputFile1, inputFile2, toShiftInt, outputFile);
 }
 
 void testWriteBigIntHexToFile(char *inputFile1, char *outputFile) {

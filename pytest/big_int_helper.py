@@ -64,7 +64,8 @@ class OpsTestArithmetic(Enum):
     ADD = 4,
     SUB = 5,
     SHIFT_LEFT = 6,
-    SHIFT_RIGHT = 7
+    SHIFT_RIGHT = 7,
+    SHIFT_ADD = 8
 
 
 def arithmetic_test_helper(operation: OpsTestArithmetic, program_error: bool, tmp_path: Path, filename_a: str, output_file: str, command: str, filename_b: str = None,
@@ -104,6 +105,10 @@ def arithmetic_test_helper(operation: OpsTestArithmetic, program_error: bool, tm
             sign = -1 if python_a < 0 else 1  # non-arithmetic right shift
             a_abs = abs(python_a)
             python_res = (a_abs >> integer) * sign
+        elif operation == OpsTestArithmetic.SHIFT_ADD:
+            if python_a < 0 or python_b < 0:
+                raise Exception("Numbers must be positive for shiftAdd")
+            python_res = python_a + (python_b << integer * 64)
         else:
             raise NotImplementedError("Invalid operation")
 

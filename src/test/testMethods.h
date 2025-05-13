@@ -15,6 +15,8 @@ void testShiftLeft(char *inputFile1, char *inputFile2, char *outputFile);
 
 void testShiftRight(char *inputFile1, char *inputFile2, char *outputFile);
 
+void testSHiftAdd(char *inputFile1, char *inputFile2, char *toShiftInt, char *outputFile);
+
 void testWriteBigIntHexToFile(char *inputFile1, char *outputFile);
 
 void testWriteBigIntDecToFile(char *inputFile1, char *outputFile);
