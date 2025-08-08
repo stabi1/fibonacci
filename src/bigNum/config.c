@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <sys/sysinfo.h>
+
 #include "config.h"
 #include "bigInt/bigIntAlloc.h"
+#include "bigFrac/bigFracAlloc.h"
 
 Config global_config = {
         .verbose = false,
@@ -21,11 +23,14 @@ Config global_config = {
 };
 
 void cleanupBigIntLib() {
-    //clear bigIntStructStack
-    free_BigIntStack(get_thread_BigIntStack());
-    free_BigIntStack(get_thread_bigIntArrayStack_1KB());
-    free_BigIntStack(get_thread_bigIntArrayStack_10KB());
-    free_BigIntStack(get_thread_bigIntArrayStack_100KB());
+    // clear bigInt stacks
+    free_Stack(get_thread_BigIntStack());
+    free_Stack(get_thread_bigIntArrayStack_1KB());
+    free_Stack(get_thread_bigIntArrayStack_10KB());
+    free_Stack(get_thread_bigIntArrayStack_100KB());
+
+    // clear bigFrac stacks
+    free_Stack(get_thread_BigFracStack());
 }
 
 size_t getNumOfThreadsFromDepthMul(size_t mulDepth) {

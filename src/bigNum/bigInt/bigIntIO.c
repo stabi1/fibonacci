@@ -189,22 +189,21 @@ char *readFile(const char *path) {
 
     struct stat statbuf;
     if (fstat(fileno(file), &statbuf)) {
-        perror("Error retrieving file stats\n");
+        fprintf(stderr,"Error retrieving stats for file '%s': %s\n", path, strerror(errno));
         goto cleanup;
     }
 
     if (!S_ISREG(statbuf.st_mode) || statbuf.st_size <= 0) {
-        fprintf(stderr, "Error processing file: Not a regular file or invalid size\n");
+        fprintf(stderr, "Error processing file '%s': Not a regular file or invalid size\n", path);
         goto cleanup;
     }
 
     if (!(string = malloc(statbuf.st_size + 1))) {
-        fprintf(stderr, "Error reading file: Could not allocate enough memory\n");
+        fprintf(stderr, "Error reading file '%s': Could not allocate enough memory\n", path);
         goto cleanup;
     }
-    if (fread(string, 1, statbuf.st_size, file) != (size_t) statbuf.
-            st_size) {
-        perror("Error reading file");
+    if (fread(string, 1, statbuf.st_size, file) != (size_t) statbuf.st_size) {
+        fprintf(stderr,"Error reading file '%s': %s\n", path, strerror(errno));
         free(string);
         string = NULL;
         goto cleanup;
@@ -226,7 +225,7 @@ int writeFile(const char *path, const char *string, bool append) {
     }
     const size_t stringLen = strlen(string);
     if (fwrite(string, 1, stringLen, file) != stringLen) {
-        perror("Error writing to file");
+        fprintf(stderr,"Error writing to file '%s': %s\n", path, strerror(errno));
         fclose(file);
         return -1;
     }
@@ -251,7 +250,7 @@ bigInt *readBigIntFromFile(const char *filename) {
 
     bool negative;
     if (fread(&negative, sizeof(bool), 1, file) != 1) {
-        perror("Error reading file");
+        fprintf(stderr,"Error reading file '%s': %s\n", filename, strerror(errno));
         fclose(file);
         return NULL;
     }
@@ -262,7 +261,7 @@ bigInt *readBigIntFromFile(const char *filename) {
     res->negative = negative;
 
     if (fread(res->bigIntArray, sizeof(uint64_t), arrayLength, file) != arrayLength) {
-        perror("Error reading file");
+        fprintf(stderr,"Error reading file '%s': %s\n", filename, strerror(errno));
         free(res);
         fclose(file);
         return NULL;
@@ -282,12 +281,12 @@ int writeBigIntToFile(const char *filename, const bigInt *b) {
     // Save the primitive fields
     size_t length = getLen(b);
     if (fwrite(&length, sizeof(size_t), 1, file) != 1) {
-        perror("Error writing to file");
+        fprintf(stderr,"Error writing to file '%s': %s\n", filename, strerror(errno));
         fclose(file);
         return -1;
     }
     if (fwrite(&b->negative, sizeof(bool), 1, file) != 1) {
-        perror("Error writing to file");
+        fprintf(stderr,"Error writing to file '%s': %s\n", filename, strerror(errno));
         fclose(file);
         return -1;
     }
@@ -295,7 +294,7 @@ int writeBigIntToFile(const char *filename, const bigInt *b) {
     // Save the bigIntArray length and data
     size_t arrayLength = b->end - b->start;
     if (fwrite(b->bigIntArray + b->start, sizeof(uint64_t), arrayLength, file) != arrayLength) {
-        perror("Error writing to file");
+        fprintf(stderr,"Error writing to file '%s': %s\n", filename, strerror(errno));
         fclose(file);
         return -1;
     }
@@ -305,8 +304,9 @@ int writeBigIntToFile(const char *filename, const bigInt *b) {
 }
 
 void removeFile(const char *path) {
-    if (remove(path) != 0)
-        perror("Error deleting file");
+    if (remove(path) != 0) {
+        fprintf(stderr,"Error deleting file '%s': %s\n", path, strerror(errno));
+    }
 }
 
 bool fileExists(const char *path) {
@@ -322,7 +322,7 @@ int createDirectory(const char *path) {
     if (mkdir(path, 0755) == 0) {
         return 0;
     } else {
-        perror("Error creating directory");
+        fprintf(stderr,"Error creating directory '%s': %s\n", path, strerror(errno));
         return -1;
     }
 }
@@ -346,7 +346,8 @@ int delete_files_in_folder(const char *folder_path) {
     bool error = false;
 
     if (dir == NULL) {
-        perror("opendir");
+        fprintf(stderr,"opendir failed for directory '%s': %s\n", folder_path, strerror(errno));
+        perror("");
         return -1;
     }
 

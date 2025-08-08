@@ -115,7 +115,7 @@ uint64_t *allocBigIntArray(size_t len, size_t *completeLen, bool setZero) {
 
 // Push an element onto the stack
 int pushBigIntStack(bigInt *x) {
-    if (global_config.deactivateCaches) return -1;
+    if (global_config.deactivateCaches) { return -1; }
     BigIntStack *stack = get_thread_BigIntStack();
     if (stack->top >= stack->size - 1) {
         return -1; // Stack is full
@@ -127,7 +127,7 @@ int pushBigIntStack(bigInt *x) {
 
 // Pop an element from the stack
 int popBigIntStack(bigInt **x) {
-    if (global_config.deactivateCaches) return -1;
+    if (global_config.deactivateCaches) { return -1; }
     BigIntStack *stack = get_thread_BigIntStack();
     if (stack->top < 0) {
         return -1; // Stack is empty
@@ -138,7 +138,7 @@ int popBigIntStack(bigInt **x) {
 }
 
 int pushBigIntArrayStack(uint64_t *x, size_t len) {
-    if (global_config.deactivateCaches) return -1;
+    if (global_config.deactivateCaches) { return -1; }
     BigIntArrayStack *stack;
     if (len < 125) {
         return -1;
@@ -161,7 +161,7 @@ int pushBigIntArrayStack(uint64_t *x, size_t len) {
 }
 
 int popBigIntArrayStack(uint64_t **x, size_t len, size_t *completeLen) {
-    if (global_config.deactivateCaches) return -1;
+    if (global_config.deactivateCaches) { return -1; }
     BigIntArrayStack *stack;
     if (len <= 125) {
         *completeLen = 125;
@@ -185,7 +185,7 @@ int popBigIntArrayStack(uint64_t **x, size_t len, size_t *completeLen) {
 }
 
 BigIntStack *create_stack(long size) {
-    BigIntStack *stack = (BigIntStack *) malloc(sizeof(BigIntStack));
+    BigIntStack *stack = (BigIntStack *) malloc(sizeof(BigIntStack)); // all stacks are the same size
     mallocCheck(stack);
     stack->top = -1;  // Initially, the stack is empty
     stack->array = malloc(size * 8);
@@ -195,7 +195,7 @@ BigIntStack *create_stack(long size) {
 }
 
 // Frees the stack (used for cleanup when a thread finishes)
-void free_BigIntStack(void *ptr) {
+void free_Stack(void *ptr) {
     BigIntStack *stack = (BigIntStack *) ptr;
     if (stack) {
         for (int i = 0; i <= stack->top; ++i) {
@@ -208,28 +208,28 @@ void free_BigIntStack(void *ptr) {
 
 
 void init_stack_key_bigIntStruct() {
-    if (pthread_key_create(&bigIntStruct_stack_key, free_BigIntStack) != 0) {
+    if (pthread_key_create(&bigIntStruct_stack_key, free_Stack) != 0) {
         perror("Error creating stack key");
         exit(EXIT_FAILURE);
     }
 }
 
 void init_stack_key_bigIntArrayStack_1KB() {
-    if (pthread_key_create(&bigIntArrayStack_1KB_stack_key, free_BigIntStack) != 0) {
+    if (pthread_key_create(&bigIntArrayStack_1KB_stack_key, free_Stack) != 0) {
         perror("Error creating stack key");
         exit(EXIT_FAILURE);
     }
 }
 
 void init_stack_key_bigIntArrayStack_10KB() {
-    if (pthread_key_create(&bigIntArrayStack_10KB_stack_key, free_BigIntStack) != 0) {
+    if (pthread_key_create(&bigIntArrayStack_10KB_stack_key, free_Stack) != 0) {
         perror("Error creating stack key");
         exit(EXIT_FAILURE);
     }
 }
 
 void init_stack_key_bigIntArrayStack_100KB() {
-    if (pthread_key_create(&bigIntArrayStack_100KB_stack_key, free_BigIntStack) != 0) {
+    if (pthread_key_create(&bigIntArrayStack_100KB_stack_key, free_Stack) != 0) {
         perror("Error creating stack key");
         exit(EXIT_FAILURE);
     }

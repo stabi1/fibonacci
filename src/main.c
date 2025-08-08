@@ -19,8 +19,6 @@ void printHelpMenu();
 const char *DEFAULT_FILENAME = "output.txt";
 
 // TODO: look at add/sub if signs and size are optimal
-// TODO: better error messages in bigIntIO
-// TODO: caching for the bigFrac struct
 // TODO: implement swapping for goldenRation and Pi, check bigFrac for swapping potential
 // TODO: better root algorithm (Karatsuba Square Root), root for bigInt
 // TODO: Use linter and fix code, docu with comments

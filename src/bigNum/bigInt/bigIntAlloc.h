@@ -37,7 +37,9 @@ BigIntArrayStack *get_thread_bigIntArrayStack_10KB();
 
 BigIntArrayStack *get_thread_bigIntArrayStack_100KB();
 
-void free_BigIntStack(void *ptr);
+BigIntStack *create_stack(long size);
+
+void free_Stack(void *ptr);
 
 uint64_t *allocBigIntArray(size_t len, size_t *completeLen, bool setZero);
 
