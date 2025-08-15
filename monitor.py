@@ -97,9 +97,10 @@ def monitor_process(pid, monitor_interval: float, compress_values: bool, start_t
             with process.oneshot():
                 threads = process.threads()  # Get list of threads
                 thread_ids = [t.id for t in threads]  # List of all thread Ids
+                cmd = process.cmdline()[0] if process.cmdline() else "No command found" # get command
                 print(
                     f"PID: {process.pid} | NUM Threads: {len(thread_ids)} | MEM%: {process.memory_percent():.2f}% | RSS: {human_readable_size(process.memory_info().rss // 1024)} |"
-                    f"Swap: {human_readable_size(swap_size)} | Command: {process.cmdline()[0]} | Log entries: {len(data)} | Passed time: {timestamp}")
+                    f"Swap: {human_readable_size(swap_size)} | Command: {cmd} | Log entries: {len(data)} | Passed time: {timestamp}")
 
             # log data, make long horizontal line for skipped data points
             last_entry = data[-1]

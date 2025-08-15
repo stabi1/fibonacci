@@ -206,6 +206,4 @@ void reduceToFirstNBits(bigInt *x, size_t n) {
 
     // Strip any leading zeros that might have been created by masking
     stripLeadingZeros(x);
-
-    return;
 }

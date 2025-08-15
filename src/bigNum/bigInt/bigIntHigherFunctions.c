@@ -122,7 +122,6 @@ bigInt *fibWithLucas(uint64_t n) {
     }
     FibLucPair *resStrct = fibLuc((int64_t) n, 0);
     bigInt *res = resStrct->fib;
-    freeBigInt(resStrct->luc);
     free(resStrct);
     return res;
 }
@@ -131,6 +130,7 @@ bigInt *fibWithLucas(uint64_t n) {
 // also this here: https://ii.uni.wroc.pl/~lorys/IPL/article75-6-1.pdf
 // needs only 2 multiplications per step instead of the 3 of the fastDoubling -> speedup of 1.5 (33% faster)
 // handles negative numbers as well
+// returns a fibLuc Pair internally but only the fib to the caller, luc will be null
 FibLucPair *fibLuc(int64_t n, size_t depth) {
     FibLucPair *result;
     struct timespec start, end;
@@ -182,25 +182,39 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         }
 
         bigInt *sum_fib = add(prev->fib, prev->luc);
-        char *filename_prev_luc = storeBigIntInSwap(prev->luc);
+        char *filename_prev_luc;
+        if(depth == 0) {
+            freeBigInt(prev->fib);
+            freeBigInt(prev->luc);
+        } else {
+            filename_prev_luc = storeBigIntInSwap(prev->luc);
+        }
+
         bigInt *fib_new = shiftRight(sum_fib, 1);
-        char *filename_fib_new = storeBigIntInSwap(fib_new);
         freeBigInt(sum_fib);
 
-        bigInt *five = getBigIntFromUnsignedInteger(5);
-        bigInt *five_mul_fib = mul(five, prev->fib);
-        freeBigInt(prev->fib);
-        freeBigInt(five);
-        prev->luc = loadBigIntFromSwap(prev->luc, filename_prev_luc);
-        bigInt *sum_luc = add(five_mul_fib, prev->luc);
-        freeBigInt(prev->luc);
-        freeBigInt(five_mul_fib);
-        bigInt *luc_new = shiftRight(sum_luc, 1);
-        freeBigInt(sum_luc);
+        if(depth == 0) {
+            result = prev;
+            result->fib = fib_new;
+            result->luc = nullptr;
+        } else {
+            char *filename_fib_new = storeBigIntInSwap(fib_new);
 
-        result = prev;
-        result->fib = loadBigIntFromSwap(fib_new, filename_fib_new);
-        result->luc = luc_new;
+            bigInt *five = getBigIntFromUnsignedInteger(5);
+            bigInt *five_mul_fib = mul(five, prev->fib);
+            freeBigInt(prev->fib);
+            freeBigInt(five);
+            prev->luc = loadBigIntFromSwap(prev->luc, filename_prev_luc);
+            bigInt *sum_luc = add(five_mul_fib, prev->luc);
+            freeBigInt(prev->luc);
+            freeBigInt(five_mul_fib);
+            bigInt *luc_new = shiftRight(sum_luc, 1);
+            freeBigInt(sum_luc);
+
+            result = prev;
+            result->fib = loadBigIntFromSwap(fib_new, filename_fib_new);
+            result->luc = luc_new;
+        }
 
         if (global_config.superVerbose) {
             getCurrentTime(&end);
@@ -225,18 +239,29 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
             getCurrentTime(&start);
         }
         bigInt *fib_new = mul(half->fib, half->luc);
-        char *filename_fib_new = storeBigIntInSwap(fib_new);
         freeBigInt(half->fib);
-        bigInt *luc_sq = mul(half->luc, half->luc);
-        freeBigInt(half->luc);
-        bigInt *two_k = getBigIntFromSignedInteger(2 * k);
-        bigInt *luc_new = add(luc_sq, two_k);
-        freeBigInt(two_k);
-        freeBigInt(luc_sq);
 
-        result = half;
-        result->fib = loadBigIntFromSwap(fib_new, filename_fib_new);
-        result->luc = luc_new;
+        if(depth == 0) {
+            freeBigInt(half->luc);
+
+            result = half;
+            result->fib = fib_new;
+            result->luc = nullptr;
+        } else {
+
+            char *filename_fib_new = storeBigIntInSwap(fib_new);
+
+            bigInt *luc_sq = mul(half->luc, half->luc);
+            freeBigInt(half->luc);
+            bigInt *two_k = getBigIntFromSignedInteger(2 * k);
+            bigInt *luc_new = add(luc_sq, two_k);
+            freeBigInt(two_k);
+            freeBigInt(luc_sq);
+
+            result = half;
+            result->fib = loadBigIntFromSwap(fib_new, filename_fib_new);
+            result->luc = luc_new;
+        }
 
         if (global_config.superVerbose) {
             getCurrentTime(&end);

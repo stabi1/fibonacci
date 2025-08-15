@@ -2,7 +2,7 @@
 MAKEFLAGS += --no-print-directory # to remove Entering directory output
 
 # Flags
-NEED_FLAGS = -pthread -lpthread -march=native -z noexecstack -std=c17 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
+NEED_FLAGS = -pthread -lpthread -march=native -z noexecstack -std=c2x -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 PERFORMANCE_FLAGS = -O3 -flto=auto -fuse-linker-plugin
 WARNING_FLAGS = -Wall -Wextra
 LINKER_FLAGS = -lm

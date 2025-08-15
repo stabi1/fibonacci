@@ -119,7 +119,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     size_t M = bitLenA > bitLenB ? bitLenA : bitLenB;
 
     // 1) Parameter
-    uint64_t m = floor(log2(2 * M - 1)) + 1;
+    uint64_t m = (uint64_t) floor(log2(2 * (double) M - 1)) + 1;
     bool mOdd = m % 2 == 1;
     uint64_t n = mOdd ? (m + 1) / 2 : (m + 2) / 2;
     uint64_t chunkLengthBits = 1ULL << (n - 1);
@@ -130,10 +130,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         fprintf(stderr, "Error: SSA called but parameters do not work | chunkLength: %lu, n: %lu\n", chunkLength, n);
         exit(EXIT_FAILURE);
     }
-
-    // uint64_t paddedLengthBits = 1ULL << (m + 1);
-    // uint64_t paddedLength = paddedLengthBits / 64;
-    // uint64_t chunkLength = chunkLengthBits / 64;
 
     // 2) blockwise Splitting in a[0..numChunks-1], b[0..numChunks-1], each block has 2n-1 bits
     bigInt **a = malloc(numChunks * sizeof(bigInt *));
@@ -188,10 +184,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     bigInt **gamma = malloc(gammaSize * sizeof(bigInt *));
     mallocCheck(gamma);
     for (size_t i = 0; i < gammaSize; ++i) {
-        /*bigInt *tmp = shiftRight(uv, gap);
-        bigInt *toReduce = uv;
-        reduceToFirstNBits(toReduce, gap);
-        gamma[i] = toReduce;*/
         gamma[i] = getFirstNBits(uv, gap);
         bigInt *tmp = shiftRight(uv, gap);
         freeBigInt(uv);
@@ -211,8 +203,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         freeBigInt(sum1);
         freeBigInt(sum2);
         // mod 2^(n+2):
-        /*reduceToFirstNBits(diff, mod2_bits);
-        z2[j] = diff;*/
         z2[j] = getFirstNBits(diff, mod2_bits);
         freeBigInt(diff);
     }
@@ -297,8 +287,6 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         }
 
         freeBigInt(z2[j]);
-        //bigInt *delta = deltaNoMod;
-        //reduceToFirstNBits(delta, mod2_bits);
         bigInt *delta = getFirstNBits(deltaNoMod, mod2_bits);
         freeBigInt(deltaNoMod);
 
