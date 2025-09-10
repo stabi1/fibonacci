@@ -108,8 +108,8 @@ void benchMark() {
     size_t iterations = 1; //iterations
     printf("Benchmark with Iterations: %ld\n", iterations);
 
-    //size_t n = 2000000;
-    size_t n = 1000000;
+    //size_t n = 200000;
+    size_t n = 4000000;
 
     char* c1 = randomHex(n*16);
     char* c2 = randomHex(n*16);

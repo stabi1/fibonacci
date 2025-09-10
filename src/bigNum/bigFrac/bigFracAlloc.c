@@ -83,7 +83,7 @@ void init_stack_key_bigFracStack() {
 }
 
 BigFracStack *get_thread_BigFracStack() {
-    static __thread BigFracStack *cached_stack = NULL;
+    static _Thread_local BigFracStack *cached_stack = NULL;
     if (!cached_stack) {
         if (pthread_once(&bigFracStruct_stack_key_once, init_stack_key_bigFracStack) != 0) {
             perror("Error in pthread_once");

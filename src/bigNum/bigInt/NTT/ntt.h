@@ -3,17 +3,51 @@
 
 #include "nttAsm.h"
 #include "../bigInt.h"
+#include <stdio.h>
 
 bigInt *ntt_mul(const bigInt *A, const bigInt *B);
 
-static uint64_t const prime = 0xd800000000000001;
+#define prime 0xd800000000000001ULL
 
-#define PAD(x) ((unsigned __int128)(x))
-#define PAD_OP(x, op, y) (PAD(x) op PAD(y))
-#define MOD_OP(x, op, y) mod_prime(PAD_OP(x, op, y))
-#define MOD_MUL(x, y) MOD_OP(x, *, y)
-#define MOD_ADD(x, y) MOD_OP(x, +, y)
-#define MOD_SUB(x, y) mod_prime(PAD(x) + PAD((y) ? prime - (y) : 0))
+// assumes a and b are already < mod
+static inline uint64_t add_mod(uint64_t a, uint64_t b) {
+    uint64_t s = a + b;
+    if (s < a || s >= prime) s -= prime;
+    return s;
+}
+
+// assumes a and b are already < mod
+static inline uint64_t sub_mod(uint64_t a, uint64_t b) {
+    uint64_t s = a - b;
+    if (a < b) s += prime;
+    return s;
+}
+
+// 2^128/prime
+static const unsigned __int128 INV_PRIME_128 = ((unsigned __int128) 0x1ULL << 64 | 0x2f684bda12f684bcULL);
+
+// assumes a and b are already < mod
+static inline uint64_t mul_mod(uint64_t a, uint64_t b) {
+    // 1) full 128-bit product t = a * b
+    unsigned __int128 t = (unsigned __int128) a * (unsigned __int128) b; // 0 <= t < 2^128
+
+    // 2) compute b' = floor(b * 2^64 / MOD)
+    //    b' = (b * inv128) >> 64
+    uint64_t bprime = (uint64_t) (((unsigned __int128) b * INV_PRIME_128) >> 64);
+
+    // 3) q = high64(a * b')
+    uint64_t q = (uint64_t) (((unsigned __int128) a * (unsigned __int128) bprime) >> 64);
+
+    // 4) r = t - q * MOD
+    unsigned __int128 r = t - (unsigned __int128) q * (unsigned __int128) prime;
+
+    // 5) correct: r, usually not executed more than once
+    while (r >= (unsigned __int128) prime){
+        r -= (unsigned __int128) prime;
+    }
+
+    return (uint64_t) r;
+}
 
 // `root_of_unity[k]` is a primitive 2^k-th root of unity
 static uint64_t const root_of_unity[] = {

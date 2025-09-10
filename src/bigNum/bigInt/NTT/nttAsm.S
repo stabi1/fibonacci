@@ -1,7 +1,8 @@
 .intel_syntax noprefix
 .global mod_prime
 
-
+// barret reduction
+// uint64_t mod_prime(unsigned __int128 x);
 mod_prime:
     movabs  r8, 0x39975a3fe9867f21
     mov     rax, rdi

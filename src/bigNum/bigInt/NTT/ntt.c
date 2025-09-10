@@ -42,15 +42,15 @@ static void ntt_twice(uint64_t *restrict const a, uint64_t *restrict const b,
             for (size_t j = 0; j < m2; ++j) {
                 uint64_t even_a = a[k + j];
                 uint64_t even_b = b[k + j];
-                uint64_t odd_a = MOD_MUL(coef, a[k + j + m2]);
-                uint64_t odd_b = MOD_MUL(coef, b[k + j + m2]);
+                uint64_t odd_a = mul_mod(coef, a[k + j + m2]);
+                uint64_t odd_b = mul_mod(coef, b[k + j + m2]);
 
-                a[k + j] = MOD_ADD(even_a, odd_a);
-                b[k + j] = MOD_ADD(even_b, odd_b);
-                a[k + j + m2] = MOD_SUB(even_a, odd_a);
-                b[k + j + m2] = MOD_SUB(even_b, odd_b);
+                a[k + j] = add_mod(even_a, odd_a);
+                b[k + j] = add_mod(even_b, odd_b);
+                a[k + j + m2] = sub_mod(even_a, odd_a);
+                b[k + j + m2] = sub_mod(even_b, odd_b);
 
-                coef = MOD_MUL(coef, root_of_unity_local);
+                coef = mul_mod(coef, root_of_unity_local);
             }
         }
     }
@@ -67,12 +67,12 @@ static void ntt_once(uint64_t *restrict const a,
             uint64_t coef = 1;
             for (size_t j = 0; j < m2; ++j) {
                 uint64_t even_a = a[k + j];
-                uint64_t odd_a = MOD_MUL(coef, a[k + j + m2]);
+                uint64_t odd_a = mul_mod(coef, a[k + j + m2]);
 
-                a[k + j] = MOD_ADD(even_a, odd_a);
-                a[k + j + m2] = MOD_SUB(even_a, odd_a);
+                a[k + j] = add_mod(even_a, odd_a);
+                a[k + j + m2] = sub_mod(even_a, odd_a);
 
-                coef = MOD_MUL(coef, root_of_unity_local);
+                coef = mul_mod(coef, root_of_unity_local);
             }
         }
     }
@@ -85,7 +85,7 @@ void fold(uint64_t const *restrict const src_b,
     for (size_t i = 0; i < len; ++i) {
         uint64_t *b_window = (uint64_t *) &dst_b[i];
         b_carry = __builtin_add_overflow(*b_window, b_carry, b_window);
-        b_carry += __builtin_add_overflow(*b_window, MOD_MUL(src_b[i], power_of_half[len_log]), b_window);
+        b_carry += __builtin_add_overflow(*b_window, mul_mod(src_b[i], power_of_half[len_log]), b_window);
     }
 }
 
@@ -107,7 +107,7 @@ bigInt *ntt_mul(const bigInt *A, const bigInt *B) {
         B = tmp;
     } // A is longer now
 
-    if(getLen(A) > 1) {}
+    if(getLen(A) > 1) {} // TODO: max length
 
     // 1) calculate constants
     size_t A_16_len = getLen(A) * 4;
@@ -156,7 +156,7 @@ bigInt *ntt_mul(const bigInt *A, const bigInt *B) {
     // 5) pointwise
     uint64_t *c_freq = calloc(len_radix_max, sizeof *c_freq);
     for (size_t i = 0, ri = 0; i < len_radix_max; ++i, ri = bit_reversed_increment(ri, len_radix_max)) {
-        c_freq[ri] = MOD_MUL(a_freq[i], b_freq[i]);
+        c_freq[ri] = mul_mod(a_freq[i], b_freq[i]);
     }
     free(a_freq);
     free(b_freq);
