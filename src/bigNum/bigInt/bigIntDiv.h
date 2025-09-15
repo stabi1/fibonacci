@@ -12,6 +12,8 @@
 
 bigInt *exactDivideBy3(const bigInt *x);
 
+bigInt *divideBy10Raised19(bigInt *dividend, uint64_t *reminder);
+
 bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool noBurnikelZiegler, bool multithread, size_t mulDepth, bool freeArguments);
 
 bigInt *divideD4Helper(bigInt *dividend, bigInt *divisor, bigInt **reminder);

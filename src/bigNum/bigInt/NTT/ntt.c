@@ -2,7 +2,6 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 
 #include "../bigIntMethods.h"
 #include "../../misc.h"

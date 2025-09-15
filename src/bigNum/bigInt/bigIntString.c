@@ -191,7 +191,7 @@ bigInt *decStringToBigIntLength(const char *decStr, const size_t strLen, const b
 }
 
 
-// calling function still needs to resize!!!
+// calling function still needs to resize
 void decStringToBigIntHelper(uint64_t *array, const size_t arrayLen, const char *decStr, const size_t decStrLen) {
     const char *decStringEnd = decStr + decStrLen;
     size_t digestsDone = 0;
@@ -269,8 +269,8 @@ char *uint64tArrayToHexString(const uint64_t *array, size_t lenInNibbles, size_t
     long j = (long) lenInNibbles - 1;
     long loopEnd = 1;
     if (negative) {
-        j++; // start one later to make space for negative sign
-        loopEnd++; // adjust loop end too
+        j++; // start one later to make space for the negative sign
+        loopEnd++; // adjust the loop end too
     }
     size_t i = start * 8;
     for (; j >= loopEnd; i++, j -= 2) {
@@ -295,23 +295,6 @@ size_t hexToNibble(char hex) {
         fprintf(stderr, "HexString Invalid, contains char %c\n", hex);
         exit(EXIT_FAILURE);
     }
-}
-
-//returns the decimal representation of the uint64_t
-char *uint64_t_toDecString(uint64_t x) {
-    size_t bufLen = 20;
-    char buf[bufLen];
-    size_t charPos = bufLen - 1;
-    while (x >= 10) {
-        buf[charPos--] = decLookup[x % 10];
-        x = x / 10;
-    }
-    buf[charPos] = decLookup[x];
-    char *res = malloc(bufLen - charPos + 1);
-    mallocCheck(res);
-    memcpy(res, buf + charPos, bufLen - charPos);
-    res[bufLen - charPos] = '\0';
-    return res;
 }
 
 size_t calculateDecStringSpace(const bigInt *x) {
@@ -344,9 +327,9 @@ char *bigIntToDecStringSchoenhage(bigInt *x) {
     return res;
 }
 
-// FREES the bigInt that is passed!!!
+// FREES the bigInt that is passed
 struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t digits, bool beginning) {
-    size_t resMaxLen = (digits == 0 || beginning) ? calculateDecStringSpace(x) : digits;
+    size_t resMaxLen = (digits == 0 || beginning) ? calculateDecStringSpace(x) : digits + 1;
     char *res = malloc(resMaxLen);
     mallocCheck(res);
     size_t len = 0;
@@ -359,30 +342,95 @@ struct schoenhageReturn *bigIntToDecStringSchoenhageLenRet(bigInt *x, size_t dig
     return ret;
 }
 
-//shamelessly adapted from Java Jdk8
 void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resString, size_t *resStringCounter,
                                        bool beginning) {
     /* If we're smaller than a certain threshold, use the smallToString
        method, padding with leading zeroes when necessary. */
     size_t xLen = getLen(x);
     if (xLen <= DEC_STRING_SMALL_FASTER) {
-        char *s = bigIntToDecStringSmall(x);
-
-        // Pad with internal zeros if necessary.
-        // Don't pad if we're at the beginning of the string.
-        if ((strlen(s) < digits) && !beginning) {
-            for (size_t i = strlen(s); i < digits; i++) {
-                (*resString)[(*resStringCounter)++] = '0';
-            }
-        } else if (beginning) { // append negative sign in the front
+        if (beginning) { // append a negative sign in the front if negative and in the beginning
             if (x->negative) {
                 (*resString)[(*resStringCounter)++] = '-';
             }
+
+            if (isZero(x)) { // should never happen
+                freeBigInt(x);
+                fprintf(stderr, "Error in dec string conversion: leading bigInt part is zero\n");
+                return;
+            }
+
+            size_t resTmpLen = calculateDecStringSpace(x);
+            char *resTmp = malloc(resTmpLen);
+            mallocCheck(resTmp);
+
+            bigInt *tmp = x;
+            size_t resTmpPos = resTmpLen - 1;
+            uint64_t reminder = 0;
+            while (true) {
+                bigInt *q = divideBy10Raised19(tmp, &reminder);
+                freeBigInt(tmp);
+                if (isZero(q)) {
+                    freeBigInt(q);
+                    break;
+                }
+
+                for(size_t i = 0; i < DEC_DIGITS_PER_UINT64 - 1; i++) {
+                    resTmp[resTmpPos--] = decLookup[reminder % 10];
+                    reminder = reminder / 10;
+                }
+                resTmp[resTmpPos--] = decLookup[reminder];
+
+                tmp = q;
+            }
+            while(reminder != 0) {
+                resTmp[resTmpPos--] = decLookup[reminder % 10];
+                reminder = reminder / 10;
+            }
+
+            size_t resLen = resTmpLen - 1 - resTmpPos;
+            memcpy(*resString + *resStringCounter, resTmp + resTmpPos + 1, resLen);
+            *resStringCounter += resLen;
+            free(resTmp);
+            return;
         }
-        freeBigInt(x);
-        memcpy(*resString + *resStringCounter, s, strlen(s));
-        *resStringCounter += strlen(s);
-        free(s);
+
+        if (isZero(x)) {
+            freeBigInt(x);
+            memset(*resString + *resStringCounter, '0', digits);
+            *resStringCounter += digits;
+            return;
+        }
+        // Translate number to string, DEC_DIGITS_PER_UINT64 digits a time
+        size_t localResPos = *resStringCounter + digits - 1;
+        bigInt *tmp = x;
+        uint64_t reminder = 0;
+        while (true) {
+            bigInt *q = divideBy10Raised19(tmp, &reminder);
+            freeBigInt(tmp);
+            if (isZero(q)) {
+                freeBigInt(q);
+                break;
+            }
+            // conversion of 64bit integer to decimal string (always leading zeros to pad to DEC_DIGITS_PER_UINT64 digits)
+            for(size_t i = 0; i < DEC_DIGITS_PER_UINT64 - 1; i++) {
+                (*resString)[localResPos--] = decLookup[reminder % 10];
+                reminder = reminder / 10;
+            }
+            (*resString)[localResPos--] = decLookup[reminder];
+
+            tmp = q;
+        }
+
+        for(size_t i = 0; i < DEC_DIGITS_PER_UINT64 - 1; i++) {
+            (*resString)[localResPos--] = decLookup[reminder % 10];
+            reminder = reminder / 10;
+            if (localResPos == *resStringCounter) {
+                break;
+            }
+        }
+        (*resString)[localResPos] = decLookup[reminder];
+
+        *resStringCounter += digits;
         return;
     }
 
@@ -396,7 +444,7 @@ void bigIntToDecStringSchoenhageHelper(bigInt *x, size_t digits, char **resStrin
         v = vNew;
     }
 
-    bigInt *r = NULL;
+    bigInt *r = nullptr;
     bigInt *q = divideModSingleThread(x, v, &r, true);
     char *filename_r = storeBigIntInSwap(r);
 
@@ -475,7 +523,7 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
         free(localTime);
     }
 
-    bigInt *r = NULL;
+    bigInt *r = nullptr;
     bigInt *q;
     if (depth == global_config.convertDepth) {
         q = divideModMultiThread(x, v, &r, global_config.mulDepth, true);
@@ -507,11 +555,11 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
     args2->digits = expectedDigits;
     args2->beginning = false;
     args2->depth = depth - 1;
-    if (pthread_create(&thread_idConvert1, NULL, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args1) != 0) {
+    if (pthread_create(&thread_idConvert1, nullptr, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args1) != 0) {
         perror("Error creating thread!");
         exit(EXIT_FAILURE);
     }
-    if (pthread_create(&thread_idConvert2, NULL, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args2) != 0) {
+    if (pthread_create(&thread_idConvert2, nullptr, bigIntToDecStringSchoenhageMultithreadHelper, (void *) args2) != 0) {
         perror("Error creating thread!");
         exit(EXIT_FAILURE);
     }
@@ -548,57 +596,4 @@ void *bigIntToDecStringSchoenhageMultithreadHelper(void *input) {
         free(localTime);
     }
     return ret;
-}
-
-//shamelessly adapted from Java Jdk8
-char *bigIntToDecStringSmall(bigInt *x) {
-    const char *zeros = "00000000000000000000";
-
-    size_t xLen = x->end - x->start;
-    if (isZero(x)) {
-        return getZeroString();
-    }
-
-    // Compute upper bound on number of digit groups and allocate space
-    //size_t maxNumDigitGroups = (4 * xLen + 6) / 7;
-    size_t maxNumDigitGroups = (6 * xLen + 8) / 5;
-    char **digitGroup = malloc(sizeof(char **) * maxNumDigitGroups);
-    mallocCheck(digitGroup);
-
-    // Translate number to string, a digit group at a time
-    int numGroups = 0;
-    bigInt *tmp = copyBigInt(x);
-    bigInt *d = getBigIntFromUnsignedInteger(0x8AC7230489E80000); // 10^DEC_DIGITS_PER_UINT64 = 8AC7230489E80000
-    while (!(tmp->end - tmp->start == 1 && tmp->bigIntArray[0] == 0)) {
-        bigInt *r = NULL;
-        bigInt *q = divideModSingleThread(tmp, d, &r, false);
-        freeBigInt(tmp);
-        digitGroup[numGroups++] = uint64_t_toDecString(r->bigIntArray[0]);
-        freeBigInt(r);
-        tmp = q;
-    }
-    freeBigInt(tmp);
-    freeBigInt(d);
-
-    char *res = malloc(numGroups * DEC_DIGITS_PER_UINT64 + 2);
-    mallocCheck(res);
-    size_t resCounter = 0;
-    memcpy(res + resCounter, digitGroup[numGroups - 1], strlen(digitGroup[numGroups - 1]));
-    resCounter += strlen(digitGroup[numGroups - 1]);
-    free(digitGroup[numGroups - 1]);
-    // Append remaining digit groups padded with leading zeros
-    for (int i = numGroups - 2; i >= 0; i--) {
-        // Prepend (any) leading zeros for this digit group
-        size_t numLeadingZeros = DEC_DIGITS_PER_UINT64 - strlen(digitGroup[i]);
-        if (numLeadingZeros != 0) {
-            memcpy(res + resCounter, zeros, numLeadingZeros);
-            resCounter += numLeadingZeros;
-        }
-        memcpy(res + resCounter, digitGroup[i], strlen(digitGroup[i]));
-        resCounter += strlen(digitGroup[i]);
-        free(digitGroup[i]);
-    }
-    res[resCounter] = '\0';
-    free(digitGroup);
-    return res;
 }

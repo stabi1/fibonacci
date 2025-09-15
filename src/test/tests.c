@@ -24,6 +24,8 @@ void testDivision();
 
 void testTmp();
 
+void testBenchMark();
+
 void testSSA() {
 
     char* c1 = randomHex(64*16);
@@ -59,8 +61,9 @@ void testSSA() {
 }
 
 void customTest() {
-    testSSA();
+    // testSSA();
     // testTmp();
+    testBenchMark();
 }
 
 void testTmp() {
@@ -104,8 +107,31 @@ void findBestValues() {
     }
 }
 
+void testBenchMark() {
+    size_t iterations = 1;
+
+    size_t n = 400000;
+    char* c1 = randomHex(n*16);
+    bigInt *tmp = hexStringToBigInt(c1);
+    free(c1);
+
+    struct timespec start;
+    char *res;
+    getCurrentTime(&start);
+    for (size_t i = 0; i < iterations; i++) {
+        res = bigIntToDecString(tmp, true);
+    }
+    struct timespec end;
+    getCurrentTime(&end);
+    double time = calcTimeDiff(&start, &end);
+    printf("Time in code 1: %f\n", time);
+
+    printf("%lu\n", strlen(res));
+    free(res);
+}
+
 void benchMark() {
-    size_t iterations = 1; //iterations
+    size_t iterations = 1;
     printf("Benchmark with Iterations: %ld\n", iterations);
 
     //size_t n = 200000;
@@ -167,7 +193,7 @@ void bruteForceDebug() {
     bigInt *res = newBigInt(1);
     res->bigIntArray[0] = 0;
     bigInt *res2 = fibonacci(0);
-    bigInt *res3 = NULL;
+    bigInt *res3 = nullptr;
     if (multiThread) {
         global_config.parallel = true;
         res3 = fibonacci(0);

@@ -40,8 +40,42 @@ bigInt *exactDivideBy3(const bigInt *x) {
     return result;
 }
 
+bigInt *divideBy10Raised19(bigInt *dividend, uint64_t *reminder) {
+    size_t m = dividend->end - dividend->start;
+    bigInt *quotient = newBigInt(m);
+
+    uint64_t divisor = 0x8AC7230489E80000; // 10^19
+    uint64_t *q = quotient->bigIntArray + quotient->start;
+    uint64_t *d = dividend->bigIntArray + dividend->start;
+
+    uint128_t divisor128 = (uint128_t) divisor;
+
+    uint64_t rem = d[m - 1];
+    uint128_t rem128 = (uint128_t) rem;
+    if (rem < divisor) {
+        q[m - 1] = 0;
+    } else {
+        uint64_t tmp = rem / divisor;
+        q[m - 1] = tmp;
+        rem = (uint64_t) (rem128 - (tmp * divisor128));
+        rem128 = (uint128_t) rem;
+    }
+    size_t xLen = 1;
+    while (++xLen <= m) {
+        uint128_t dividendEstimate = (rem128 << 64) | (uint128_t) (d[m - xLen]);
+        uint64_t qAct = dividendEstimate / divisor;
+        rem = dividendEstimate % divisor;
+
+        q[m - xLen] = qAct;
+        rem128 = (uint128_t) rem;
+    }
+    *reminder = rem;
+    quotient->end = quotient->start + getOccupiedBlocks(quotient);
+    return quotient;
+}
+
 bigInt *divide(const bigInt *dividend, const bigInt *divisor) {
-    bigInt *res = divideHelper((bigInt *) dividend, (bigInt *) divisor, NULL, false, global_config.parallel, global_config.mulDepth, false);
+    bigInt *res = divideHelper((bigInt *) dividend, (bigInt *) divisor, nullptr, false, global_config.parallel, global_config.mulDepth, false);
     res->negative = dividend->negative ^ divisor->negative;
     return res;
 }
@@ -54,7 +88,7 @@ bigInt *divideMod(const bigInt *dividend, const bigInt *divisor, bigInt **remind
 }
 
 bigInt *divideSingleThread(bigInt *dividend, bigInt *divisor) {
-    bigInt *res = divideHelper(dividend, divisor, NULL, false, false, 0, false);
+    bigInt *res = divideHelper(dividend, divisor, nullptr, false, false, 0, false);
     res->negative = dividend->negative ^ divisor->negative;
     return res;
 }
@@ -128,7 +162,7 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
             *reminder = newBigIntNotZeroed(n);
             divideOneWord(dividend, v[0], quotient, *reminder);
         } else {
-            divideOneWord(dividend, v[0], quotient, NULL);
+            divideOneWord(dividend, v[0], quotient, nullptr);
         }
         if (freeArguments) {
             freeBigInt(dividend);
@@ -140,7 +174,7 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
     if (n < D4FASTER || noBurnikelZiegler) {
         bigInt *quotient = newBigInt(m - n + 1);
         if (reminder == NULL) {
-            divideD4(dividend, divisor, quotient, NULL);
+            divideD4(dividend, divisor, quotient, nullptr);
         } else {
             *reminder = newBigInt(n);
             divideD4(dividend, divisor, quotient, *reminder);
@@ -320,8 +354,8 @@ bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool mult
     z = zTmp;
     bigInt *quotient = getZeroBigInt();
     char *filename_quotient = storeBigIntInSwap(quotient);
-    bigInt *qi = NULL;
-    bigInt *ri = NULL;
+    bigInt *qi;
+    bigInt *ri = nullptr;
     for (int i = (int) t - 2; i > 0; i--) {
         // step 8a: compute (qi,ri) such that z=b*qi+ri
         qi = divide2n1n(z, bShifted, &ri, multithread, mulDepth);
@@ -375,7 +409,7 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, si
     bigInt *aUpper = getUpperFrom(A, n / 2);
 
     // step 3: q1=aUpper/B, r1=aUpper%B
-    bigInt *r1 = NULL;
+    bigInt *r1 = nullptr;
     bigInt *q1 = divide3n2n(aUpper, B, &r1, multithread, mulDepth);
     freeBigInt(aUpper);
     char *filename_q1 = storeBigIntInSwap(q1);
