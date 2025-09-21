@@ -14,6 +14,7 @@
 
 #include "../bigNum/bigFrac/bigFracString.h"
 #include "../bigNum/bigFrac/bigFrac.h"
+#include "../bigNum/bigInt/bigIntMul.h"
 #include "../bigNum/bigInt/SSA/ssa.h"
 #include "../bigNum/bigInt/SSA/ssaHelper.h"
 #include "../bigNum/bigInt/NTT/ntt.h"
@@ -62,20 +63,37 @@ void testSSA() {
 
 void customTest() {
     // testSSA();
-    // testTmp();
-    testBenchMark();
+    testTmp();
+    // testBenchMark();
 }
 
 void testTmp() {
-    char* c1 = randomHex(5000000*16); // Size 40MB
-    char* c2 = randomHex(1000000*16); // Size 8MB
+    char* c1 = randomHex(1000000*16);
+    char* c2 = randomHex(700005*16);
     bigInt *tmp1 = hexStringToBigInt(c1);
     bigInt *tmp2 = hexStringToBigInt(c2);
+    // printf("Len: %lu\n", getLen(tmp1));
     free(c1);
     free(c2);
 
-    bigInt *res = SSA_modular(tmp1, tmp2);
-    printf("Len: %zu\n", getLen(res));
+    bigInt *res1 = SSA_modular(tmp1, tmp2);
+
+    bigInt *res2 = karatsuba(tmp1, tmp2);
+    printf("\n--------------------------------------------\n");
+    if (compareBigInt(res1, res2) != 0) {
+        printBigIntHex(res1);
+        printBigIntHex(res2);
+        printf("NOT EQUAL\n");
+    } else {
+        printf("Equal\n");
+    }
+    freeBigInt(tmp2);
+    freeBigInt(res2);
+
+    printf("resLen: %lu\n", getLen(res1));
+    freeBigInt(tmp1);
+    freeBigInt(res1);
+
 }
 
 void findBestValues() {
@@ -135,7 +153,7 @@ void benchMark() {
     printf("Benchmark with Iterations: %ld\n", iterations);
 
     //size_t n = 200000;
-    size_t n = 4000000;
+    const size_t n = 80000;
 
     char* c1 = randomHex(n*16);
     char* c2 = randomHex(n*16);
@@ -162,7 +180,7 @@ void benchMark() {
     bigInt *res2;
     getCurrentTime(&start2);
     for (size_t i = 0; i < iterations; i++) {
-        res2 = ntt_mul(tmp1, tmp2);
+        res2 = SSA_modular(tmp1, tmp2);
     }
     struct timespec end2;
     getCurrentTime(&end2);

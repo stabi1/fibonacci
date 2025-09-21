@@ -1,4 +1,3 @@
-import ctypes
 import random
 import shutil
 from pathlib import Path
@@ -6,8 +5,6 @@ from typing import List, Tuple, Callable
 from enum import Enum
 
 import pytest
-from fontTools.misc.cython import returns
-from numpy.ma.core import nonzero
 
 random.seed(42)
 
@@ -16,7 +13,7 @@ command_list_non_multithread = ["", "--do-swap --swap-threshold 0", "--deactivat
 command_list_permuted = [x + " " + y for x in command_list for y in command_list if x != y]
 
 FIB_DIR = Path(__file__).parent
-NUMER_FILES_PATH = FIB_DIR.joinpath("numer_files")
+NUMER_FILES_PATH = FIB_DIR.joinpath("number_files")
 EXECUTABLE_NAME = "fib"
 
 
@@ -192,9 +189,10 @@ def get_positive_test_numbers() -> List[Tuple[str, str]]:
         (random_hex_string(2000 * 16), "rand_len_2000x16.txt"),
         (random_hex_string(2000 * 16 + 1), "rand_len_2000x16+1.txt"),
         (random_hex_string(720 * 16 - 1), "rand_len_720x16-1.txt"),
-        (random_hex_string(1152 * 16 - 6), "rand_len_1152*16-6.txt"),
-        (random_hex_string(10000 * 16 - 3), "rand_len_10000*16-3.txt"),
-        ("1" + "0" * 16 * 15 + "0" * 5, "rand_len_1+0xaLot.txt")
+        (random_hex_string(1152 * 16 - 6), "rand_len_1152x16-6.txt"),
+        (random_hex_string(10000 * 16 - 3), "rand_len_10000x16-3.txt"),
+        ("1" + "0" * 16 * 15 + "0" * 5, "rand_len_1+0xaLot.txt"),
+        (random_hex_string(120000 * 16 - 5), "rand_len_10000x16-3.txt"),
     ]
     return positive_test_numbers
 
@@ -215,6 +213,7 @@ def get_positive_dec_test_numbers() -> List[Tuple[str, str]]:
         (random_dec_string(64), "dec_randon_len_64.txt"),
         (random_dec_string(65), "dec_randon_len_65.txt"),
         (random_dec_string(100), "dec_randon_len_100.txt"),
+        (random_dec_string(100), "dec_randon_len_100.txt"),
         (random_dec_string(60 * 16), "dec_randon_len_60x16.txt"),
         (random_dec_string(60 * 16 + 1), "dec_randon_len_60x16+1.txt"),
         (random_dec_string(500 * 16 + 1), "dec_randon_len_500x16+1.txt"),
@@ -223,7 +222,8 @@ def get_positive_dec_test_numbers() -> List[Tuple[str, str]]:
         (random_dec_string(720 * 16 - 1), "dec_randon_len_720x16-1.txt"),
         (random_dec_string(1152 * 16 - 6), "dec_randon_len_1152x16-6.txt"),
         (random_dec_string(10000 * 16 - 3), "dec_randon_len_10000x16-3.txt"),
-        ("1" + "0" * 16 * 15 + "0" * 5, "dec_rand_len_1+0xaLot.txt")
+        ("1" + "0" * 16 * 15 + "0" * 5, "dec_rand_len_1+0xaLot.txt"),
+        (random_dec_string(120000 * 16 - 5), "dec_rand_len_10000x16-3.txt"),
     ]
     return positive_dec_test_numbers
 

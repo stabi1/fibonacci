@@ -19,8 +19,6 @@ pthread_once_t bigIntArrayStack_10KB_stack_key_once = PTHREAD_ONCE_INIT;
 pthread_key_t bigIntArrayStack_100KB_stack_key;
 pthread_once_t bigIntArrayStack_100KB_stack_key_once = PTHREAD_ONCE_INIT;
 
-BigIntStack *create_stack(long size);
-
 bigInt *allocBigIntStruct();
 
 bigInt *newBigIntHelper(size_t len, bool setZero);
@@ -236,7 +234,7 @@ void init_stack_key_bigIntArrayStack_100KB() {
 }
 
 BigIntStack *get_thread_BigIntStack() {
-    static _Thread_local BigIntStack *cached_stack = NULL;
+    static _Thread_local BigIntStack *cached_stack = nullptr;
     if (!cached_stack) {
         if (pthread_once(&bigIntStruct_stack_key_once, init_stack_key_bigIntStruct) != 0) {
             perror("Error in pthread_once");
@@ -259,7 +257,7 @@ BigIntStack *get_thread_BigIntStack() {
 }
 
 BigIntArrayStack *get_thread_bigIntArrayStack_1KB() {
-    static _Thread_local BigIntArrayStack *cached_stack = NULL;
+    static _Thread_local BigIntArrayStack *cached_stack = nullptr;
     if (!cached_stack) {
         if (pthread_once(&bigIntArrayStack_1KB_stack_key_once, init_stack_key_bigIntArrayStack_1KB) != 0) {
             perror("Error in pthread_once");
@@ -286,7 +284,7 @@ BigIntArrayStack *get_thread_bigIntArrayStack_1KB() {
 }
 
 BigIntArrayStack *get_thread_bigIntArrayStack_10KB() {
-    static _Thread_local BigIntArrayStack *cached_stack = NULL;
+    static _Thread_local BigIntArrayStack *cached_stack = nullptr;
     if (!cached_stack) {
         if (pthread_once(&bigIntArrayStack_10KB_stack_key_once, init_stack_key_bigIntArrayStack_10KB) != 0) {
             perror("Error in pthread_once");
@@ -313,7 +311,7 @@ BigIntArrayStack *get_thread_bigIntArrayStack_10KB() {
 }
 
 BigIntArrayStack *get_thread_bigIntArrayStack_100KB() {
-    static _Thread_local BigIntArrayStack *cached_stack = NULL;
+    static _Thread_local BigIntArrayStack *cached_stack = nullptr;
     if (!cached_stack) {
         if (pthread_once(&bigIntArrayStack_100KB_stack_key_once, init_stack_key_bigIntArrayStack_100KB) != 0) {
             perror("Error in pthread_once");

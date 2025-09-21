@@ -5,7 +5,7 @@
 
 bigInt *sliceBigInt(const bigInt *x, size_t offset, size_t chunkSize);
 
-bigInt *reduceModF(const bigInt *x, const bigInt *fermatNumber, size_t fermatIndex);
+bigInt *reduceModF(const bigInt *x, size_t fermatIndex);
 
 bigInt *rotateLeftModF(const bigInt *x, size_t k, size_t totalBits);
 

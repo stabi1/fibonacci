@@ -18,7 +18,7 @@ Config global_config = {
         .mulThresholds = {
             .NAIVE_MUL_FASTER = 100,
             .KARATSUBA_FASTER = 400,
-            .TOOM_COOK_FASTER = 100000
+            .TOOM_COOK_FASTER = 80000
         }
 };
 

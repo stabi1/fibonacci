@@ -39,7 +39,7 @@ char *getCurrentDateTime() {
 
     // Get the current time
     time_t currentTime;
-    currentTime = time(NULL);
+    currentTime = time(nullptr);
 
     // Convert to local time format
     struct tm localTime;

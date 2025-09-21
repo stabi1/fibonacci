@@ -5,13 +5,15 @@
 #include "bigIntAlloc.h"
 #include "../misc.h"
 
-#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <immintrin.h>
 
 bigInt *add_helper(const bigInt *x, const bigInt *y, bool negative);
 
 bigInt *sub_helper(const bigInt *x, const bigInt *y, bool negative);
+
+void shiftAddSameNumberHelper(bigInt *x, const bigInt *toShift, size_t n, size_t xLenOld);
 
 bool isValidBigInt(const bigInt *x) {
     if (x == NULL || x->bigIntArray == NULL) return false;
@@ -222,7 +224,8 @@ bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
         fprintf(stderr, "shiftAdd is only defined for non negative integers\n");
         exit(EXIT_FAILURE);
     }
-    if (isZero(toShift)) { // toShift == 0
+    if (isZero(toShift)) {
+        // toShift == 0
         return copyBigInt(x);
     }
     if (n == 0) {
@@ -232,9 +235,86 @@ bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
 }
 
 // adds toShift to x; with toShift shifted n blocks to the left, the result will be in x after the call
+// Changes x, will resize x if there is not enough space
+void shiftAddSameNumberSafe(bigInt *x, const bigInt *toShift, const size_t n) {
+    if (!x->arrayOwner) {
+        fprintf(stderr, "shiftAddSameNumberSafe: x is not array owner\n");
+        exit(EXIT_FAILURE);
+    }
+    if ((x->negative && !isZero(x)) || (toShift->negative && !isZero(toShift))) {
+        fprintf(stderr, "shiftAddSameNumber is only defined for non negative integers\n");
+        exit(EXIT_FAILURE);
+    }
+    if (isZero(toShift)) {
+        return;
+    }
+
+    const size_t xLen = getLen(x);
+    const size_t toShiftLen = getLen(toShift);
+    if (xLen < toShiftLen + n) {
+        // resize
+        void *tmp = realloc(x->bigIntArray, (x->start + toShiftLen + n + 1) * 8);
+        mallocCheck(tmp);
+        x->bigIntArray = tmp;
+        x->completeLength = x->start + toShiftLen + n + 1;
+        x->end = x->start + toShiftLen + n + 1;
+        x->bigIntArray[x->end - 1] = 0;
+
+        shiftAddSameNumberHelper(x, toShift, n, xLen);
+        stripLeadingZeros(x);
+    } else {
+        unsigned char carry = 1;
+        unsigned long long out;
+        carry = _addcarry_u64(carry, x->bigIntArray[x->start + n + toShiftLen - 1],
+                              toShift->bigIntArray[toShift->start + toShiftLen - 1], &out);
+        if (carry != 0) {
+            for (size_t i = x->start + n + toShiftLen; i < x->end; i++) {
+                if (_popcnt64(x->bigIntArray[i]) != 64) {
+                    // no resize
+                    shiftAddSameNumberHelper(x, toShift, n, xLen);
+                    stripLeadingZeros(x);
+                    return;
+                }
+            }
+            // resize
+            void* tmp = realloc(x->bigIntArray, (x->start + xLen + 1) * 8);
+            mallocCheck(tmp);
+            x->bigIntArray = tmp;
+            x->completeLength = x->start + xLen + 1;
+            x->end = x->start + toShiftLen + n + 1;
+            x->bigIntArray[x->end - 1] = 0;
+            shiftAddSameNumberHelper(x, toShift, n, xLen);
+            stripLeadingZeros(x);
+            return;
+        }
+        // no resize
+        shiftAddSameNumberHelper(x, toShift, n, xLen);
+        stripLeadingZeros(x);
+    }
+}
+
+void shiftAddSameNumberHelper(bigInt *x, const bigInt *toShift, const size_t n, const size_t xLenOld) {
+    if (xLenOld <= n) {
+        if (xLenOld < n) {
+            memset(x->bigIntArray + x->start + xLenOld, 0, (n - xLenOld) * 8);
+        }
+        memcpy(x->bigIntArray + x->start + n, toShift->bigIntArray + toShift->start, getLen(toShift) * 8);
+        return;
+    }
+    if (xLenOld < getLen(toShift) + n) {
+        memset(x->bigIntArray + x->start + xLenOld, 0, (getLen(toShift) + n - xLenOld) * 8);
+    }
+
+    shiftAddSameNumber_Asm(x, toShift, n);
+}
+
 // the caller must guarantee that x is big enough to hold the result
-// if x had leading zero blocks, if not filled by the addition they will remain
-void shiftAddSameNumber(const bigInt *x, const bigInt *toShift, const size_t n) {
+// x can have leading zero blocks. If x had leading zero blocks, if not filled by the addition they will remain
+void shiftAddSameNumber(bigInt *x, const bigInt *toShift, const size_t n) {
+    if (!x->arrayOwner) {
+        fprintf(stderr, "shiftAddSameNumber: x is not array owner\n");
+        exit(EXIT_FAILURE);
+    }
     if ((x->negative && !isZero(x)) || (toShift->negative && !isZero(toShift))) {
         fprintf(stderr, "shiftAddSameNumber is only defined for non negative integers\n");
         exit(EXIT_FAILURE);
@@ -276,10 +356,10 @@ void getToomSlice(const bigInt *x, size_t lowerSize, size_t upperSize, size_t fu
     start0 = (long long) x->start - (long long) (offset);
     end0 = (long long) ((long long) x->start + upperSize - 1 - offset);
 
-    start1 = (long long) x->start + (long long) (upperSize + (1 - 1) * lowerSize - offset);
+    start1 = (long long) x->start + (long long) (upperSize - offset);
     end1 = start1 + (long long) lowerSize - 1;
 
-    start2 = (long long) x->start + (long long) (upperSize + (2 - 1) * lowerSize - offset);
+    start2 = (long long) x->start + (long long) (upperSize + lowerSize - offset);
     end2 = start2 + (long long) lowerSize - 1;
 
     size_t size0, size1, size2;
@@ -401,7 +481,7 @@ bigInt *sub(const bigInt *x, const bigInt *y) {
 }
 
 bigInt *sub_helper(const bigInt *x, const bigInt *y, bool negative) {
-    bigInt *res = newBigInt(getLen(x));
+    bigInt *res = newBigIntNotZeroed(getLen(x));
     do_sub_asm(x, y, res);
     res->negative = negative;
     size_t blocks = getOccupiedBlocks(res);

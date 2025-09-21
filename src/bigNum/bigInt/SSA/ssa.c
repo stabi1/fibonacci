@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 
-bigInt **FFT_modF(bigInt **a, size_t N, const size_t fermatIndex) {
+bigInt **FFT_modF(bigInt **a, const size_t N, const size_t fermatIndex) {
     if (N == 1) {
         bigInt **Y = malloc(sizeof(bigInt *));
         mallocCheck(Y);
@@ -115,8 +115,9 @@ bigInt **iFFT_modF(bigInt **a, size_t N, const size_t fermatIndex) {
 }
 
 bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
-    size_t bitLenA = bitLength(A), bitLenB = bitLength(B);
-    size_t M = bitLenA > bitLenB ? bitLenA : bitLenB;
+    const size_t bitLenA = bitLength(A);
+    const size_t bitLenB = bitLength(B);
+    const size_t M = bitLenA > bitLenB ? bitLenA : bitLenB;
 
     // 1) Parameter
     uint64_t m = (uint64_t) floor(log2(2 * (double) M - 1)) + 1;
@@ -126,7 +127,8 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     uint64_t chunkLength = chunkLengthBits / 64;
     uint64_t numChunks = mOdd ? 1ULL << (n + 1) : 1ULL << n;
 
-    if (chunkLength < 1 || n < 6) { // 2^(n-1) >= 64
+    if (chunkLength < 1 || n < 6) {
+        // 2^(n-1) >= 64
         fprintf(stderr, "Error: SSA called but parameters do not work | chunkLength: %lu, n: %lu\n", chunkLength, n);
         exit(EXIT_FAILURE);
     }
@@ -141,6 +143,13 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         b[i] = sliceBigInt(B, i * chunkLength, chunkLength);
     }
 
+    /*for (long i = (long) numChunks - 1; i > 0; i--) {
+        if (!isZero(a[i])) {
+            printf("Non leading zero blocks: %lu\n", numChunks - i + 1);
+            break;
+        }
+    }*/
+
     // 3) integer convolution for z_j mod 2^(n+2)
     size_t mod2_bits = n + 2;
     // a_i mod 2^(n+2), b_i mod 2^(n+2)
@@ -149,7 +158,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     bigInt **beta = malloc(numChunks * sizeof(bigInt *));
     mallocCheck(beta);
     for (size_t i = 0; i < numChunks; ++i) {
-        alpha[i] = getFirstNBits(a[i], mod2_bits);   // mod 2^(n+2)
+        alpha[i] = getFirstNBits(a[i], mod2_bits); // mod 2^(n+2)
         beta[i] = getFirstNBits(b[i], mod2_bits);
     }
 
@@ -224,23 +233,16 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     }
     free(b);
 
-    // Build: F_n = 2^(2^n) + 1
-    bigInt *fermatBase = getBigIntFromUnsignedInteger(1);
-    bigInt *power = shiftLeft(fermatBase, (1ULL << n)); // 2^(2^n)
-    bigInt *F_n = add(power, fermatBase); // +1
-    freeBigInt(fermatBase);
-    freeBigInt(power);
-
     // Pointwise multiplication in the ring mod F
     bigInt **Chat = malloc(numChunks / 2 * sizeof(bigInt *));
     mallocCheck(Chat);
     for (size_t i = 0; i < numChunks / 2; ++i) {
-        bigInt *AhatReduced = reduceModF(Ahat[i], F_n, n);
+        bigInt *AhatReduced = reduceModF(Ahat[i], n);
         freeBigInt(Ahat[i]);
-        bigInt *BhatReduced = reduceModF(Bhat[i], F_n, n);
+        bigInt *BhatReduced = reduceModF(Bhat[i], n);
         freeBigInt(Bhat[i]);
 
-        Chat[i] = mulSingleThread(AhatReduced, BhatReduced);  // mod F because reduced beforehand
+        Chat[i] = mulSingleThread(AhatReduced, BhatReduced); // mod F_n because reduced beforehand
         freeBigInt(AhatReduced);
         freeBigInt(BhatReduced);
     }
@@ -258,10 +260,9 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     bigInt **zF = malloc(numChunks / 2 * sizeof(bigInt *));
     mallocCheck(zF);
     for (size_t i = 0; i < numChunks / 2; ++i) {
-        zF[i] = reduceModF(c[i], F_n, n);
+        zF[i] = reduceModF(c[i], n);
         freeBigInt(c[i]);
     }
-    freeBigInt(F_n);
     free(c);
 
     // 5) CRT‑Combination: z[j] = combine(z2[j] mod 2^(n+2), zF[j] mod F_n)
@@ -269,17 +270,14 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     mallocCheck(z);
     bigInt *TwoPowNPlus2 = getBigIntFromUnsignedInteger(1ULL << (n + 2));
     bigInt *zero = getBigIntFromUnsignedInteger(0);
-    size_t k = n + 2;
+    const size_t k = n + 2;
     for (size_t j = 0; j < numChunks / 2; ++j) {
         // δ = (z2[j] - zF[j]) mod 2^(n+2)
         bigInt *deltaNoMod = sub(z2[j], zF[j]);
         if (deltaNoMod->negative) {
-            //reduceToFirstNBits(deltaNoMod, k);
-            bigInt *tmp1 = getFirstNBits(deltaNoMod, k);
-            freeBigInt(deltaNoMod);
-            deltaNoMod = tmp1;
-            deltaNoMod->negative = true;
+            reduceToFirstNBits(deltaNoMod, k);
             if (compareBigInt(deltaNoMod, zero) != 1) {
+                // a > b
                 bigInt *tmp = add(deltaNoMod, TwoPowNPlus2);
                 freeBigInt(deltaNoMod);
                 deltaNoMod = tmp;
@@ -287,8 +285,8 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         }
 
         freeBigInt(z2[j]);
-        bigInt *delta = getFirstNBits(deltaNoMod, mod2_bits);
-        freeBigInt(deltaNoMod);
+        reduceToFirstNBits(deltaNoMod, mod2_bits);
+        bigInt *delta = deltaNoMod;
 
         // z[j] = zF[j] + δ * F
         bigInt *shift = rotateLeftModF(delta, 1ULL << n, 1ULL << (m + 1)); // shift and add equals mul by fermat number
@@ -314,17 +312,10 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     }
     free(z);
 
-    // Build: F_m = 2^(2^m) + 1
-    fermatBase = getBigIntFromUnsignedInteger(1);
-    power = shiftLeft(fermatBase, (1ULL << m)); // 2^(2^m)
-    bigInt *F_m = add(power, fermatBase); // +1
-    freeBigInt(fermatBase);
-    freeBigInt(power);
-
     // final reduce by F_m
-    bigInt *resultMod = reduceModF(result, F_m, m);
-    freeBigInt(F_m);
+    bigInt *resultMod = reduceModF(result, m);
     freeBigInt(result);
+    stripLeadingZeros(resultMod);
 
     return resultMod;
 }

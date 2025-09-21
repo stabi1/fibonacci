@@ -93,3 +93,4 @@ clean:
 	rm -f $(OUTPUT_FILENAME_TEST)
 	rm -rf $(BUILD_ROOT)
 	rm -rf $(SWAP_DIR)
+	rm -rf pytest/number_files

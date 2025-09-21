@@ -29,17 +29,23 @@ bigInt *sliceBigInt(const bigInt *x, size_t offset, size_t chunkSize) {
 }
 
 // computes the minimal positive remainder of x mod F, where F is the fermatIndex-th fermat number
-bigInt *reduceModF(const bigInt *x, const bigInt *fermatNumber, size_t fermatIndex) {
-    size_t totalBits = 1ULL << (fermatIndex + 1);
-    size_t k = totalBits / 2;
+bigInt *reduceModF(const bigInt *x, const size_t fermatIndex) {
+    const size_t totalBits = 1ULL << (fermatIndex + 1);
+    const size_t k = totalBits / 2;
 
-    bigInt *v = shiftRight(x, totalBits - k); // high bits
-    bigInt *u = getFirstNBits(x, totalBits - k); // low bits
+    bigInt *v = sliceBigInt(x, k/64, k/64); // high bits
+    bigInt *u = sliceBigInt(x, 0, k/64); // low bits
     bigInt *res;
 
-    if (compareBigInt(v, u) == 1) { // v > u
-        bigInt *tmp = sub(u, v);
-        res = add(tmp, fermatNumber);
+    if (compareBigInt(v, u) == 1) {// v > u -> add 2^{2^fermatIndex} + 1
+        bigInt *one = getBigIntFromUnsignedInteger(1);
+        bigInt *tmp = add(u, one);
+
+        const size_t nBits = 1ULL << fermatIndex;
+        shiftAddSameNumberSafe(tmp, one, nBits / 64); // nBits % 64 is always zero
+        freeBigInt(one);
+
+        res = sub(tmp, v);
         freeBigInt(tmp);
     } else {
         res = sub(u, v);
@@ -61,10 +67,10 @@ bigInt *rotateLeftModF(const bigInt *x, size_t k, size_t totalBits) {
     k = k % totalBits;
     bigInt *res;
     if (k % 64 == 0 && totalBits % 64 == 0) {
-        size_t lowLength = totalBits/64 - k/64;
+        size_t lowLength = totalBits / 64 - k / 64;
         bigInt *low = sliceBigInt(x, 0, lowLength);
         bigInt *high = sliceBigInt(x, lowLength, getLen(x) - lowLength);
-        res = shiftAdd(high, low, k/64);
+        res = shiftAdd(high, low, k / 64);
         freeBigInt(low);
         freeBigInt(high);
     } else {
@@ -92,13 +98,13 @@ bigInt *rotateRightModF(const bigInt *x, size_t k, size_t totalBits) {
     k = k % totalBits;
     bigInt *res;
     if (k % 64 == 0 && totalBits % 64 == 0) {
-        size_t lowLength = k/64;
+        size_t lowLength = k / 64;
         bigInt *low = sliceBigInt(x, 0, lowLength);
         bigInt *high = sliceBigInt(x, lowLength, getLen(x) - lowLength);
-        res = shiftAdd(high, low, totalBits/64 - k/64);
+        res = shiftAdd(high, low, totalBits / 64 - k / 64);
         freeBigInt(low);
         freeBigInt(high);
-    }else {
+    } else {
         bigInt *high = shiftRight(x, k);
         bigInt *low = getFirstNBits(x, k);
         bigInt *tmp = shiftLeft(low, totalBits - k);
@@ -181,7 +187,12 @@ bigInt *getFirstNBits(const bigInt *x, size_t n) {
     return result;
 }
 
-void reduceToFirstNBits(bigInt *x, size_t n) {
+void reduceToFirstNBits(bigInt *x, const size_t n) {
+    if (!x->arrayOwner) {
+        fprintf(stderr, "shiftAddSameNumberSafe: x is not array owner\n");
+        exit(EXIT_FAILURE);
+    }
+
     // Calculate how many complete 64-bit words we need
     size_t completeWords = n / 64;
     size_t remainingBits = n % 64;
