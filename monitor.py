@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+""" Keeps track of memory and storage usage of running fib program """
 import argparse
 import os
 import sys

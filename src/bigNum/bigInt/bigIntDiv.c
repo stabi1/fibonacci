@@ -231,7 +231,7 @@ void divideOneWord(bigInt *dividend, uint64_t divisor, bigInt *quotient, bigInt 
     quotient->end = quotient->start + getOccupiedBlocks(quotient);
 }
 
-//returns dividend/divisor
+//returns dividend/divisor with Knuth's Algorithm D
 //adapted from https://raw.githubusercontent.com/hcs0/Hackers-Delight/master/divmnu64.c.txt
 void divideD4(const bigInt *dividend, const bigInt *divisor, bigInt *quotient, bigInt *reminder) {
     uint64_t *q = quotient->bigIntArray + quotient->start;

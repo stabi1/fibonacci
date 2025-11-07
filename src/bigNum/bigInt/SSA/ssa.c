@@ -14,8 +14,8 @@ bigInt **FFT_modF(bigInt **a, const size_t N, const size_t fermatIndex) {
         Y[0] = copyBigInt(a[0]);
         return Y;
     }
-    size_t half = N / 2;
-    size_t depth = custom_tzcnt(N);
+    const size_t half = N / 2;
+    const size_t depth = custom_tzcnt(N);
 
     // split even/odd
     bigInt **even = malloc(half * sizeof(bigInt *));
@@ -29,10 +29,10 @@ bigInt **FFT_modF(bigInt **a, const size_t N, const size_t fermatIndex) {
     // Butterfly
     bigInt **Y = malloc(half * sizeof(bigInt *));
     mallocCheck(Y);
-    size_t tmp = 1ULL << (fermatIndex - (depth - 1));
+    const size_t tmp = 1ULL << (fermatIndex - (depth - 1));
     for (size_t k = 0; k < half; k += 2) {
-        size_t rev = bit_reverse(k / 2, depth - 1) + 1;
-        size_t x = tmp * rev;
+        const size_t rev = bit_reverse(k / 2, depth - 1) + 1;
+        const size_t x = tmp * rev;
         bigInt *t = rotateLeftModF(Yo[k / 2], x, 1ULL << (fermatIndex + 1));
         freeBigInt(Yo[k / 2]);
         // Y[k]    = Ye[k] + t
@@ -67,17 +67,17 @@ bigInt **iFFT_modF(bigInt **a, size_t N, const size_t fermatIndex) {
     // Butterfly
     bigInt **Y = malloc(N * sizeof(bigInt *));
     mallocCheck(Y);
-    size_t tmp = 1ULL << (fermatIndex - depth);
+    const size_t tmp = 1ULL << (fermatIndex - depth);
     for (size_t k = 0; k < N; k += 2) {
-        size_t rev = bit_reverse(k / 2, depth) + 1;
-        size_t x = (tmp * rev);
+        const size_t rev = bit_reverse(k / 2, depth) + 1;
+        const size_t x = (tmp * rev);
 
         bigInt *add = addModF(a[k], a[k + 1], fermatIndex);
         bigInt *sub = subModF(a[k], a[k + 1], fermatIndex);
 
         Y[k] = rotateRightModF(add, 1, 1ULL << (fermatIndex + 1));
         freeBigInt(add);
-        size_t toRotate = x + 1; // + 1 because 2^(-1)
+        const size_t toRotate = x + 1; // + 1 because 2^(-1)
         Y[k + 1] = rotateRightModF(sub, toRotate, 1ULL << (fermatIndex + 1));
         freeBigInt(sub);
     }
@@ -117,15 +117,15 @@ bigInt **iFFT_modF(bigInt **a, size_t N, const size_t fermatIndex) {
 bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     const size_t bitLenA = bitLength(A);
     const size_t bitLenB = bitLength(B);
-    const size_t M = bitLenA > bitLenB ? bitLenA : bitLenB;
+    const size_t M = bitLenA + bitLenB;
 
     // 1) Parameter
-    uint64_t m = (uint64_t) floor(log2(2 * (double) M - 1)) + 1;
-    bool mOdd = m % 2 == 1;
-    uint64_t n = mOdd ? (m + 1) / 2 : (m + 2) / 2;
-    uint64_t chunkLengthBits = 1ULL << (n - 1);
-    uint64_t chunkLength = chunkLengthBits / 64;
-    uint64_t numChunks = mOdd ? 1ULL << (n + 1) : 1ULL << n;
+    const uint64_t m = (uint64_t) floor(log2((double) M - 1)) + 1;
+    const bool mOdd = m % 2 == 1;
+    const uint64_t n = mOdd ? (m + 1) / 2 : (m + 2) / 2;
+    const uint64_t chunkLengthBits = 1ULL << (n - 1);
+    const uint64_t chunkLength = chunkLengthBits / 64;
+    const uint64_t numChunks = mOdd ? 1ULL << (n + 1) : 1ULL << n;
 
     if (chunkLength < 1 || n < 6) {
         // 2^(n-1) >= 64
@@ -143,15 +143,8 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
         b[i] = sliceBigInt(B, i * chunkLength, chunkLength);
     }
 
-    /*for (long i = (long) numChunks - 1; i > 0; i--) {
-        if (!isZero(a[i])) {
-            printf("Non leading zero blocks: %lu\n", numChunks - i + 1);
-            break;
-        }
-    }*/
-
     // 3) integer convolution for z_j mod 2^(n+2)
-    size_t mod2_bits = n + 2;
+    const size_t mod2_bits = n + 2;
     // a_i mod 2^(n+2), b_i mod 2^(n+2)
     bigInt **alpha = malloc(numChunks * sizeof(bigInt *));
     mallocCheck(alpha);
@@ -163,7 +156,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     }
 
     // Numbers u, v to the convolution product
-    size_t gap = 3 * n + 5;
+    const size_t gap = 3 * n + 5;
 
     bigInt *u = getZeroBigInt();
     bigInt *v = getZeroBigInt();
@@ -189,7 +182,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     freeBigInt(v);
 
     // split in γ[0..2K-2], chunk size = gap
-    size_t gammaSize = 2 * numChunks;
+    const size_t gammaSize = 2 * numChunks;
     bigInt **gamma = malloc(gammaSize * sizeof(bigInt *));
     mallocCheck(gamma);
     for (size_t i = 0; i < gammaSize; ++i) {
@@ -307,7 +300,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     // 6) assembling the result
     bigInt *result = newBigInt(getLen(A) + getLen(B));
     for (size_t j = 0; j < numChunks / 2; ++j) {
-        shiftAddSameNumber(result, z[j], (j * 1ULL << (n - 1)) / 64);
+        shiftAddSameNumber(result, z[j], j * chunkLength);
         freeBigInt(z[j]);
     }
     free(z);

@@ -12,25 +12,21 @@
 #include <stdbool.h>
 #include <signal.h>
 
-enum computeOperation getComputeOperation(char *token);
+enum computeOperation getComputeOperation(const char *token);
 
 void printHelpMenu();
 
 const char *DEFAULT_FILENAME = "output.txt";
 
-// TODO: look at add/sub if signs and size are optimal
-// TODO: implement swapping for goldenRation and Pi, check bigFrac for swapping potential
-// TODO: better root algorithm (Karatsuba Square Root), root for bigInt
-// TODO: Use linter and fix code, docu with comments
-// TODO: make way more tests (tests with all the different features en-/disabled) (allways check partial bigInt support)
-// TODO: update readme, update help-message
+// Ideas:
+// - implement swapping for goldenRation and Pi, check bigFrac for swapping potential
+// - better root algorithm (Karatsuba Square Root), root for bigInt
+// - clean up cores/threads mess
 
-// Target time for ./fib -o f -r d -c pi 1000000 -v = 0.5s
-// is 5.5
 
 enum {
     OPT_MAX_THREADS = 1001,
-    OPT_NUM_CORES,
+    OPT_MIN_THREADS,
     OPT_RESULT_FILENAME,
     OPT_DO_SWAP,
     OPT_SWAP_THRESHOLD,
@@ -42,13 +38,13 @@ enum {
 };
 
 const size_t numOfArgsComputeOperation[] = {
-        [CONVERT_NUMBER]    = 0,
-        [GOLDEN_RATIO]      = 1,
-        [FIBONACCI]         = 1,
-        [SQUARE_ROOT]       = 2,
-        [PI]                = 1,
-        [E]                 = 1,
-        [UNKNOWN_OPERATION] = 0,
+    [CONVERT_NUMBER]    = 0,
+    [GOLDEN_RATIO]      = 1,
+    [FIBONACCI]         = 1,
+    [SQUARE_ROOT]       = 2,
+    [PI]                = 1,
+    [E]                 = 1,
+    [UNKNOWN_OPERATION] = 0,
 };
 
 static struct option long_options[] = {
@@ -63,7 +59,7 @@ static struct option long_options[] = {
         {"verbose",            no_argument,       NULL, 'v'},
         {"super-verbose",      no_argument,       NULL, OPT_SUPER_VERBOSE},
         {"max-threads",        required_argument, NULL, OPT_MAX_THREADS},
-        {"num-cores",          required_argument, NULL, OPT_NUM_CORES},
+        {"num-cores",          required_argument, NULL, OPT_MIN_THREADS},
         {"output-filename",    required_argument, NULL, OPT_RESULT_FILENAME},
         {"info-in-outputfile", no_argument,       NULL, OPT_INFO_IN_OUTPUTFILE},
         {"do-swap",            no_argument,       NULL, OPT_DO_SWAP},
@@ -80,8 +76,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
+    // signal handler
+    struct sigaction sa = {0};
     sa.sa_sigaction = handleSignals;
     sa.sa_flags = SA_SIGINFO;
     if (sigaction(SIGINT, &sa, NULL) == -1) {
@@ -96,7 +92,7 @@ int main(int argc, char *argv[]) {
     // default values
     char outputRadix = 'h';
     char output = 't';
-    size_t cores = 0; //available cores
+    size_t min_threads = 0; //available threads
     size_t max_threads = 0;
     bool do_debug = false;
     bool do_test = false;
@@ -140,8 +136,8 @@ int main(int argc, char *argv[]) {
                     global_config.verbose = true;
                     global_config.superVerbose = true;
                     break;
-                case OPT_NUM_CORES:
-                    cores = parseUINT64(optarg, UINT64_MAX, 1);
+                case OPT_MIN_THREADS:
+                    min_threads = parseUINT64(optarg, UINT64_MAX, 1);
                     break;
                 case OPT_MAX_THREADS:
                     max_threads = parseUINT64(optarg, UINT64_MAX, 1);
@@ -195,7 +191,6 @@ int main(int argc, char *argv[]) {
                             if (optind >= argc) {
                                 fprintf(stderr, "Option -c requires a operation and a number (-c <operation> <number> <number>)\n");
                                 exit(EXIT_FAILURE);
-
                             }
                             computeNumberArgument2 = parseUINT64(argv[optind], UINT64_MAX, 0);
                             optind++;
@@ -240,19 +235,19 @@ int main(int argc, char *argv[]) {
         printf("Caches are deactivated\n");
     }
     if (global_config.verbose && global_config.swap) {
-        printf("Swapping is activated with threshold: %lu MB\n", global_config.swapThreshold);
+        printf("Swapping is activated with threshold: %zu MB\n", global_config.swapThreshold);
     }
 
     if (global_config.parallel) {
         printf("Multithreading enabled\n");
-        if (cores != 0 && max_threads != 0) {
+        if (min_threads != 0 && max_threads != 0) {
             fprintf(stderr, "Options p and n are mutually exclusive");
             exit(EXIT_FAILURE);
         }
-        if (cores != 0) {
-            global_config.maxThreads = cores;
-            global_config.mulDepth = getMulDepthFromCores(cores);
-            global_config.convertDepth = getConvertDepthFromCores(cores);
+        if (min_threads != 0) {
+            global_config.maxThreads = min_threads;
+            global_config.mulDepth = getMulDepthFromCores(min_threads);
+            global_config.convertDepth = getConvertDepthFromCores(min_threads);
         } else {
             global_config.maxThreads = max_threads;
             global_config.mulDepth = getMulDepthFromMaxThreads(max_threads);
@@ -260,7 +255,7 @@ int main(int argc, char *argv[]) {
         }
     }
     if (outputFilename == NULL) {
-        size_t len = strlen(DEFAULT_FILENAME);
+        const size_t len = strlen(DEFAULT_FILENAME);
         outputFilename = malloc(len + 1);
         mallocCheck(outputFilename);
         strncpy(outputFilename, DEFAULT_FILENAME, len + 1);
@@ -315,7 +310,7 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-enum computeOperation getComputeOperation(char *token) {
+enum computeOperation getComputeOperation(const char *token) {
     if (strcmp(token, "convert-number") == 0) {
         return CONVERT_NUMBER;
     } else if (strcmp(token, "fibonacci") == 0) {
@@ -335,24 +330,42 @@ enum computeOperation getComputeOperation(char *token) {
 
 void printHelpMenu() {
     char *helpMenuText = "Usage:\n"
-                         "fibonacci:  -o -> output f|t|n (f=file, t=terminal, n=none); default value: t\n"
-                         "            -r -> radix d|h (d=decimal, h=hexadecimal); default value: h\n"
-                         "            -m -> enables multithreading; default value: false\n"
-                         "            -c -> compute\n"
-                         "\n"
-                         "            e.g.:\n "
-                         "                  Calculate 10000000t fibonacci number and write the result in decimal into the file res.txt\n"
-                         "                  ./fib -o f -r d --output-filename res.txt -c fibonacci 10000000\n"
-                         "                  Same as before, now with verbose output and swap activated if a bigInt is bigger than 1 MB\n"
-                         "                  ./fib -o f -r d --output-filename res.txt -v --do-swap --swap-threshold 1 -n 10000000 \n"
-                         "\n"
-                         "            The default filename is output.txt | if the file exists, it will be overwritten\n"
-                         "\n"
-                         "miscellaneous:  -h -> display this help message\n"
-                         "                -d -> debug\n"
-                         "                -t -> test\n"
-                         "                -b -> benchMark\n"
-                         "                -v -> verbose\n"
-                         "                --output-filename -> set filename for output file\n";
+            "main options:  -o -> output f|t|n (f=file, t=terminal, n=none); default value: t\n"
+            "               -r -> radix d|h (d=decimal, h=hexadecimal); default value: h\n"
+            "               -m -> enables multithreading; default value: false\n"
+            "               -c -> compute [arg]:\n"
+            "                   possible args:\n"
+            "                       e <precision>\n"
+            "                       pi <precision>\n"
+            "                       square-root <number> <precision>\n"
+            "                       golden-ratio <precision>\n"
+            "                       fibonacci <n>\n"
+            "                       convert-number -> uses input and outfile and input and output radix \n"
+            "\n"
+            "               e.g.:\n "
+            "                  Calculate 10000000t fibonacci number and write the result in decimal into the file res.txt\n"
+            "                  ./fib -o f -r d --output-filename res.txt -c fibonacci 10000000\n"
+            "                  Same as before, now with verbose output and swap activated if a bigInt is bigger than 1 MB and multithreading\n"
+            "                  ./fib -o f -r d --output-filename res.txt -m -v --do-swap --swap-threshold 1 -c fibonacci 10000000 \n"
+            "\n"
+
+            "\n"
+            "miscellaneous:  -h -> display this help message\n"
+            "                -d -> fib debug, tests all fib numbers\n"
+            "                -t -> test [argument]\n"
+            "                -b -> benchMark\n"
+            "                -v -> verbose, more output\n"
+            "                --super-verbose -> even more output\n"
+            "                --output-filename -> set filename for output file\n"
+            "                   -> The default filename is output.txt | if the file exists, it will be overwritten\n"
+            "                --input-filename -> set filename for input file\n"
+            "                --input-radix -> radix of the input file\n"
+            "                --max-threads -> set maximum number of threads the program is allowed to use\n"
+            "                --min-threads -> set minimum number of threads (can be more that the machine has)\n"
+            "                   -> if neither option is set, the number of threads will be auto-detected\n"
+            "                --info-in-outputfile -> prints info about the number in it into the output file \n"
+            "                --do-swap -> activates swaping \n"
+            "                --swap-threshold -> sets the threshold in MB after which a number will be swaped \n"
+            "                --deactivate-caches -> deactivates caching of bigInt/bigFrac structs and bigInt arrays\n";
     printf("%s\n", helpMenuText);
 }

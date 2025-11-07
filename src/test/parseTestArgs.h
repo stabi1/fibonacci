@@ -1,6 +1,6 @@
 #ifndef FIBONACCI_PARSETESTARGS_H
 #define FIBONACCI_PARSETESTARGS_H
 
-void selectTest(char * args);
+void selectTest(const char *args);
 
 #endif //FIBONACCI_PARSETESTARGS_H

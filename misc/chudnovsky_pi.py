@@ -1,5 +1,4 @@
-# used for informal benchmarking
-# from https://www.craig-wood.com/nick/articles/pi-chudnovsky/
+""" used for informal benchmarking from https://www.craig-wood.com/nick/articles/pi-chudnovsky/ """
 
 import math
 from gmpy2 import mpz

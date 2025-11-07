@@ -1,4 +1,4 @@
-# Python file with the fft needed for the SSA implemented in Python. Used for debugging
+""" Python file with the fft needed for the SSA implemented in Python. Used for debugging """
 
 def reduce_mod_f(x: int, fermat_number: int, fermat_index_loc: int) -> int:
     total_bits = 1 << (fermat_index_loc + 1)  # total bits (2^(fermat_index + 1))

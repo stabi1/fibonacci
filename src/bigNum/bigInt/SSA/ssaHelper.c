@@ -13,8 +13,8 @@
 // return a bigInt (NOT array owner) where offset is the offset in x
 // and chunkSize is the size of the slice.
 // If the slice is out of bounds, return a zero bigInt.
-bigInt *sliceBigInt(const bigInt *x, size_t offset, size_t chunkSize) {
-    size_t resStart = x->start + offset;
+bigInt *sliceBigInt(const bigInt *x, const size_t offset, const size_t chunkSize) {
+    const size_t resStart = x->start + offset;
     if (resStart >= x->end) {
         return getZeroBigInt();
     }
@@ -67,7 +67,7 @@ bigInt *rotateLeftModF(const bigInt *x, size_t k, size_t totalBits) {
     k = k % totalBits;
     bigInt *res;
     if (k % 64 == 0 && totalBits % 64 == 0) {
-        size_t lowLength = totalBits / 64 - k / 64;
+        const size_t lowLength = totalBits / 64 - k / 64;
         bigInt *low = sliceBigInt(x, 0, lowLength);
         bigInt *high = sliceBigInt(x, lowLength, getLen(x) - lowLength);
         res = shiftAdd(high, low, k / 64);
@@ -87,7 +87,7 @@ bigInt *rotateLeftModF(const bigInt *x, size_t k, size_t totalBits) {
 }
 
 // rotates x right by k bits. totalBits is the number of bits of x to where the rotation is applied.
-bigInt *rotateRightModF(const bigInt *x, size_t k, size_t totalBits) {
+bigInt *rotateRightModF(const bigInt *x, size_t k, const size_t totalBits) {
     if (k == 0) {
         return copyBigInt(x);
     }
@@ -98,7 +98,7 @@ bigInt *rotateRightModF(const bigInt *x, size_t k, size_t totalBits) {
     k = k % totalBits;
     bigInt *res;
     if (k % 64 == 0 && totalBits % 64 == 0) {
-        size_t lowLength = k / 64;
+        const size_t lowLength = k / 64;
         bigInt *low = sliceBigInt(x, 0, lowLength);
         bigInt *high = sliceBigInt(x, lowLength, getLen(x) - lowLength);
         res = shiftAdd(high, low, totalBits / 64 - k / 64);
@@ -118,15 +118,15 @@ bigInt *rotateRightModF(const bigInt *x, size_t k, size_t totalBits) {
 }
 
 // (a + b) mod F, where F is the fermatIndex-th fermat number
-bigInt *addModF(const bigInt *a, const bigInt *b, size_t fermatIndex) {
+bigInt *addModF(const bigInt *a, const bigInt *b, const size_t fermatIndex) {
     bigInt *s = add(a, b);
 
-    size_t maxBitlength = 1ULL << (fermatIndex + 1);
+    const size_t maxBitlength = 1ULL << (fermatIndex + 1);
     while (bitLength(s) > maxBitlength) {
         bigInt *low;
         bigInt *high;
         if (maxBitlength >= 64) {
-            size_t maxlength = maxBitlength / 64;
+            const size_t maxlength = maxBitlength / 64;
             low = sliceBigInt(s, 0, maxlength);
             high = sliceBigInt(s, maxlength, getLen(s) - maxlength);
         } else {
@@ -144,7 +144,7 @@ bigInt *addModF(const bigInt *a, const bigInt *b, size_t fermatIndex) {
 }
 
 // (a - b) mod F, where F is the fermatIndex-th fermat number
-bigInt *subModF(const bigInt *a, const bigInt *b, size_t fermatIndex) {
+bigInt *subModF(const bigInt *a, const bigInt *b, const size_t fermatIndex) {
     bigInt *rotated = rotateLeftModF(b, 1ULL << fermatIndex, 1ULL << (fermatIndex + 1));
     bigInt *res = addModF(a, rotated, fermatIndex);
     freeBigInt(rotated);
@@ -158,15 +158,15 @@ bigInt *getFirstNBits(const bigInt *x, size_t n) {
     }
 
     // Calculate how many complete 64-bit words we need
-    size_t completeWords = n / 64;
-    size_t remainingBits = n % 64;
+    const size_t completeWords = n / 64;
+    const size_t remainingBits = n % 64;
 
     // Calculate how many words we actually have available
-    size_t availableWords = getLen(x);
+    const size_t availableWords = getLen(x);
 
     // Determine how many words we'll actually use
-    size_t wordsNeeded = completeWords + (remainingBits > 0 ? 1 : 0);
-    size_t actualWords = completeWords < availableWords ? wordsNeeded : availableWords;
+    const size_t wordsNeeded = completeWords + (remainingBits > 0 ? 1 : 0);
+    const size_t actualWords = completeWords < availableWords ? wordsNeeded : availableWords;
 
     // Create new bigInt with the required size
     bigInt *result = newBigInt(actualWords);
@@ -174,11 +174,11 @@ bigInt *getFirstNBits(const bigInt *x, size_t n) {
     // Copy the complete words
     memcpy(result->bigIntArray, x->bigIntArray + x->start, actualWords * 8);
 
-    size_t i = actualWords - 1;
+    const size_t i = actualWords - 1;
     // Handle the last word
     if (completeWords < availableWords && remainingBits > 0) {
         // Create mask for remaining bits: (1 << remainingBits) - 1
-        uint64_t mask = (1ULL << remainingBits) - 1;
+        const uint64_t mask = (1ULL << remainingBits) - 1;
         result->bigIntArray[i] = x->bigIntArray[x->start + i] & mask;
     }
 
@@ -189,28 +189,28 @@ bigInt *getFirstNBits(const bigInt *x, size_t n) {
 
 void reduceToFirstNBits(bigInt *x, const size_t n) {
     if (!x->arrayOwner) {
-        fprintf(stderr, "shiftAddSameNumberSafe: x is not array owner\n");
+        fprintf(stderr, "reduceToFirstNBits: x is not array owner\n");
         exit(EXIT_FAILURE);
     }
 
     // Calculate how many complete 64-bit words we need
-    size_t completeWords = n / 64;
-    size_t remainingBits = n % 64;
+    const size_t completeWords = n / 64;
+    const size_t remainingBits = n % 64;
 
     // Calculate how many words we actually have available
-    size_t availableWords = getLen(x);
+    const size_t availableWords = getLen(x);
 
     // Determine how many words we'll actually use
-    size_t wordsNeeded = completeWords + (remainingBits > 0 ? 1 : 0);
-    size_t actualWords = completeWords < availableWords ? wordsNeeded : availableWords;
+    const size_t wordsNeeded = completeWords + (remainingBits > 0 ? 1 : 0);
+    const size_t actualWords = completeWords < availableWords ? wordsNeeded : availableWords;
 
     // Copy the complete words
-    size_t i = actualWords - 1;
+    const size_t i = actualWords - 1;
 
     // Handle the last word
     if (completeWords < availableWords && remainingBits > 0) {
         // Create mask for remaining bits: (1 << remainingBits) - 1
-        uint64_t mask = (1ULL << remainingBits) - 1;
+        const uint64_t mask = (1ULL << remainingBits) - 1;
         x->bigIntArray[x->start + i] = x->bigIntArray[x->start + i] & mask;
     }
     x->end = x->start + actualWords;

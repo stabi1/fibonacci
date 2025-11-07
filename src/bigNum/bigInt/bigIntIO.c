@@ -16,6 +16,7 @@ const char *SWAP_DIR = "swap_storage/";
 
 uint64_t counter = 0;
 
+// cleans up the swap folder in case of program termination
 void handleSignals(int sig, siginfo_t *info, void *context) {
     (void) info; // Unused parameter
     (void) context; // Unused parameter
@@ -23,7 +24,7 @@ void handleSignals(int sig, siginfo_t *info, void *context) {
         printf("\nSIGINT or SIGTERM received, cleaning up resources\n");
         fflush(stdout); // Ensure the output is immediately visible
         if (directoryExists(SWAP_DIR)) {
-            int status = delete_files_in_folder(SWAP_DIR);
+            const int status = delete_files_in_folder(SWAP_DIR);
             if (status == 0) {
                 printf("Cleanup successful, exiting\n");
                 exit(EXIT_FAILURE);
@@ -41,9 +42,9 @@ void handleSignals(int sig, siginfo_t *info, void *context) {
 char *get_16_hex_string() {
     unsigned char *hex_str = malloc(17);
     mallocCheck(hex_str);
-    size_t counterLocal = atomic_fetch_add_explicit(&counter, 1, memory_order_relaxed);
+    const size_t counterLocal = atomic_fetch_add_explicit(&counter, 1, memory_order_relaxed);
     for (int i = 15; i >= 0; --i) {
-        uint8_t digit = counterLocal >> (i * 4) & 0xF;
+        const uint8_t digit = counterLocal >> (i * 4) & 0xF;
         hex_str[15 - i] = (digit < 10) ? (unsigned char) ('0' + digit) : (unsigned char) ('A' + (digit - 10));
     }
     hex_str[16] = '\0';

@@ -16,7 +16,6 @@
 #include "../bigNum/bigFrac/bigFrac.h"
 #include "../bigNum/bigInt/bigIntMul.h"
 #include "../bigNum/bigInt/SSA/ssa.h"
-#include "../bigNum/bigInt/SSA/ssaHelper.h"
 #include "../bigNum/bigInt/NTT/ntt.h"
 
 char *randomHex(uint64_t n);
@@ -68,8 +67,8 @@ void customTest() {
 }
 
 void testTmp() {
-    char* c1 = randomHex(1000000*16);
-    char* c2 = randomHex(700005*16);
+    char* c1 = randomHex(100000*16);
+    char* c2 = randomHex(7005*16);
     bigInt *tmp1 = hexStringToBigInt(c1);
     bigInt *tmp2 = hexStringToBigInt(c2);
     // printf("Len: %lu\n", getLen(tmp1));
@@ -78,7 +77,7 @@ void testTmp() {
 
     bigInt *res1 = SSA_modular(tmp1, tmp2);
 
-    bigInt *res2 = karatsuba(tmp1, tmp2);
+    /*bigInt *res2 = multiplyToomCook3(tmp1, tmp2);
     printf("\n--------------------------------------------\n");
     if (compareBigInt(res1, res2) != 0) {
         printBigIntHex(res1);
@@ -87,11 +86,11 @@ void testTmp() {
     } else {
         printf("Equal\n");
     }
-    freeBigInt(tmp2);
-    freeBigInt(res2);
+    freeBigInt(res2);*/
 
     printf("resLen: %lu\n", getLen(res1));
     freeBigInt(tmp1);
+    freeBigInt(tmp2);
     freeBigInt(res1);
 
 }

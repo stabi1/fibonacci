@@ -10,12 +10,13 @@ def reference_implementation_pi(n: int) -> str:
     bits = math.ceil((n + 5) * 3.32193)
     get_context().precision = bits
 
-    pi = const_pi()
+    pi: mpfr = const_pi()
     print("Pi calc done")
 
     pi_str = str(pi)
-    res = pi_str[:n+2]
-    if n==0:
+    res: str = pi_str[:n+2]
+
+    if n == 0:
         res = res + "0"
     return res
 

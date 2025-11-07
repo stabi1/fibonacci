@@ -5,7 +5,7 @@
 #include "../bigNum/bigInt/bigIntMethods.h"
 #include "../util.h"
 
-void verifyBigInt(bigInt *x) {
+void verifyBigInt(const bigInt *x) {
     if (!isValidBigInt(x)) {
         fprintf(stderr, "Result is not a valid bigInt\n");
         abort();
@@ -13,11 +13,11 @@ void verifyBigInt(bigInt *x) {
 }
 
 bigInt *readBigIntHexFromFileTestHelper(char *path) {
-    char *delim = ":";
-    char *filePath = strtok(path, delim);
-    char *partialBigIntUnder = strtok(NULL, delim);
-    char *partialBigIntOver = strtok(NULL, delim);
-    char *overflow = strtok(NULL, delim);
+    const char *delim = ":";
+    const char *filePath = strtok(path, delim);
+    char *partialBigIntUnder = strtok(nullptr, delim);
+    char *partialBigIntOver = strtok(nullptr, delim);
+    const char *overflow = strtok(nullptr, delim);
 
     bigInt *fileBigInt = readBigIntHexFromFile(filePath);
 
@@ -33,10 +33,10 @@ bigInt *readBigIntHexFromFileTestHelper(char *path) {
         exit(EXIT_FAILURE);
     }
 
-    size_t under = parseUINT64(partialBigIntUnder, UINT64_MAX, 0);
-    size_t over = parseUINT64(partialBigIntOver, UINT64_MAX, 0);
+    const size_t under = parseUINT64(partialBigIntUnder, UINT64_MAX, 0);
+    const size_t over = parseUINT64(partialBigIntOver, UINT64_MAX, 0);
 
-    size_t newSize = under + getLen(fileBigInt) + over;
+    const size_t newSize = under + getLen(fileBigInt) + over;
     bigInt *res = newBigInt(newSize);
     memset(res->bigIntArray, 0xF, under * 8);
     memcpy(res->bigIntArray + under, fileBigInt->bigIntArray, getLen(fileBigInt) * 8);
@@ -49,11 +49,11 @@ bigInt *readBigIntHexFromFileTestHelper(char *path) {
     return res;
 }
 
-void test1Input1IntOutput(bigInt *(*operation)(const bigInt *, size_t), char *inputFile1, char *intToShift, char *outputFile) {
+void test1Input1IntOutput(bigInt *(*operation)(const bigInt *, size_t), char *inputFile1, char *intToShift, const char *outputFile) {
     bigInt *input = readBigIntHexFromFileTestHelper(inputFile1);
     verifyBigInt(input);
 
-    size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
+    const size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
 
     bigInt *res = operation(input, toShift);
     verifyBigInt(res);
@@ -64,13 +64,14 @@ void test1Input1IntOutput(bigInt *(*operation)(const bigInt *, size_t), char *in
     freeBigInt(res);
 }
 
-void test2Input1IntOutput(bigInt *(*operation)(const bigInt *, const bigInt *, size_t), char *inputFile1, char *inputFile2, char *intToShift, char *outputFile) {
+void test2Input1IntOutput(bigInt *(*operation)(const bigInt *, const bigInt *, size_t), char *inputFile1, char *inputFile2, char *intToShift,
+                          const char *outputFile) {
     bigInt *input1 = readBigIntHexFromFileTestHelper(inputFile1);
     bigInt *input2 = readBigIntHexFromFileTestHelper(inputFile2);
     verifyBigInt(input1);
     verifyBigInt(input2);
 
-    size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
+    const size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
 
     bigInt *res = operation(input1, input2, toShift);
     verifyBigInt(res);
@@ -82,7 +83,7 @@ void test2Input1IntOutput(bigInt *(*operation)(const bigInt *, const bigInt *, s
     freeBigInt(res);
 }
 
-void test2Input1Output(bigInt *(*operation)(const bigInt *, const bigInt *), char *inputFile1, char *inputFile2, char *outputFile) {
+void test2Input1Output(bigInt *(*operation)(const bigInt *, const bigInt *), char *inputFile1, char *inputFile2, const char *outputFile) {
     bigInt *input1 = readBigIntHexFromFileTestHelper(inputFile1);
     bigInt *input2 = readBigIntHexFromFileTestHelper(inputFile2);
     verifyBigInt(input1);
@@ -99,7 +100,7 @@ void test2Input1Output(bigInt *(*operation)(const bigInt *, const bigInt *), cha
 }
 
 void test2Input2Output(bigInt *(*operation)(const bigInt *, const bigInt *, bigInt **), char *inputFile1, char *inputFile2,
-                       char *outputFile1, char *outputFile2) {
+                       const char *outputFile1, const char *outputFile2) {
     bigInt *input1 = readBigIntHexFromFileTestHelper(inputFile1);
     bigInt *input2 = readBigIntHexFromFileTestHelper(inputFile2);
     verifyBigInt(input1);
@@ -128,35 +129,35 @@ void test1InputZeroOutput(void (*operation)(const bigInt *, const char *), char 
     freeBigInt(input1);
 }
 
-void testMul(char *inputFile1, char *inputFile2, char *outputFile) {
+void testMul(char *inputFile1, char *inputFile2, const char *outputFile) {
     test2Input1Output(mul, inputFile1, inputFile2, outputFile);
 }
 
-void testDiv(char *inputFile1, char *inputFile2, char *outputFile) {
+void testDiv(char *inputFile1, char *inputFile2, const char *outputFile) {
     test2Input1Output(divide, inputFile1, inputFile2, outputFile);
 }
 
-void testDivMod(char *inputFile1, char *inputFile2, char *outputFile1, char *outputFile2) {
+void testDivMod(char *inputFile1, char *inputFile2, const char *outputFile1, const char *outputFile2) {
     test2Input2Output(divideMod, inputFile1, inputFile2, outputFile1, outputFile2);
 }
 
-void testAdd(char *inputFile1, char *inputFile2, char *outputFile) {
+void testAdd(char *inputFile1, char *inputFile2, const char *outputFile) {
     test2Input1Output(add, inputFile1, inputFile2, outputFile);
 }
 
-void testSub(char *inputFile1, char *inputFile2, char *outputFile) {
+void testSub(char *inputFile1, char *inputFile2, const char *outputFile) {
     test2Input1Output(sub, inputFile1, inputFile2, outputFile);
 }
 
-void testShiftLeft(char *inputFile1, char *toShiftInt, char *outputFile) {
+void testShiftLeft(char *inputFile1, char *toShiftInt, const char *outputFile) {
     test1Input1IntOutput(shiftLeft, inputFile1, toShiftInt, outputFile);
 }
 
-void testShiftRight(char *inputFile1, char *toShiftInt, char *outputFile) {
+void testShiftRight(char *inputFile1, char *toShiftInt, const char *outputFile) {
     test1Input1IntOutput(shiftRight, inputFile1, toShiftInt, outputFile);
 }
 
-void testSHiftAdd(char *inputFile1, char *inputFile2, char *toShiftInt, char *outputFile) {
+void testSHiftAdd(char *inputFile1, char *inputFile2, char *toShiftInt, const char *outputFile) {
     test2Input1IntOutput(shiftAdd, inputFile1, inputFile2, toShiftInt, outputFile);
 }
 
@@ -167,4 +168,3 @@ void testWriteBigIntHexToFile(char *inputFile1, char *outputFile) {
 void testWriteBigIntDecToFile(char *inputFile1, char *outputFile) {
     test1InputZeroOutput(writeBigIntDecToFile, inputFile1, outputFile);
 }
-

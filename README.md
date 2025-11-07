@@ -1,30 +1,58 @@
 # Fibonacci
-Compute the nth fibonacci number. Optimized for speed with my own bignum implementation written in C and Assembly-x86
+
+Compute the nth fibonacci number and much more. Optimized for speed with my own bignum implementation written in C and Assembly-x86
+
+### Capabilities:
+- Can calculate the following to arbitrary size/precision:
+    - *e*
+    - π
+    - ϕ (Golden ratio)
+    - Square root
+    - fibonacci number
+    - convert between binary, decimal and hexadecimal strings
 
 
-## Memory
-Single thread fibonacci takes up around 5.5 times as much memory as the size of the predicted result.
-Single thread conversion to decimal takes around 9 times as much memory as the size of the predicted result.
+# Number types
 
-Example for n=500000000; the result size is 40 MB:
-* Then peak memory usage is around 220 MB
-* Then peak memory usage for the conversion to decimal is 360 MB
+Uses `bigInt` as integer type \
+Uses `bigFrac` as fixed-point (scaled integer) type
 
+# Algorithms
+The different algorithms that this program uses are listed below
+
+## Multiplication
+ - Naive multiplication
+ - Karatsuba multiplication
+ - Toom-Cook (Toom-3) multiplication 
+ - Schönhage–Strassen algorithm
+
+## Division
+- Knuth's Algorithm D
+- Burnikel-Ziegler Division
+
+## Square root
+- Newton's method
 
 ## Requirements
-The OS must be Linux! \
-cpu features needed:
-* bmi2
 
+The OS must be Linux and the architecture x86-64
+
+# Makefile
+
+`make setup` to initialize the repo after clone \
+`make` to compile with all optimizations \
+`make debug` to compile for debugging \
+`make sanitize` to compile with sanitizers \
+`make test` to compile for tests and run tests \
+`make clean` to remove all temporary files \
 
 ## Tests:
+
 Run all tests: `make test` \
-Run all valgrind tests: `pytest -m valgrind_test` \
-Run all non valgrind tests (fast): `pytest -m "not valgrind_test"`
-
-
+Run all partial bigInt tests: `pytest -m partialBigInt_test` \
 
 ## Misc
+
 * Max length = ~2000 petabytes (64bit bit-length counter)
 * Max ssaMax length = ~576 petabytes (log2(2*bitlength)<63)
 * BigInt Division uses truncating division

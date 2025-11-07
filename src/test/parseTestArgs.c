@@ -20,18 +20,18 @@ enum TestType {
     PRINT_DEC
 };
 
-const size_t numOfArgs[] = {
-        [CUSTOM_TEST] = 0,
-        [MUL]         = 3,
-        [DIV]         = 3,
-        [DIV_MOD]     = 4,
-        [ADD]         = 3,
-        [SUB]         = 3,
-        [SHIFT_LEFT]  = 3,
-        [SHIFT_RIGHT] = 3,
-        [SHIFT_ADD]   = 4,
-        [PRINT_HEX]   = 2,
-        [PRINT_DEC]   = 2,
+constexpr size_t numOfArgs[] = {
+    [CUSTOM_TEST] = 0,
+    [MUL] = 3,
+    [DIV] = 3,
+    [DIV_MOD] = 4,
+    [ADD] = 3,
+    [SUB] = 3,
+    [SHIFT_LEFT] = 3,
+    [SHIFT_RIGHT] = 3,
+    [SHIFT_ADD] = 4,
+    [PRINT_HEX] = 2,
+    [PRINT_DEC] = 2,
 };
 
 void onError(char *argsCpy) {
@@ -39,22 +39,22 @@ void onError(char *argsCpy) {
     exit(EXIT_FAILURE);
 }
 
-void selectTest(char *args) {
+void selectTest(const char *args) {
     //copy args
-    size_t argLen = strlen(args);
+    const size_t argLen = strlen(args);
     char *argsCpy = malloc(argLen + 1);
     mallocCheck(argsCpy);
     strncpy(argsCpy, args, argLen + 1);
     argsCpy[argLen] = '\0';
 
     // extract arguments
-    char *delim = ",";
-    char *testType = strtok(argsCpy, delim);
-    char *arg1 = strtok(NULL, delim);
-    char *arg2 = strtok(NULL, delim);
-    char *arg3 = strtok(NULL, delim);
-    char *arg4 = strtok(NULL, delim);
-    char *overflow = strtok(NULL, delim);
+    const char *delim = ",";
+    const char *testType = strtok(argsCpy, delim);
+    char *arg1 = strtok(nullptr, delim);
+    char *arg2 = strtok(nullptr, delim);
+    char *arg3 = strtok(nullptr, delim);
+    char *arg4 = strtok(nullptr, delim);
+    char *overflow = strtok(nullptr, delim);
 
     // determine test type
     enum TestType type;
@@ -86,7 +86,7 @@ void selectTest(char *args) {
         exit(EXIT_FAILURE);
     }
 
-    size_t numArgs = numOfArgs[type];
+    const size_t numArgs = numOfArgs[type];
     if (numArgs == 1) {
         if (arg1 == NULL) {
             fprintf(stderr, "Missing argument\n");

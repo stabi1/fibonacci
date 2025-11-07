@@ -257,11 +257,6 @@ all_test_numbers_small_names = positive_test_numbers_small_names + negative_test
 all_test_number_pairs_names = [(a, b) for a in all_test_numbers_names for b in all_test_numbers_names]
 all_test_number_pairs_small_names = [(a, b) for a in all_test_numbers_small_names for b in all_test_numbers_small_names]
 
-
-# positive_test_number_pairs_names = [(a, b) for a in positive_test_numbers for b in positive_test_numbers]
-# positive_test_number_pairs_small_names = [(a, b) for a in positive_test_numbers_small_names for b in positive_test_numbers_small_names]
-
-
 def add_partial_big_int_to_filename(filename: str, under: int = 20, over: int = 20) -> str:
     delimiter: str = ":"
     return f"{filename}{delimiter}{under}{delimiter}{over}"

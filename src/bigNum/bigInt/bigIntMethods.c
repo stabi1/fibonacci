@@ -484,7 +484,7 @@ bigInt *sub_helper(const bigInt *x, const bigInt *y, bool negative) {
     bigInt *res = newBigIntNotZeroed(getLen(x));
     do_sub_asm(x, y, res);
     res->negative = negative;
-    size_t blocks = getOccupiedBlocks(res);
+    const size_t blocks = getOccupiedBlocks(res);
     res->end = res->start + blocks;
     return res;
 }
