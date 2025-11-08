@@ -152,7 +152,7 @@ bigInt *subModF(const bigInt *a, const bigInt *b, const size_t fermatIndex) {
 }
 
 // return a bigInt with the first n bits of x
-bigInt *getFirstNBits(const bigInt *x, size_t n) {
+bigInt *getFirstNBits(const bigInt *x, const size_t n) {
     if (n == 0 || isZero(x)) {
         return getZeroBigInt();
     }

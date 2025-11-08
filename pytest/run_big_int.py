@@ -35,7 +35,7 @@ def run_command_in_valgrind(command: str, path: Path, timeout: int = 100000) -> 
     if result_valgrind.returncode < 0:
         pytest.fail(f"Valgrind CRASHED!!!{format_args(result_valgrind.args)}")
 
-    if result_valgrind.returncode is valgrind_error:
+    if result_valgrind.returncode == valgrind_error:
         os.write(sys.stderr.fileno(), result_valgrind.stderr)
         os.write(sys.stdout.fileno(), result_valgrind.stdout)
         pytest.fail(f"Valgrind error!{format_args(result_valgrind.args)}")

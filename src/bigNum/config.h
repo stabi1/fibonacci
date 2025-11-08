@@ -10,6 +10,7 @@ typedef struct {
     size_t TOOM_COOK_FASTER; // Size when toom-cook is faster than SSA
 } MulThresholds;
 
+// struct that holds the global config vars
 typedef struct {
     bool verbose;
     bool superVerbose;

@@ -20,10 +20,11 @@ bigInt *mulExecute(const bigInt *x, const bigInt *y);
 bigInt *mulParallelExecute(const bigInt *x, const bigInt *y, size_t depth);
 
 bigInt *mul(const bigInt *x, const bigInt *y) {
-    if (global_config.parallel)
+    if (global_config.parallel) {
         return mulParallel(x, y, global_config.mulDepth);
-    else
+    } else {
         return mulSingleThread(x, y);
+    }
 }
 
 bigInt *mulSingleThread(const bigInt *x, const bigInt *y) {

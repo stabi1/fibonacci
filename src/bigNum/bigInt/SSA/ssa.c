@@ -114,6 +114,7 @@ bigInt **iFFT_modF(bigInt **a, size_t N, const size_t fermatIndex) {
     return res;
 }
 
+// implements the Schönhage–Strassen algorithm from the original paper https://link.springer.com/article/10.1007/BF02242355
 bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     const size_t bitLenA = bitLength(A);
     const size_t bitLenB = bitLength(B);

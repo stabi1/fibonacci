@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-void mallocCheck(void *p);
+void mallocCheck(const void *p);
 
 char *getZeroString();
 

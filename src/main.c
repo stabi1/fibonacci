@@ -22,6 +22,7 @@ const char *DEFAULT_FILENAME = "output.txt";
 // - implement swapping for goldenRation and Pi, check bigFrac for swapping potential
 // - better root algorithm (Karatsuba Square Root), root for bigInt
 // - clean up cores/threads mess
+// - change -b flag, make current functionality a test argument
 
 
 enum {

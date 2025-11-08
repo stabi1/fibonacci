@@ -182,7 +182,7 @@ FibLucPair *fibLuc(int64_t n, size_t depth) {
         }
 
         bigInt *sum_fib = add(prev->fib, prev->luc);
-        char *filename_prev_luc;
+        char *filename_prev_luc = ""; // prevent warning
         if(depth == 0) {
             freeBigInt(prev->fib);
             freeBigInt(prev->luc);

@@ -40,7 +40,10 @@ void handleSignals(int sig, siginfo_t *info, void *context) {
 }
 
 char *get_16_hex_string() {
-    unsigned char *hex_str = malloc(17);
+    unsigned char *hex_str = (unsigned char*) malloc(17);
+    if (hex_str == NULL) {
+        exit(EXIT_FAILURE);
+    }
     mallocCheck(hex_str);
     const size_t counterLocal = atomic_fetch_add_explicit(&counter, 1, memory_order_relaxed);
     for (int i = 15; i >= 0; --i) {

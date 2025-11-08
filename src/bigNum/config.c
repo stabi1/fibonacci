@@ -33,7 +33,7 @@ void cleanupBigIntLib() {
     free_Stack(get_thread_BigFracStack());
 }
 
-size_t getNumOfThreadsFromDepthMul(size_t mulDepth) {
+size_t getNumOfThreadsFromDepthMul(const size_t mulDepth) {
     switch (mulDepth) {
         case 0:
             return 1;
@@ -47,7 +47,7 @@ size_t getNumOfThreadsFromDepthMul(size_t mulDepth) {
 }
 
 
-size_t calcMulDepthForParallelMuls(size_t numMuls) {
+size_t calcMulDepthForParallelMuls(const size_t numMuls) {
     size_t resDepth = 0;
     while (true) {
         if (numMuls * getNumOfThreadsFromDepthMul(resDepth) > global_config.maxThreads)
@@ -58,7 +58,7 @@ size_t calcMulDepthForParallelMuls(size_t numMuls) {
 }
 
 
-size_t getMulDepthFromMaxThreads(size_t maxThreads) {
+size_t getMulDepthFromMaxThreads(const size_t maxThreads) {
     if (maxThreads == 0) {
         return getMulDepthFromCores(0);
     }
@@ -78,14 +78,14 @@ size_t getMulDepthFromMaxThreads(size_t maxThreads) {
     }
 }
 
-size_t getMulDepthFromCores(size_t nprocsSet) {
+size_t getMulDepthFromCores(const size_t nprocsSet) {
     size_t numberOfCores;
     if (nprocsSet == 0) {
         numberOfCores = get_nprocs();
-        if (global_config.verbose) printf("Number of cores detected: %lu\n", numberOfCores);
+        if (global_config.verbose) printf("Number of threads detected: %lu\n", numberOfCores);
     } else {
         numberOfCores = nprocsSet;
-        if (global_config.verbose) printf("Number of cores set: %lu\n", numberOfCores);
+        if (global_config.verbose) printf("Number of threads set: %lu\n", numberOfCores);
     }
 
     if (numberOfCores < 6) {
@@ -103,7 +103,7 @@ size_t getMulDepthFromCores(size_t nprocsSet) {
     }
 }
 
-size_t getConvertDepthFromMaxThreads(size_t maxThreads) {
+size_t getConvertDepthFromMaxThreads(const size_t maxThreads) {
     if (maxThreads == 0) {
         return getConvertDepthFromCores(0);
     }
@@ -135,14 +135,14 @@ size_t getConvertDepthFromMaxThreads(size_t maxThreads) {
     }
 }
 
-size_t getConvertDepthFromCores(size_t nprocsSet) {
+size_t getConvertDepthFromCores(const size_t nprocsSet) {
     size_t numberOfCores;
     if (nprocsSet == 0) {
         numberOfCores = get_nprocs();
-        if (global_config.verbose) printf("Number of cores detected: %lu\n", numberOfCores);
+        if (global_config.verbose) printf("Number of threads detected: %lu\n", numberOfCores);
     } else {
         numberOfCores = nprocsSet;
-        if (global_config.verbose) printf("Number of cores set: %lu\n", numberOfCores);
+        if (global_config.verbose) printf("Number of threads set: %lu\n", numberOfCores);
     }
 
     if (numberOfCores < 3) {

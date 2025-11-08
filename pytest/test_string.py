@@ -65,7 +65,7 @@ def test_dec_string_partial_bigint_valgrind(tmp_path: Path, filename_a: str):
     if test_hex_string == "-0":
         test_hex_string = "0"
 
-    sys.set_int_max_str_digits(1000000)
+    sys.set_int_max_str_digits(10000000)
     assert res_string == str(int(test_hex_string, 16)), f"Command: {command}"
 
 
