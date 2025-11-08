@@ -13,28 +13,28 @@ Please forgive the poor documentation.
     - Fibonacci number
     - Convert between binary, decimal and hexadecimal strings
 
-# Number types
+## Number types
 
 Uses `bigInt` as integer type \
 Uses `bigFrac` as fixed-point (scaled integer) type
 
-# Algorithms
+## Algorithms
 
 The different algorithms that this program uses are listed below
 
-## Multiplication
+### Multiplication
 
 - Naïve multiplication
 - Karatsuba multiplication
 - Toom-Cook (Toom-3) multiplication
 - Schönhage–Strassen algorithm
 
-## Division
+### Division
 
 - Knuth's Algorithm D
 - Burnikel-Ziegler Division
 
-## Square root
+### Square root
 
 - Newton's method
 
@@ -42,7 +42,7 @@ The different algorithms that this program uses are listed below
 
 The OS must be Linux and the architecture x86-64
 
-# Makefile
+## Makefile
 
 `make setup` to initialize the repo after clone \
 `make` to compile with all optimizations \
