@@ -1,10 +1,10 @@
 #include "bigIntMul.h"
 
-#include "mulAsm.h"
-#include "bigIntAsm.h"
-#include "bigIntDiv.h"
-#include "../misc.h"
-#include "bigIntIO.h"
+#include "../mulAsm.h"
+#include "../bigIntAsm.h"
+#include "../bigIntDiv.h"
+#include "../../misc.h"
+#include "../bigIntIO.h"
 #include "SSA/ssa.h"
 
 #include <stddef.h>

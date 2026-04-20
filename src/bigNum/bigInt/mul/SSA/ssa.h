@@ -1,7 +1,7 @@
 #ifndef FIBONACCI_SSA_H
 #define FIBONACCI_SSA_H
 
-#include "../bigInt.h"
+#include "../../bigInt.h"
 
 bigInt *SSA_modular(const bigInt *A, const bigInt *B);
 

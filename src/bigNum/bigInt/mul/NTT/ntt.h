@@ -2,8 +2,7 @@
 #define FIBONACCI_NTT_H
 
 #include "nttAsm.h"
-#include "../bigInt.h"
-#include <stdio.h>
+#include "../../bigInt.h"
 
 bigInt *ntt_mul(const bigInt *A, const bigInt *B);
 

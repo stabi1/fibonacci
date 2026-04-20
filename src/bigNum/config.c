@@ -6,20 +6,20 @@
 #include "bigFrac/bigFracAlloc.h"
 
 Config global_config = {
-        .verbose = false,
-        .superVerbose = false,
-        .parallel = false,
-        .mulDepth = 0,
-        .convertDepth = 0,
-        .swap = false,
-        .swapThreshold = 100,
-        .deactivateCaches = false,
-        .maxThreads = 1,
-        .mulThresholds = {
-            .NAIVE_MUL_FASTER = 100,
-            .KARATSUBA_FASTER = 400,
-            .TOOM_COOK_FASTER = 80000
-        }
+    .verbose = false,
+    .superVerbose = false,
+    .parallel = false,
+    .mulDepth = 0,
+    .convertDepth = 0,
+    .swap = false,
+    .swapThreshold = 100,
+    .deactivateCaches = false,
+    .maxThreads = 1,
+    .mulThresholds = {
+        .NAIVE_MUL_FASTER = 100,
+        .KARATSUBA_FASTER = 400,
+        .TOOM_COOK_FASTER = 80000
+    }
 };
 
 void cleanupBigIntLib() {

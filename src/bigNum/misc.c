@@ -52,8 +52,8 @@ char *getCurrentDateTime() {
 
     snprintf(dateTimeString, 75, "%02d-%02d-%04d %02d:%02d:%02d",
              localTime.tm_mday,
-             localTime.tm_mon + 1,       // tm_mon is 0-based
-             localTime.tm_year + 1900,   // tm_year is years since 1900
+             localTime.tm_mon + 1, // tm_mon is 0-based
+             localTime.tm_year + 1900, // tm_year is years since 1900
              localTime.tm_hour,
              localTime.tm_min,
              localTime.tm_sec);
@@ -94,4 +94,21 @@ uint64_t bit_reverse(const uint64_t x, const uint64_t bits) {
         }
     }
     return r;
+}
+
+// calculate GCD (greatest common devisor) using Euclidean algorithm
+uint64_t gcd(uint64_t a, uint64_t b) {
+    while (b != 0) {
+        const uint64_t temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+// calculate LCM (least common multiple)
+uint64_t lcm(const uint64_t a, const uint64_t b) {
+    if (a == 0 || b == 0) return 0;
+    const __uint128_t tmp = (__uint128_t) a * b;
+    return tmp / gcd(a, b);
 }

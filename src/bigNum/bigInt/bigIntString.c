@@ -307,7 +307,9 @@ size_t calculateDecStringSpace(const bigInt *x) {
 //fills the char array with the dec presentation of the bigInt
 char *bigIntToDecString(bigInt *x, bool doFree) {
     if (isZero(x)) {
-        freeBigInt(x);
+        if (doFree) {
+            freeBigInt(x);
+        }
         return getZeroString();
     }
 

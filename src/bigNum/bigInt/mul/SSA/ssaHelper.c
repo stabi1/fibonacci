@@ -1,7 +1,7 @@
 #include "ssaHelper.h"
 
-#include "../bigIntAlloc.h"
-#include "../bigIntMethods.h"
+#include "../../bigIntAlloc.h"
+#include "../../bigIntMethods.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,11 +33,12 @@ bigInt *reduceModF(const bigInt *x, const size_t fermatIndex) {
     const size_t totalBits = 1ULL << (fermatIndex + 1);
     const size_t k = totalBits / 2;
 
-    bigInt *v = sliceBigInt(x, k/64, k/64); // high bits
-    bigInt *u = sliceBigInt(x, 0, k/64); // low bits
+    bigInt *v = sliceBigInt(x, k / 64, k / 64); // high bits
+    bigInt *u = sliceBigInt(x, 0, k / 64); // low bits
     bigInt *res;
 
-    if (compareBigInt(v, u) == 1) {// v > u -> add 2^{2^fermatIndex} + 1
+    if (compareBigInt(v, u) == 1) {
+        // v > u -> add 2^{2^fermatIndex} + 1
         bigInt *one = getBigIntFromUnsignedInteger(1);
         bigInt *tmp = add(u, one);
 

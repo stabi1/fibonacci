@@ -1,6 +1,6 @@
 #include "bigIntDiv.h"
 
-#include "bigIntMul.h"
+#include "mul/bigIntMul.h"
 #include "../constants.h"
 #include "../misc.h"
 

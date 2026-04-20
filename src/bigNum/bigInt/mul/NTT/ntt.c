@@ -1,10 +1,9 @@
 #include "ntt.h"
 
-#include <string.h>
 #include <stdio.h>
 
-#include "../bigIntMethods.h"
-#include "../../misc.h"
+#include "../../bigIntMethods.h"
+#include "../../../misc.h"
 
 #define POW2(index) ((size_t)1 << (index))
 

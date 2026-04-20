@@ -235,7 +235,8 @@ bigInt *shiftAdd(const bigInt *x, const bigInt *toShift, const size_t n) {
 }
 
 // adds toShift to x; with toShift shifted n blocks to the left, the result will be in x after the call
-// Changes x, will resize x if there is not enough space
+// Changes x->bigIntArray, will resize x->bigIntArray if there is not enough space
+// DO NOT USE WHEN THE bigIntArray IS STILL USED SOMEWHERE ELSE
 void shiftAddSameNumberSafe(bigInt *x, const bigInt *toShift, const size_t n) {
     if (!x->arrayOwner) {
         fprintf(stderr, "shiftAddSameNumberSafe: x is not array owner\n");

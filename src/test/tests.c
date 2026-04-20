@@ -14,9 +14,11 @@
 
 #include "../bigNum/bigFrac/bigFracString.h"
 #include "../bigNum/bigFrac/bigFrac.h"
-#include "../bigNum/bigInt/bigIntMul.h"
-#include "../bigNum/bigInt/SSA/ssa.h"
-#include "../bigNum/bigInt/NTT/ntt.h"
+#include "../bigNum/bigInt/mul/bigIntMul.h"
+#include "../bigNum/bigInt/mul/SSA/ssa.h"
+#include "../bigNum/bigInt/mul/NTT/ntt.h"
+#include "../bigNum/bigInt/mul/SSA_small/ssaSmall.h"
+#include "../bigNum/bigInt/mul/SSA_small/ssaSmallHelper.h"
 
 char *randomHex(uint64_t n);
 
@@ -26,14 +28,15 @@ void testTmp();
 
 void testBenchMark();
 
-void testSSA() {
+void testtest();
 
-    char* c1 = randomHex(64*16);
-    char* c2 = randomHex(64*16);
+void testSSA() {
+    char *c1 = randomHex(64 * 16);
+    char *c2 = randomHex(64 * 16);
     bigInt *tmp1 = hexStringToBigInt(c1);
     bigInt *tmp2 = hexStringToBigInt(c2);
-    //printBigIntHex(tmp1);
-    //printBigIntHex(tmp2);
+    printBigIntHex(tmp1);
+    printBigIntHex(tmp2);
     free(c1);
     free(c2);
     //bigInt *tmp1 = getBigIntFromSignedInteger(11830);
@@ -43,7 +46,7 @@ void testSSA() {
     //printBigIntBinary(tmp2);
 
     bigInt *res1 = mulSingleThread(tmp1, tmp2);
-    bigInt *res2 = ntt_mul(tmp1, tmp2);
+    bigInt *res2 = SSA_small(tmp1, tmp2);
 
     printf("\n--------------------------------------------\n");
     if (compareBigInt(res1, res2) != 0) {
@@ -57,18 +60,26 @@ void testSSA() {
     freeBigInt(tmp2);
     freeBigInt(res1);
     freeBigInt(res2);
-
 }
 
 void customTest() {
     // testSSA();
-    testTmp();
-    // testBenchMark();
+    // testTmp();
+    testBenchMark();
+    // testtest();
+}
+
+void testtest() {
+    bigInt *tmp1 = decStringToBigInt("732423816979762972870138598232469939079168");
+    // bigInt *tmp2 = decStringToBigInt("61145681293797231677983948800");
+
+    bigInt *res1 = div2ExpModNPrime(tmp1, 11, 1024);
+    printBigIntDec(res1);
 }
 
 void testTmp() {
-    char* c1 = randomHex(100000*16);
-    char* c2 = randomHex(7005*16);
+    char *c1 = randomHex(100000 * 16);
+    char *c2 = randomHex(7005 * 16);
     bigInt *tmp1 = hexStringToBigInt(c1);
     bigInt *tmp2 = hexStringToBigInt(c2);
     // printf("Len: %lu\n", getLen(tmp1));
@@ -77,7 +88,7 @@ void testTmp() {
 
     bigInt *res1 = SSA_modular(tmp1, tmp2);
 
-    /*bigInt *res2 = multiplyToomCook3(tmp1, tmp2);
+    bigInt *res2 = multiplyToomCook3(tmp1, tmp2);
     printf("\n--------------------------------------------\n");
     if (compareBigInt(res1, res2) != 0) {
         printBigIntHex(res1);
@@ -86,13 +97,12 @@ void testTmp() {
     } else {
         printf("Equal\n");
     }
-    freeBigInt(res2);*/
+    freeBigInt(res2);
 
     printf("resLen: %lu\n", getLen(res1));
     freeBigInt(tmp1);
     freeBigInt(tmp2);
     freeBigInt(res1);
-
 }
 
 void findBestValues() {
@@ -125,26 +135,35 @@ void findBestValues() {
 }
 
 void testBenchMark() {
-    size_t iterations = 1;
+    size_t iterations = 3000;
 
-    size_t n = 400000;
-    char* c1 = randomHex(n*16);
-    bigInt *tmp = hexStringToBigInt(c1);
+    size_t n = 1000;
+    char *c1 = randomHex(n * 16);
+    char *c2 = randomHex(n * 16);
+    bigInt *tmp1 = hexStringToBigInt(c1);
+    bigInt *tmp2 = hexStringToBigInt(c2);
     free(c1);
+    free(c2);
 
     struct timespec start;
-    char *res;
+    bigInt *res;
     getCurrentTime(&start);
+
     for (size_t i = 0; i < iterations; i++) {
-        res = bigIntToDecString(tmp, true);
+        res = SSA_small(tmp1, tmp2);
+        freeBigInt(res);
     }
+    res = SSA_small(tmp1, tmp2);
+
     struct timespec end;
     getCurrentTime(&end);
     double time = calcTimeDiff(&start, &end);
     printf("Time in code 1: %f\n", time);
 
-    printf("%lu\n", strlen(res));
-    free(res);
+    printf("%lu\n", getLen(res));
+    freeBigInt(res);
+    freeBigInt(tmp1);
+    freeBigInt(tmp2);
 }
 
 void benchMark() {
@@ -152,10 +171,10 @@ void benchMark() {
     printf("Benchmark with Iterations: %ld\n", iterations);
 
     //size_t n = 200000;
-    const size_t n = 80000;
+    const size_t n = 1000000;
 
-    char* c1 = randomHex(n*16);
-    char* c2 = randomHex(n*16);
+    char *c1 = randomHex(n * 16);
+    char *c2 = randomHex(n * 16);
     bigInt *tmp1 = hexStringToBigInt(c1);
     bigInt *tmp2 = hexStringToBigInt(c2);
     free(c1);
@@ -165,9 +184,14 @@ void benchMark() {
     struct timespec start;
     bigInt *res1;
     getCurrentTime(&start);
+
     for (size_t i = 0; i < iterations; i++) {
         res1 = mulSingleThread(tmp1, tmp2);
+        freeBigInt(res1);
     }
+    res1 = mulSingleThread(tmp1, tmp2);
+
+
     struct timespec end;
     getCurrentTime(&end);
     double time = calcTimeDiff(&start, &end);
@@ -178,9 +202,13 @@ void benchMark() {
     struct timespec start2;
     bigInt *res2;
     getCurrentTime(&start2);
+
     for (size_t i = 0; i < iterations; i++) {
-        res2 = SSA_modular(tmp1, tmp2);
+        res2 = SSA_small(tmp1, tmp2);
+        freeBigInt(res2);
     }
+    res2 = SSA_small(tmp1, tmp2);
+
     struct timespec end2;
     getCurrentTime(&end2);
     double time2 = calcTimeDiff(&start2, &end2);

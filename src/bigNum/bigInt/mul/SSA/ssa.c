@@ -1,8 +1,8 @@
 #include "ssa.h"
 
 #include "ssaHelper.h"
-#include "../bigIntMethods.h"
-#include "../../misc.h"
+#include "../../bigIntMethods.h"
+#include "../../../misc.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -301,7 +301,7 @@ bigInt *SSA_modular(const bigInt *A, const bigInt *B) {
     // 6) assembling the result
     bigInt *result = newBigInt(getLen(A) + getLen(B));
     for (size_t j = 0; j < numChunks / 2; ++j) {
-        shiftAddSameNumber(result, z[j], j * chunkLength);
+        shiftAddSameNumberSafe(result, z[j], j * chunkLength);
         freeBigInt(z[j]);
     }
     free(z);

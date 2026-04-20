@@ -2,7 +2,7 @@
 #define IMPLEMENTIERUNG_KARATSUBA_H
 
 #include <stddef.h>
-#include "bigIntMethods.h"
+#include "../bigIntMethods.h"
 
 bigInt *karatsuba(const bigInt *x, const bigInt *y);
 

@@ -1,7 +1,7 @@
 #ifndef FIBONACCI_SSAHELPER_H
 #define FIBONACCI_SSAHELPER_H
 
-#include "../bigInt.h"
+#include "../../bigInt.h"
 
 bigInt *sliceBigInt(const bigInt *x, size_t offset, size_t chunkSize);
 
