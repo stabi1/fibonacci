@@ -137,7 +137,7 @@ void findBestValues() {
 void testBenchMark() {
     size_t iterations = 3000;
 
-    size_t n = 1000;
+    size_t n = 3000;
     char *c1 = randomHex(n * 16);
     char *c2 = randomHex(n * 16);
     bigInt *tmp1 = hexStringToBigInt(c1);
@@ -167,11 +167,11 @@ void testBenchMark() {
 }
 
 void benchMark() {
-    size_t iterations = 1;
+    size_t iterations = 5000;
     printf("Benchmark with Iterations: %ld\n", iterations);
 
     //size_t n = 200000;
-    const size_t n = 1000000;
+    const size_t n = 800;
 
     char *c1 = randomHex(n * 16);
     char *c2 = randomHex(n * 16);
@@ -185,7 +185,7 @@ void benchMark() {
     bigInt *res1;
     getCurrentTime(&start);
 
-    for (size_t i = 0; i < iterations; i++) {
+    for (size_t i = 1; i < iterations; i++) {
         res1 = mulSingleThread(tmp1, tmp2);
         freeBigInt(res1);
     }
@@ -203,7 +203,7 @@ void benchMark() {
     bigInt *res2;
     getCurrentTime(&start2);
 
-    for (size_t i = 0; i < iterations; i++) {
+    for (size_t i = 1; i < iterations; i++) {
         res2 = SSA_small(tmp1, tmp2);
         freeBigInt(res2);
     }

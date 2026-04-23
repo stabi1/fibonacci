@@ -5,6 +5,8 @@
 
 bigInt *reduceModNPrime(const bigInt *x, uint64_t nprime);
 
+void reduceModNPrimeInPlace(bigInt **x, uint64_t nprime);
+
 bigInt *mul2ExpModNPrime(const bigInt *x, uint64_t d, uint64_t nprime);
 
 bigInt *div2ExpModNPrime(const bigInt *x, uint64_t k, uint64_t nprime);

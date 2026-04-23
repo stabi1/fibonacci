@@ -88,14 +88,14 @@ bigInt *SSA_small(const bigInt *A, const bigInt *B) {
     uint64_t pl = (S + 64 - 1) / 64;
     pl = ((pl + (1ULL << k) - 1) >> k) << k;
     const uint64_t N = pl * 64;
-    uint64_t M = N >> k; // multiple of 64
+    const uint64_t M = N >> k; // multiple of 64
 
     const uint64_t maxLK = lcm(64, 1ULL << k);
     const uint64_t Nprime = ((2 * M + k + 2) / maxLK + 1) * maxLK;
     const uint64_t Mp = Nprime >> k;
     const uint64_t K = 1ULL << k;
 
-    // printf("N: %lu, M: %lu, Nprime: %lu, Mp: %lu, K: %lu\n", N, M, Nprime, Mp, K);
+    // printf("N: %lu, M: %lu, Nprime: %lu, Mp: %lu, K: %lu;\tNum blocks: %lu; Block Size: %lu\n", N, M, Nprime, Mp, K, K, M / 64);
 
     uint64_t **l = fftInitL(k);
 
@@ -109,8 +109,8 @@ bigInt *SSA_small(const bigInt *A, const bigInt *B) {
         bigInt *tmp = mulSingleThread(AParts[i], BParts[i]);
         freeBigInt(AParts[i]);
         freeBigInt(BParts[i]);
-        AParts[i] = reduceModNPrime(tmp, Nprime);
-        freeBigInt(tmp);
+        reduceModNPrimeInPlace(&tmp, Nprime);
+        AParts[i] = tmp;
     }
 
     ifftModNPrime(AParts, K, 2 * Mp, Nprime, 0);
@@ -137,16 +137,16 @@ bigInt *SSA_small(const bigInt *A, const bigInt *B) {
             // TODO: optimize
             printf("FUCCKSS\n");
             bigInt *one = getBigIntFromUnsignedInteger(1);
-            bigInt *tmp = shiftLeft(one, Nprime);
-            bigInt *mod = add(tmp, one);
+            bigInt *mod = shiftLeft(one, Nprime);
+            shiftAddSameNumberSafe(mod, one, 0);
             freeBigInt(one);
-            freeBigInt(tmp);
             bigInt *shifted = shiftLeft(mod, i * M);
             freeBigInt(mod);
-            tmp = sub(res, shifted);
+            bigInt* tmp = sub(res, shifted);
             freeBigInt(shifted);
             freeBigInt(res);
             res = tmp;
+            exit(EXIT_FAILURE);
         }
         freeBigInt(T_val);
         freeBigInt(bj);
@@ -160,7 +160,6 @@ bigInt *SSA_small(const bigInt *A, const bigInt *B) {
     free(l);
 
     // Final normalization modulo 2^N + 1
-    bigInt *finalRes = reduceModNPrime(res, N);
-    freeBigInt(res);
-    return finalRes;
+    reduceModNPrimeInPlace(&res, N);
+    return res;
 }

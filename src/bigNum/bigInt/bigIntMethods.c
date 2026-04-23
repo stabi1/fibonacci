@@ -59,13 +59,12 @@ bool isZero(const bigInt *x) {
 }
 
 size_t getLen(const bigInt *x) {
-    return (x->end) - (x->start);
+    return x->end - x->start;
 }
 
 // -> max length 2000 petabytes
 size_t bitLength(const bigInt *x) {
-    size_t xLen = x->end - x->start;
-    return xLen * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
+    return getLen(x) * 64 - custom_lzcnt(x->bigIntArray[x->end - 1]);
 }
 
 size_t getOccupiedBlocks(const bigInt *x) {

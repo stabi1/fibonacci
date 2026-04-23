@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 
+// TODO: avoid copy
 bigInt *reduceModNPrime(const bigInt *x, const uint64_t nprime) {
     const size_t lowLength = nprime / 64;
     bigInt *low = sliceBigInt(x, 0, lowLength);
@@ -29,6 +30,16 @@ bigInt *reduceModNPrime(const bigInt *x, const uint64_t nprime) {
     freeBigInt(high);
 
     return res;
+}
+
+void reduceModNPrimeInPlace(bigInt **x, const uint64_t nprime) {
+    const size_t lowLength = nprime / 64;
+    if (getLen(*x) <= lowLength) {
+        return;
+    }
+    bigInt *res = reduceModNPrime(*x, nprime);
+    freeBigInt(*x);
+    *x = res;
 }
 
 // computes x*2^d mod 2^nprime + 1
@@ -74,14 +85,14 @@ bigInt *mul2ExpModNPrime(const bigInt *x, const uint64_t d, const uint64_t nprim
     if (negate) {
         // TODO Optimize
         bigInt *one = getBigIntFromUnsignedInteger(1);
-        bigInt *modBase = shiftLeft(one, nprime);
-        bigInt *modulus = add(modBase, one);
+        bigInt *modulus = shiftLeft(one, nprime);
+        shiftAddSameNumberSafe(modulus, one, 0);
+        freeBigInt(one);
 
         bigInt *finalRes = sub(modulus, res);
-
+        freeBigInt(modulus);
         freeBigInt(res);
         res = finalRes;
-        freeBigInt(one); freeBigInt(modBase); freeBigInt(modulus);
     }
 
     freeBigInt(H);
@@ -101,7 +112,7 @@ bigInt *div2ExpModNPrime(const bigInt *x, const uint64_t k, const uint64_t nprim
 // Builds bit-reversal array
 uint64_t **fftInitL(const uint64_t k) {
     uint64_t **l = malloc(sizeof(uint64_t *) * (k + 1));
-    mallocCheck(l);
+    mallocCheck(l); //
     l[0] = malloc(sizeof(uint64_t) * 1);
     mallocCheck(l[0]);
     l[0][0] = 0;
@@ -121,33 +132,28 @@ uint64_t **fftInitL(const uint64_t k) {
 
 // (a + b) mod 2^nprime + 1
 bigInt *addModNPrime(const bigInt *a, const bigInt *b, const size_t nprime) {
-    bigInt *tmp = add(a, b);
-    bigInt *res = reduceModNPrime(tmp, nprime);
-    freeBigInt(tmp);
+    bigInt *res = add(a, b);
+    reduceModNPrimeInPlace(&res, nprime);
     return res;
 }
 
 // (a - b) mod 2^nprime + 1
 bigInt *subModNPrime(const bigInt *a, const bigInt *b, const size_t nprime) {
-    bigInt *res;
+    bigInt  *res = sub(a, b);
     if (compareBigInt(a, b) >= 0) {
-        // a >= b, normal subtraction
-        bigInt *tmp = sub(a, b);
-        res = reduceModNPrime(tmp, nprime);
-        freeBigInt(tmp);
+        // a >= b
+        reduceModNPrimeInPlace(&res, nprime);
     } else {
-        // a < b, compute (2^nprime + 1) - (b - a)
-        bigInt *diff = sub(b, a);
-        // TODO Optimize
+        // a < b
         bigInt *one = getBigIntFromUnsignedInteger(1);
-        bigInt *tmpFn = shiftLeft(one, nprime);
-        bigInt *Fn = add(tmpFn, one);
-        freeBigInt(tmpFn);
+        bigInt *Fn = shiftLeft(one, nprime);
+        shiftAddSameNumberSafe(Fn, one, 0);
         freeBigInt(one);
 
-        res = sub(Fn, diff); // Guaranteed strictly positive
-        freeBigInt(diff);
+        bigInt* tmp = add(Fn, res); // Guaranteed strictly positive
+        freeBigInt(res);
         freeBigInt(Fn);
+        res = tmp;
     }
 
     return res;
