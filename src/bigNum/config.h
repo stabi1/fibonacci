@@ -1,8 +1,11 @@
 #ifndef FIBONACCI_CONFIG_H
 #define FIBONACCI_CONFIG_H
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+#define K_VALUES_COUNT 20
 
 typedef struct {
     size_t NAIVE_MUL_FASTER; // Size when naiveMul is faster than karatsuba
@@ -22,6 +25,7 @@ typedef struct {
     bool deactivateCaches;
     size_t maxThreads;
     MulThresholds mulThresholds;
+    uint64_t kValuesSsaSmall[K_VALUES_COUNT];
 } Config;
 
 extern Config global_config;

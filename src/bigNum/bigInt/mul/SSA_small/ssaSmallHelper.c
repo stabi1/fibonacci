@@ -3,10 +3,10 @@
 #include "../SSA/ssaHelper.h"
 #include "../../bigIntMethods.h"
 #include "../../../misc.h"
+#include "../../../config.h"
 
 #include <stdio.h>
 
-// TODO: avoid copy
 bigInt *reduceModNPrime(const bigInt *x, const uint64_t nprime) {
     const size_t lowLength = nprime / 64;
     bigInt *low = sliceBigInt(x, 0, lowLength);
@@ -139,7 +139,7 @@ bigInt *addModNPrime(const bigInt *a, const bigInt *b, const size_t nprime) {
 
 // (a - b) mod 2^nprime + 1
 bigInt *subModNPrime(const bigInt *a, const bigInt *b, const size_t nprime) {
-    bigInt  *res = sub(a, b);
+    bigInt *res = sub(a, b);
     if (compareBigInt(a, b) >= 0) {
         // a >= b
         reduceModNPrimeInPlace(&res, nprime);
@@ -150,7 +150,7 @@ bigInt *subModNPrime(const bigInt *a, const bigInt *b, const size_t nprime) {
         shiftAddSameNumberSafe(Fn, one, 0);
         freeBigInt(one);
 
-        bigInt* tmp = add(Fn, res); // Guaranteed strictly positive
+        bigInt *tmp = add(Fn, res); // Guaranteed strictly positive
         freeBigInt(res);
         freeBigInt(Fn);
         res = tmp;
@@ -169,4 +169,13 @@ bigInt **decompose(const bigInt *x, const uint64_t K, const uint64_t nprime, con
         res[i] = val;
     }
     return res;
+}
+
+size_t getKValue(const size_t len) {
+    for (size_t i = 0; i < K_VALUES_COUNT; ++i) {
+        if (len < global_config.kValuesSsaSmall[i]) {
+            return i + 1;
+        }
+    }
+    return K_VALUES_COUNT + 1;
 }

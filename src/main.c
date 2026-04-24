@@ -9,7 +9,6 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include <signal.h>
 
 enum computeOperation getComputeOperation(const char *token);
@@ -38,7 +37,7 @@ enum {
     OPT_SUPER_VERBOSE
 };
 
-const size_t numOfArgsComputeOperation[] = {
+constexpr size_t numOfArgsComputeOperation[] = {
     [CONVERT_NUMBER]    = 0,
     [GOLDEN_RATIO]      = 1,
     [FIBONACCI]         = 1,
@@ -49,29 +48,29 @@ const size_t numOfArgsComputeOperation[] = {
 };
 
 static struct option long_options[] = {
-        {"help",               no_argument,       NULL, 'h'},
-        {"output-format",      required_argument, NULL, 'o'},
-        {"multithread",        no_argument,       NULL, 'm'},
-        {"output-radix",       required_argument, NULL, 'r'},
-        {"debug",              no_argument,       NULL, 'd'},
-        {"benchMark",          no_argument,       NULL, 'b'},
-        {"test",               required_argument, NULL, 't'},
-        {"compute",            required_argument, NULL, 'c'},
-        {"verbose",            no_argument,       NULL, 'v'},
-        {"super-verbose",      no_argument,       NULL, OPT_SUPER_VERBOSE},
-        {"max-threads",        required_argument, NULL, OPT_MAX_THREADS},
-        {"num-cores",          required_argument, NULL, OPT_MIN_THREADS},
-        {"output-filename",    required_argument, NULL, OPT_RESULT_FILENAME},
-        {"info-in-outputfile", no_argument,       NULL, OPT_INFO_IN_OUTPUTFILE},
-        {"do-swap",            no_argument,       NULL, OPT_DO_SWAP},
-        {"swap-threshold",     required_argument, NULL, OPT_SWAP_THRESHOLD},
-        {"input-filename",     required_argument, NULL, OPT_INPUT_FILENAME},
-        {"input-radix",        required_argument, NULL, OPT_INPUT_RADIX},
-        {"deactivate-caches",  no_argument,       NULL, OPT_DEACTIVATE_CACHES},
-        {NULL, 0,                                 NULL, 0}
+        {"help",               no_argument,       nullptr, 'h'},
+        {"output-format",      required_argument, nullptr, 'o'},
+        {"multithread",        no_argument,       nullptr, 'm'},
+        {"output-radix",       required_argument, nullptr, 'r'},
+        {"debug",              no_argument,       nullptr, 'd'},
+        {"benchMark",          no_argument,       nullptr, 'b'},
+        {"test",               required_argument, nullptr, 't'},
+        {"compute",            required_argument, nullptr, 'c'},
+        {"verbose",            no_argument,       nullptr, 'v'},
+        {"super-verbose",      no_argument,       nullptr, OPT_SUPER_VERBOSE},
+        {"max-threads",        required_argument, nullptr, OPT_MAX_THREADS},
+        {"num-cores",          required_argument, nullptr, OPT_MIN_THREADS},
+        {"output-filename",    required_argument, nullptr, OPT_RESULT_FILENAME},
+        {"info-in-outputfile", no_argument,       nullptr, OPT_INFO_IN_OUTPUTFILE},
+        {"do-swap",            no_argument,       nullptr, OPT_DO_SWAP},
+        {"swap-threshold",     required_argument, nullptr, OPT_SWAP_THRESHOLD},
+        {"input-filename",     required_argument, nullptr, OPT_INPUT_FILENAME},
+        {"input-radix",        required_argument, nullptr, OPT_INPUT_RADIX},
+        {"deactivate-caches",  no_argument,       nullptr, OPT_DEACTIVATE_CACHES},
+        {nullptr, 0,                              nullptr, 0}
 };
 
-int main(int argc, char *argv[]) {
+int main(const int argc, char *argv[]) {
     if (argc == 1) {
         fprintf(stderr, "No arguments, use -h for usage\n");
         exit(EXIT_FAILURE);
@@ -81,11 +80,11 @@ int main(int argc, char *argv[]) {
     struct sigaction sa = {0};
     sa.sa_sigaction = handleSignals;
     sa.sa_flags = SA_SIGINFO;
-    if (sigaction(SIGINT, &sa, NULL) == -1) {
+    if (sigaction(SIGINT, &sa, nullptr) == -1) {
         perror("Error registering SIGINT handler");
         return 1;
     }
-    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+    if (sigaction(SIGTERM, &sa, nullptr) == -1) {
         perror("Error registering SIGTERM handler");
         return 1;
     }
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
     bool do_debug = false;
     bool do_test = false;
     bool do_benchmark = false;
-    char *outputFilename = NULL;
+    char *outputFilename = nullptr;
     bool infoInOutputFile = false;
 
     uint64_t computeNumberArgument1 = 0;
@@ -106,13 +105,13 @@ int main(int argc, char *argv[]) {
     enum computeOperation computeOperation = UNKNOWN_OPERATION;
 
     char inputRadix = '\0';
-    char *inputFilename = NULL;
-    char *testArgs = NULL;
+    char *inputFilename = nullptr;
+    char *testArgs = nullptr;
 
     int option;
 
     while (optind < argc) {
-        if ((option = getopt_long(argc, argv, "+hbt:mvdr:o:c:", long_options, NULL)) != -1) {
+        if ((option = getopt_long(argc, argv, "+hbt:mvdr:o:c:", long_options, nullptr)) != -1) {
             switch (option) {
                 case 'h':
                     printHelpMenu();
@@ -202,7 +201,7 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 case OPT_INPUT_FILENAME: {
-                    size_t len = strlen(optarg);
+                    const size_t len = strlen(optarg);
                     inputFilename = malloc(len + 1);
                     mallocCheck(inputFilename);
                     strncpy(inputFilename, optarg, len + 1);
@@ -330,7 +329,7 @@ enum computeOperation getComputeOperation(const char *token) {
 }
 
 void printHelpMenu() {
-    char *helpMenuText = "Usage:\n"
+    const char* helpMenuText = "Usage:\n"
             "main options:  -o -> output f|t|n (f=file, t=terminal, n=none); default value: t\n"
             "               -r -> radix d|h (d=decimal, h=hexadecimal); default value: h\n"
             "               -m -> enables multithreading; default value: false\n"

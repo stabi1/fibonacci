@@ -81,9 +81,10 @@ void ifftModNPrime(bigInt **XParts, const uint64_t K, const uint64_t omega, cons
     }
 }
 
+// Assumtion: A is the bigger number
 bigInt *SSA_small(const bigInt *A, const bigInt *B) {
     const uint64_t S = bitLength(A) + bitLength(B);
-    const uint64_t k = 5; // TODO
+    const uint64_t k = getKValue(getLen(A));
 
     uint64_t pl = (S + 64 - 1) / 64;
     pl = ((pl + (1ULL << k) - 1) >> k) << k;
