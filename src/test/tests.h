@@ -1,7 +1,6 @@
 #ifndef FIBONACCI_TESTS_H
 #define FIBONACCI_TESTS_H
 
-#include <stdbool.h>
 #include "../bigNum/bigInt/bigInt.h"
 
 void customTest();

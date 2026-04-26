@@ -96,7 +96,8 @@ bigInt *SSA_small(const bigInt *A, const bigInt *B) {
     const uint64_t Mp = Nprime >> k;
     const uint64_t K = 1ULL << k;
 
-    // printf("N: %lu, M: %lu, Nprime: %lu, Mp: %lu, K: %lu;\tNum blocks: %lu; Block Size: %lu\n", N, M, Nprime, Mp, K, K, M / 64);
+    //printf("A_len: %lu, B_len: %lu, k: %lu, N: %lu, M: %lu, Nprime: %lu, Mp: %lu, K: %lu;\tNum blocks: %lu; Block Size: %lu\n",
+           //getLen(A), getLen(B), k, N, M, Nprime, Mp, K, K, M / 64);
 
     uint64_t **l = fftInitL(k);
 
@@ -143,7 +144,7 @@ bigInt *SSA_small(const bigInt *A, const bigInt *B) {
             freeBigInt(one);
             bigInt *shifted = shiftLeft(mod, i * M);
             freeBigInt(mod);
-            bigInt* tmp = sub(res, shifted);
+            bigInt *tmp = sub(res, shifted);
             freeBigInt(shifted);
             freeBigInt(res);
             res = tmp;

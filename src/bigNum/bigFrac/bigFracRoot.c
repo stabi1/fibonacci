@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 bigFrac *sqrtInitialGuess(const bigFrac *radicand) {
     radicand->bigIntPart->start += radicand->fractionBlocks;
@@ -69,9 +70,7 @@ bigFrac *sqrt2Old(const bigFrac *radicand, const size_t wantedFractionBlocks) {
     bigFrac *x = sqrtInitialGuess(radicand);
 
     size_t bufferBlocks = 5;
-    size_t i = 0;
     while (true) {
-        i++;
         // Compute n/x
         bigFrac *quotient = divideBigFrac(radicand, x, wantedFractionBlocks + bufferBlocks);
 

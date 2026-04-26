@@ -3,7 +3,6 @@
 
 #include "bigInt.h"
 #include <stdint-gcc.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 char *uint64tArrayToHexString(const uint64_t *array, size_t lenInNibbles, size_t start, bool negative);

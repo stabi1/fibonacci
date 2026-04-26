@@ -3,6 +3,7 @@
 #include "bigIntDiv.h"
 #include "../constants.h"
 #include "../misc.h"
+#include "bigIntMethods.h"
 
 #include <stdio.h>
 #include <string.h>

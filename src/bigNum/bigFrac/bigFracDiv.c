@@ -3,6 +3,7 @@
 #include "bigFracMethods.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 bigFrac *divideBigFrac(const bigFrac *dividend, const bigFrac *divisor, const size_t wantedFractionBlocks) {
     if (isZero(divisor->bigIntPart)) {

@@ -173,7 +173,7 @@ bigInt **decompose(const bigInt *x, const uint64_t K, const uint64_t nprime, con
 
 size_t getKValue(const size_t len) {
     for (size_t i = 0; i < K_VALUES_COUNT; ++i) {
-        if (len < global_config.kValuesSsaSmall[i]) {
+        if (len <= global_config.kValuesSsaSmall[i]) {
             return i + 1;
         }
     }

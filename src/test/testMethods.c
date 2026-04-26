@@ -1,9 +1,14 @@
-#include <stdio.h>
-#include <string.h>
+#include "testMethods.h"
 
 #include "../bigNum/bigInt/bigInt.h"
 #include "../bigNum/bigInt/bigIntMethods.h"
 #include "../util.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "../bigNum/bigInt/mul/SSA_small/ssaSmall.h"
 
 void verifyBigInt(const bigInt *x) {
     if (!isValidBigInt(x)) {
@@ -55,7 +60,17 @@ void test1Input1IntOutput(bigInt *(*operation)(const bigInt *, size_t), char *in
 
     const size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
 
+    struct timespec startTime, endTime;
+    if (global_config.measureTime) {
+        getCurrentTime(&startTime);
+    }
     bigInt *res = operation(input, toShift);
+    if (global_config.measureTime) {
+        getCurrentTime(&endTime);
+        printf("Time: %f\n", calcTimeDiff(&startTime, &endTime));
+    }
+
+
     verifyBigInt(res);
 
     writeBigIntHexToFile(res, outputFile);
@@ -73,7 +88,16 @@ void test2Input1IntOutput(bigInt *(*operation)(const bigInt *, const bigInt *, s
 
     const size_t toShift = parseUINT64(intToShift, UINT64_MAX, 0);
 
+    struct timespec startTime, endTime;
+    if (global_config.measureTime) {
+        getCurrentTime(&startTime);
+    }
     bigInt *res = operation(input1, input2, toShift);
+    if (global_config.measureTime) {
+        getCurrentTime(&endTime);
+        printf("Time: %f\n", calcTimeDiff(&startTime, &endTime));
+    }
+
     verifyBigInt(res);
 
     writeBigIntHexToFile(res, outputFile);
@@ -89,7 +113,16 @@ void test2Input1Output(bigInt *(*operation)(const bigInt *, const bigInt *), cha
     verifyBigInt(input1);
     verifyBigInt(input2);
 
+    struct timespec startTime, endTime;
+    if (global_config.measureTime) {
+        getCurrentTime(&startTime);
+    }
     bigInt *res = operation(input1, input2);
+    if (global_config.measureTime) {
+        getCurrentTime(&endTime);
+        printf("Time: %f\n", calcTimeDiff(&startTime, &endTime));
+    }
+
     verifyBigInt(res);
 
     writeBigIntHexToFile(res, outputFile);
@@ -107,7 +140,16 @@ void test2Input2Output(bigInt *(*operation)(const bigInt *, const bigInt *, bigI
     verifyBigInt(input2);
 
     bigInt *res2;
+    struct timespec startTime, endTime;
+    if (global_config.measureTime) {
+        getCurrentTime(&startTime);
+    }
     bigInt *res1 = operation(input1, input2, &res2);
+    if (global_config.measureTime) {
+        getCurrentTime(&endTime);
+        printf("Time: %f\n", calcTimeDiff(&startTime, &endTime));
+    }
+
     verifyBigInt(res1);
     verifyBigInt(res2);
 
@@ -124,13 +166,25 @@ void test1InputZeroOutput(void (*operation)(const bigInt *, const char *), char 
     bigInt *input1 = readBigIntHexFromFileTestHelper(inputFile1);
     verifyBigInt(input1);
 
+    struct timespec startTime, endTime;
+    if (global_config.measureTime) {
+        getCurrentTime(&startTime);
+    }
     operation(input1, outputFile);
+    if (global_config.measureTime) {
+        getCurrentTime(&endTime);
+        printf("Time: %f\n", calcTimeDiff(&startTime, &endTime));
+    }
 
     freeBigInt(input1);
 }
 
 void testMul(char *inputFile1, char *inputFile2, const char *outputFile) {
     test2Input1Output(mul, inputFile1, inputFile2, outputFile);
+}
+
+void testSsaSmall(char *inputFile1, char *inputFile2, const char *outputFile) {
+    test2Input1Output(SSA_small, inputFile1, inputFile2, outputFile);
 }
 
 void testDiv(char *inputFile1, char *inputFile2, const char *outputFile) {
@@ -149,12 +203,12 @@ void testSub(char *inputFile1, char *inputFile2, const char *outputFile) {
     test2Input1Output(sub, inputFile1, inputFile2, outputFile);
 }
 
-void testShiftLeft(char *inputFile1, char *toShiftInt, const char *outputFile) {
-    test1Input1IntOutput(shiftLeft, inputFile1, toShiftInt, outputFile);
+void testShiftLeft(char *inputFile1, char *inputFile2, const char *outputFile) {
+    test1Input1IntOutput(shiftLeft, inputFile1, inputFile2, outputFile);
 }
 
-void testShiftRight(char *inputFile1, char *toShiftInt, const char *outputFile) {
-    test1Input1IntOutput(shiftRight, inputFile1, toShiftInt, outputFile);
+void testShiftRight(char *inputFile1, char *inputFile2, const char *outputFile) {
+    test1Input1IntOutput(shiftRight, inputFile1, inputFile2, outputFile);
 }
 
 void testSHiftAdd(char *inputFile1, char *inputFile2, char *toShiftInt, const char *outputFile) {

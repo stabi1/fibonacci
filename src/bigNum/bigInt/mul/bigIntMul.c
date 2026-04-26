@@ -9,9 +9,13 @@
 
 #include <stddef.h>
 #include <pthread.h>
+#include <stdio.h>
+#include <string.h>
 
-size_t PARALLEL_MUL_FASTER_DEPTH_1 = 2000; //Size when toom-cook-multithread is faster than toom-cook (5 Threads)
-size_t PARALLEL_MUL_FASTER_DEPTH_2 = 10000; //Size when toom-cook-multithread is faster than toom-cook (25 Threads)
+#include "SSA_small/ssaSmall.h"
+
+size_t PARALLEL_MUL_FASTER_DEPTH_1 = 2000; // Size when toom-cook-multithread is faster than toom-cook (5 Threads)
+size_t PARALLEL_MUL_FASTER_DEPTH_2 = 10000; // Size when toom-cook-multithread is faster than toom-cook (25 Threads)
 
 void *multiplyToomCook3MultiThreadHelper(void *input);
 
@@ -63,6 +67,8 @@ bigInt *mulExecute(const bigInt *x, const bigInt *y) {
         return karatsuba(x, y);
     } else if (yLen <= global_config.mulThresholds.TOOM_COOK_FASTER) {
         return multiplyToomCook3(x, y);
+    } else if (yLen <= global_config.mulThresholds.SSA_SMALL_FASTER) {
+        return SSA_small(x, y);
     } else {
         return SSA_modular(x, y);
     }

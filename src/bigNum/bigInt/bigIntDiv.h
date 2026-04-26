@@ -1,14 +1,7 @@
 #ifndef FIBONACCI_BIGINTDIV_H
 #define FIBONACCI_BIGINTDIV_H
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include "bigIntMethods.h"
-#include "bigIntString.h"
-#include "bigIntAsm.h"
-#include "mulAsm.h"
+#include "bigInt.h"
 
 bigInt *exactDivideBy3(const bigInt *x);
 

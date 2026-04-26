@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
+#include <string.h>
+
+#include "bigNum/misc.h"
 
 uint64_t parseUINT64(char *str, const uint64_t max, const uint64_t min) {
     errno = 0;
@@ -11,21 +14,51 @@ uint64_t parseUINT64(char *str, const uint64_t max, const uint64_t min) {
     if (endptr == str || *endptr != '\0') {
         fprintf(stderr, "%s could not be converted to unsigned long \n", str);
         exit(EXIT_FAILURE);
-    } else if (errno == ERANGE) {
+    }
+    if (errno == ERANGE) {
         fprintf(stderr, "%s over - or underflows unsigned long \n", str);
         exit(EXIT_FAILURE);
-    } else if (str[0] == '-') {
+    }
+    if (str[0] == '-') {
         fprintf(stderr, "%s no negative numbers allowed \n", str);
         exit(EXIT_FAILURE);
     }
     if (value < min) {
         fprintf(stderr, "%s is smaller than %lu\n", str, min);
         exit(EXIT_FAILURE);
-    } else if (value > max) {
+    }
+    if (value > max) {
         fprintf(stderr, "%s is bigger than %lu\n", str, max);
         exit(EXIT_FAILURE);
     }
     return value;
+}
+
+void parseUINT64List(uint64_t *res, const char* list, const size_t numEntries) {
+    const size_t len = strlen(list);
+    char *copy = malloc(len + 1);
+    mallocCheck(copy);
+
+    memcpy(copy, list, len + 1);
+
+    size_t i = 0;
+    char *token = strtok(copy, ",");
+
+    while (token != NULL) {
+        if (i >= numEntries) {
+            free(copy);
+            fprintf(stderr, "%s too many entries in List\n", list);
+            exit(EXIT_FAILURE);
+        }
+
+        res[i++] = parseUINT64(token, UINT64_MAX, 0);
+        token = strtok(nullptr, ",");
+    }
+    free(copy);
+    if (i != numEntries) {
+        fprintf(stderr, "%s too few entries in List\n", list);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void getCurrentTime(struct timespec *toFill) {

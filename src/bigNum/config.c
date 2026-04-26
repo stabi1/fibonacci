@@ -15,12 +15,20 @@ Config global_config = {
     .swapThreshold = 100,
     .deactivateCaches = false,
     .maxThreads = 1,
+    .measureTime = false,
     .mulThresholds = {
         .NAIVE_MUL_FASTER = 100,
         .KARATSUBA_FASTER = 400,
         .TOOM_COOK_FASTER = 80000,
+        .SSA_SMALL_FASTER = 10000000000,
     },
-    .kValuesSsaSmall = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,161,718,19,20},
+    .divThresholds = {
+        .D4_FASTER = 70,
+    },
+    .kValuesSsaSmall = {
+        0, 0, 250, 270, 430, 680, 1900, 4000, 8400, 45000, 120000, 200000, 790000, 3200000, 25000000, 100000000, 450000000, 1450000000, 2450000000,
+        1900000000
+    },
 };
 
 void cleanupBigIntLib() {
@@ -110,8 +118,9 @@ size_t getConvertDepthFromMaxThreads(const size_t maxThreads) {
     }
 
     if (maxThreads < 2) {
-        if (global_config.verbose) printf(
-            "Number of convert compute threads that will be created during conversion: %d\n", 1);
+        if (global_config.verbose)
+            printf(
+                "Number of convert compute threads that will be created during conversion: %d\n", 1);
         return 0;
     } else if (maxThreads < 4) {
         if (global_config.verbose) printf("Number of compute threads that will be created during conversion: %d\n", 2);

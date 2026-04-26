@@ -3,6 +3,8 @@
 
 void testMul(char *inputFile1, char *inputFile2, const char *outputFile);
 
+void testSsaSmall(char *inputFile1, char *inputFile2, const char *outputFile);
+
 void testDiv(char *inputFile1, char *inputFile2, const char *outputFile);
 
 void testDivMod(char *inputFile1, char *inputFile2, const char *outputFile1, const char *outputFile2);

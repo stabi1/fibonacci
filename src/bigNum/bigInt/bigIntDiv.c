@@ -3,8 +3,12 @@
 #include "mul/bigIntMul.h"
 #include "../constants.h"
 #include "../misc.h"
+#include "../config.h"
 
-size_t D4FASTER = 70;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 size_t PARALLEL_DIV_FASTER = 1000;
 
 //To be used when the number is known to be exactly divisible by 3
@@ -171,7 +175,7 @@ bigInt *divideHelper(bigInt *dividend, bigInt *divisor, bigInt **reminder, bool 
         return quotient;
     }
 
-    if (n < D4FASTER || noBurnikelZiegler) {
+    if (n < global_config.divThresholds.D4_FASTER || noBurnikelZiegler) {
         bigInt *quotient = newBigInt(m - n + 1);
         if (reminder == NULL) {
             divideD4(dividend, divisor, quotient, nullptr);
@@ -316,10 +320,10 @@ void divideD4(const bigInt *dividend, const bigInt *divisor, bigInt *quotient, b
 //return A/B
 //adapted from Java Jdk8 (divideBurnikelZiegler, divide2n1n and divide3n2n)
 bigInt *divideBurnikelZiegler(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, size_t mulDepth, bool freeArguments) {
-    long s = (long) (B->end - B->start); //s
+    long s = (long) (B->end - B->start); // s
 
     // step 1: let m = min{2^k | (2^k)*D4FASTER > s}
-    long m = 1 << (64 - custom_lzcnt(s / D4FASTER)); //m
+    long m = 1 << (64 - custom_lzcnt(s / global_config.divThresholds.D4_FASTER)); // m
 
     long j = (s + m - 1) / m;      // step 2a: j = ceil(s/m)
     long n = j * m;             // step 2b: block length in 64-bit units
@@ -401,7 +405,7 @@ bigInt *divide2n1n(bigInt *A, bigInt *B, bigInt **reminder, bool multithread, si
     size_t n = B->end - B->start;
 
     // step 1: base case
-    if (n % 2 != 0 || n < D4FASTER || isZero(A)) {
+    if (n % 2 != 0 || n < global_config.divThresholds.D4_FASTER || isZero(A)) {
         return divideHelper(A, B, reminder, true, multithread, mulDepth, false);
     }
 

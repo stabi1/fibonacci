@@ -34,7 +34,10 @@ enum {
     OPT_INPUT_RADIX,
     OPT_DEACTIVATE_CACHES,
     OPT_INFO_IN_OUTPUTFILE,
-    OPT_SUPER_VERBOSE
+    OPT_SUPER_VERBOSE,
+    OPT_MUL_THRESHOLDS,
+    OPT_DIV_THRESHOLDS,
+    OPT_K_VALUES,
 };
 
 constexpr size_t numOfArgsComputeOperation[] = {
@@ -48,27 +51,31 @@ constexpr size_t numOfArgsComputeOperation[] = {
 };
 
 static struct option long_options[] = {
-        {"help",               no_argument,       nullptr, 'h'},
-        {"output-format",      required_argument, nullptr, 'o'},
-        {"multithread",        no_argument,       nullptr, 'm'},
-        {"output-radix",       required_argument, nullptr, 'r'},
-        {"debug",              no_argument,       nullptr, 'd'},
-        {"benchMark",          no_argument,       nullptr, 'b'},
-        {"test",               required_argument, nullptr, 't'},
-        {"compute",            required_argument, nullptr, 'c'},
-        {"verbose",            no_argument,       nullptr, 'v'},
-        {"super-verbose",      no_argument,       nullptr, OPT_SUPER_VERBOSE},
-        {"max-threads",        required_argument, nullptr, OPT_MAX_THREADS},
-        {"num-cores",          required_argument, nullptr, OPT_MIN_THREADS},
-        {"output-filename",    required_argument, nullptr, OPT_RESULT_FILENAME},
-        {"info-in-outputfile", no_argument,       nullptr, OPT_INFO_IN_OUTPUTFILE},
-        {"do-swap",            no_argument,       nullptr, OPT_DO_SWAP},
-        {"swap-threshold",     required_argument, nullptr, OPT_SWAP_THRESHOLD},
-        {"input-filename",     required_argument, nullptr, OPT_INPUT_FILENAME},
-        {"input-radix",        required_argument, nullptr, OPT_INPUT_RADIX},
-        {"deactivate-caches",  no_argument,       nullptr, OPT_DEACTIVATE_CACHES},
-        {nullptr, 0,                              nullptr, 0}
+    {"help",               no_argument,       nullptr, 'h'},
+    {"output-format",      required_argument, nullptr, 'o'},
+    {"multithread",        no_argument,       nullptr, 'm'},
+    {"output-radix",       required_argument, nullptr, 'r'},
+    {"debug",              no_argument,       nullptr, 'd'},
+    {"benchMark",          no_argument,       nullptr, 'b'},
+    {"test",               required_argument, nullptr, 't'},
+    {"compute",            required_argument, nullptr, 'c'},
+    {"verbose",            no_argument,       nullptr, 'v'},
+    {"super-verbose",      no_argument,       nullptr, OPT_SUPER_VERBOSE},
+    {"max-threads",        required_argument, nullptr, OPT_MAX_THREADS},
+    {"num-cores",          required_argument, nullptr, OPT_MIN_THREADS},
+    {"output-filename",    required_argument, nullptr, OPT_RESULT_FILENAME},
+    {"info-in-outputfile", no_argument,       nullptr, OPT_INFO_IN_OUTPUTFILE},
+    {"do-swap",            no_argument,       nullptr, OPT_DO_SWAP},
+    {"swap-threshold",     required_argument, nullptr, OPT_SWAP_THRESHOLD},
+    {"input-filename",     required_argument, nullptr, OPT_INPUT_FILENAME},
+    {"input-radix",        required_argument, nullptr, OPT_INPUT_RADIX},
+    {"deactivate-caches",  no_argument,       nullptr, OPT_DEACTIVATE_CACHES},
+    {"mul-thresholds",     required_argument, nullptr, OPT_MUL_THRESHOLDS},
+    {"div-thresholds",     required_argument, nullptr, OPT_DIV_THRESHOLDS},
+    {"k-values",           required_argument, nullptr, OPT_K_VALUES},
+    {nullptr, 0,                              nullptr, 0}
 };
+
 
 int main(const int argc, char *argv[]) {
     if (argc == 1) {
@@ -99,6 +106,10 @@ int main(const int argc, char *argv[]) {
     bool do_benchmark = false;
     char *outputFilename = nullptr;
     bool infoInOutputFile = false;
+    bool mulThresholdSet = false;
+    bool divThresholdSet = false;
+    bool kValuesSet = false;
+
 
     uint64_t computeNumberArgument1 = 0;
     uint64_t computeNumberArgument2 = 0;
@@ -124,6 +135,7 @@ int main(const int argc, char *argv[]) {
                     testArgs = optarg;
                     break;
                 case 'b':
+                    global_config.measureTime = true;
                     do_benchmark = true;
                     break;
                 case 'm':
@@ -148,8 +160,33 @@ int main(const int argc, char *argv[]) {
                 case OPT_SWAP_THRESHOLD:
                     global_config.swapThreshold = parseUINT64(optarg, UINT64_MAX, 0);
                     break;
+                case OPT_MUL_THRESHOLDS: {
+                    constexpr size_t mulLen = 4;
+                    uint64_t res[mulLen];
+                    parseUINT64List(res, optarg, mulLen);
+                    global_config.mulThresholds.NAIVE_MUL_FASTER = res[0];
+                    global_config.mulThresholds.KARATSUBA_FASTER = res[1];
+                    global_config.mulThresholds.TOOM_COOK_FASTER = res[2];
+                    global_config.mulThresholds.SSA_SMALL_FASTER = res[3];
+                    mulThresholdSet = true;
+                    break;
+                }
+                case OPT_DIV_THRESHOLDS: {
+                    constexpr size_t divLen = 1;
+                    uint64_t res[divLen];
+                    parseUINT64List(res, optarg, divLen);
+                    global_config.divThresholds.D4_FASTER = res[0];
+                    divThresholdSet = true;
+                    break;
+                }
+                case OPT_K_VALUES: {
+                    constexpr size_t kLen = K_VALUES_COUNT;
+                    parseUINT64List(global_config.kValuesSsaSmall, optarg, kLen);
+                    kValuesSet = true;
+                    break;
+                }
                 case OPT_RESULT_FILENAME: {
-                    size_t len = strlen(optarg);
+                    const size_t len = strlen(optarg);
                     outputFilename = malloc(len + 1);
                     mallocCheck(outputFilename);
                     strncpy(outputFilename, optarg, len + 1);
@@ -236,6 +273,21 @@ int main(const int argc, char *argv[]) {
     }
     if (global_config.verbose && global_config.swap) {
         printf("Swapping is activated with threshold: %zu MB\n", global_config.swapThreshold);
+    }
+    if ((global_config.verbose && mulThresholdSet) || global_config.superVerbose) {
+        printf("Mul Thresholds - naive mul faster: %lu; karatsuba faster: %lu; Toom-Cook faster: %lu; SSA-small faster: %lu\n",
+               global_config.mulThresholds.NAIVE_MUL_FASTER, global_config.mulThresholds.KARATSUBA_FASTER,
+               global_config.mulThresholds.TOOM_COOK_FASTER, global_config.mulThresholds.SSA_SMALL_FASTER);
+    }
+    if ((global_config.verbose && divThresholdSet) || global_config.superVerbose) {
+        printf("Div Thresholds: D4 faster: %lu \n", global_config.divThresholds.D4_FASTER);
+    }
+    if ((global_config.verbose && kValuesSet) || global_config.superVerbose) {
+        printf("KValues: %zu", global_config.kValuesSsaSmall[0]);
+        for (size_t i = 1; i < K_VALUES_COUNT; i++) {
+            printf(",%zu: ", global_config.kValuesSsaSmall[i]);
+        }
+        printf("\n");
     }
 
     if (global_config.parallel) {
@@ -329,7 +381,7 @@ enum computeOperation getComputeOperation(const char *token) {
 }
 
 void printHelpMenu() {
-    const char* helpMenuText = "Usage:\n"
+    const char *helpMenuText = "Usage:\n"
             "main options:  -o -> output f|t|n (f=file, t=terminal, n=none); default value: t\n"
             "               -r -> radix d|h (d=decimal, h=hexadecimal); default value: h\n"
             "               -m -> enables multithreading; default value: false\n"
@@ -353,7 +405,7 @@ void printHelpMenu() {
             "miscellaneous:  -h -> display this help message\n"
             "                -d -> fib debug, tests all fib numbers\n"
             "                -t -> test [argument]\n"
-            "                -b -> benchMark\n"
+            "                -b -> run benchmark, with -t: measure time\n"
             "                -v -> verbose, more output\n"
             "                --super-verbose -> even more output\n"
             "                --output-filename -> set filename for output file\n"
@@ -366,6 +418,10 @@ void printHelpMenu() {
             "                --info-in-outputfile -> prints info about the number in it into the output file \n"
             "                --do-swap -> activates swaping \n"
             "                --swap-threshold -> sets the threshold in MB after which a number will be swaped \n"
-            "                --deactivate-caches -> deactivates caching of bigInt/bigFrac structs and bigInt arrays\n";
+            "                --deactivate-caches -> deactivates caching of bigInt/bigFrac structs and bigInt arrays\n"
+            "                --mul-thresholds -> sets mul thresholds manually\n"
+            "                --div-thresholds -> sets div thresholds manually\n"
+            "                --k-values -> sets k values manually\n";
+
     printf("%s\n", helpMenuText);
 }

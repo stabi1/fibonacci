@@ -9,6 +9,7 @@
 enum TestType {
     CUSTOM_TEST = 0,
     MUL,
+    SSA_SMALL,
     DIV,
     DIV_MOD,
     ADD,
@@ -23,6 +24,7 @@ enum TestType {
 constexpr size_t numOfArgs[] = {
     [CUSTOM_TEST] = 0,
     [MUL] = 3,
+    [SSA_SMALL] = 3,
     [DIV] = 3,
     [DIV_MOD] = 4,
     [ADD] = 3,
@@ -54,7 +56,7 @@ void selectTest(const char *args) {
     char *arg2 = strtok(nullptr, delim);
     char *arg3 = strtok(nullptr, delim);
     char *arg4 = strtok(nullptr, delim);
-    char *overflow = strtok(nullptr, delim);
+    const char *overflow = strtok(nullptr, delim);
 
     // determine test type
     enum TestType type;
@@ -62,6 +64,8 @@ void selectTest(const char *args) {
         type = CUSTOM_TEST;
     } else if (strcmp(testType, "mul") == 0) {
         type = MUL;
+    } else if (strcmp(testType, "ssa-small") == 0) {
+        type = SSA_SMALL;
     } else if (strcmp(testType, "div") == 0) {
         type = DIV;
     } else if (strcmp(testType, "divMod") == 0) {
@@ -127,6 +131,9 @@ void selectTest(const char *args) {
             break;
         case MUL:
             testMul(arg1, arg2, arg3);
+            break;
+        case SSA_SMALL:
+            testSsaSmall(arg1, arg2, arg3);
             break;
         case ADD:
             testAdd(arg1, arg2, arg3);

@@ -1,6 +1,7 @@
 #include "bigFracIO.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 //prints bigInt in Hex
 void printBigFracHex(const bigFrac *x) {
