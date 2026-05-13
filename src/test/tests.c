@@ -13,6 +13,7 @@
 
 #include "../bigNum/bigFrac/bigFracString.h"
 #include "../bigNum/bigFrac/bigFrac.h"
+#include "../bigNum/bigInt/mulAsm.h"
 #include "../bigNum/bigInt/mul/bigIntMul.h"
 #include "../bigNum/bigInt/mul/SSA/ssa.h"
 #include "../bigNum/bigInt/mul/NTT/ntt.h"
@@ -166,10 +167,10 @@ void testBenchMark() {
 }
 
 void benchMark() {
-    size_t iterations = 1;
+    const size_t iterations = global_config.iterations;
     printf("Benchmark with Iterations: %ld\n", iterations);
 
-    const size_t n = 30000000;
+    constexpr size_t n = 5;
 
     char *c1 = randomHex(n * 16);
     char *c2 = randomHex(n * 16);
@@ -184,15 +185,15 @@ void benchMark() {
     getCurrentTime(&start);
 
     for (size_t i = 1; i < iterations; i++) {
-        res1 = SSA_modular(tmp1, tmp2);
+        res1 = naiveMul_Asm(tmp1, tmp2);
         freeBigInt(res1);
     }
-    res1 = SSA_modular(tmp1, tmp2);
+    res1 = naiveMul_Asm(tmp1, tmp2);
 
 
     struct timespec end;
     getCurrentTime(&end);
-    double time = calcTimeDiff(&start, &end);
+    const double time = calcTimeDiff(&start, &end);
     printf("Time in code 1: %f\n", time);
     printf("----------------------------------------------\n");
 
@@ -202,14 +203,14 @@ void benchMark() {
     getCurrentTime(&start2);
 
     for (size_t i = 1; i < iterations; i++) {
-        res2 = SSA_small(tmp1, tmp2);
+        res2 = karatsuba(tmp1, tmp2);
         freeBigInt(res2);
     }
-    res2 = SSA_small(tmp1, tmp2);
+    res2 = karatsuba(tmp1, tmp2);
 
     struct timespec end2;
     getCurrentTime(&end2);
-    double time2 = calcTimeDiff(&start2, &end2);
+    const double time2 = calcTimeDiff(&start2, &end2);
     printf("Time in code 2: %f\n", time2);
     printf("----------------------------------------------\n");
 

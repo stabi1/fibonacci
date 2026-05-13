@@ -60,7 +60,7 @@ bigInt *mulExecute(const bigInt *x, const bigInt *y) {
         return getZeroBigInt();
     }
 
-    size_t yLen = getLen(y);
+    const size_t yLen = getLen(y);
     if (yLen <= global_config.mulThresholds.NAIVE_MUL_FASTER) {
         return naiveMul_Asm(x, y);
     } else if (yLen <= global_config.mulThresholds.KARATSUBA_FASTER) {

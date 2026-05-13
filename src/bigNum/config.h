@@ -28,6 +28,7 @@ typedef struct {
     bool deactivateCaches;
     size_t maxThreads;
     bool measureTime;
+    size_t iterations;
     MulThresholds mulThresholds;
     DivThresholds divThresholds;
     uint64_t kValuesSsaSmall[K_VALUES_COUNT];

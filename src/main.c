@@ -60,6 +60,7 @@ static struct option long_options[] = {
     {"test",               required_argument, nullptr, 't'},
     {"compute",            required_argument, nullptr, 'c'},
     {"verbose",            no_argument,       nullptr, 'v'},
+    {"iterations",         required_argument, nullptr, 'i'},
     {"super-verbose",      no_argument,       nullptr, OPT_SUPER_VERBOSE},
     {"max-threads",        required_argument, nullptr, OPT_MAX_THREADS},
     {"num-cores",          required_argument, nullptr, OPT_MIN_THREADS},
@@ -122,7 +123,7 @@ int main(const int argc, char *argv[]) {
     int option;
 
     while (optind < argc) {
-        if ((option = getopt_long(argc, argv, "+hbt:mvdr:o:c:", long_options, nullptr)) != -1) {
+        if ((option = getopt_long(argc, argv, "+hbt:i:mvdr:o:c:", long_options, nullptr)) != -1) {
             switch (option) {
                 case 'h':
                     printHelpMenu();
@@ -143,6 +144,9 @@ int main(const int argc, char *argv[]) {
                     break;
                 case 'v':
                     global_config.verbose = true;
+                    break;
+                case 'i':
+                    global_config.iterations = parseUINT64(optarg, UINT64_MAX, 1);;
                     break;
                 case OPT_SUPER_VERBOSE:
                     global_config.verbose = true;
@@ -407,6 +411,7 @@ void printHelpMenu() {
             "                -t -> test [argument]\n"
             "                -b -> run benchmark, with -t: measure time\n"
             "                -v -> verbose, more output\n"
+            "                -i -> set amount of iterations\n"
             "                --super-verbose -> even more output\n"
             "                --output-filename -> set filename for output file\n"
             "                   -> The default filename is output.txt | if the file exists, it will be overwritten\n"

@@ -16,10 +16,11 @@ Config global_config = {
     .deactivateCaches = false,
     .maxThreads = 1,
     .measureTime = false,
+    .iterations = 1,
     .mulThresholds = {
-        .NAIVE_MUL_FASTER = 100,
-        .KARATSUBA_FASTER = 400,
-        .TOOM_COOK_FASTER = 80000,
+        .NAIVE_MUL_FASTER = 40,
+        .KARATSUBA_FASTER = 200,
+        .TOOM_COOK_FASTER = 15000,
         .SSA_SMALL_FASTER = 10000000000,
     },
     .divThresholds = {

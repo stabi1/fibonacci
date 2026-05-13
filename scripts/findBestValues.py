@@ -21,14 +21,14 @@ def random_hex_string(length: int) -> str:
     return hex_string
 
 
-def run_program(size: int, k_values: list[int] = None, mul_thresholds=None) -> float:
+def run_program(size: int, k_values: list[int] = None, mul_thresholds=None, iterations: int = 1) -> float:
     delimiter = ","
 
     if k_values is not None:
-        args_fib = ["./fib", "-b", "-t", f"ssa-small{delimiter}{"file1.txt"}{delimiter}{"file2.txt"}{delimiter}{"res.txt"}", "--k-values",
+        args_fib = ["./fib", "-b", "-i", f"{iterations}", "-t", f"ssa-small{delimiter}{"file1.txt"}{delimiter}{"file2.txt"}{delimiter}{"res.txt"}", "--k-values",
                     str(k_values).removeprefix("[").removesuffix("]")]
     elif mul_thresholds is not None:
-        args_fib = ["./fib", "-b", "-t", f"mul{delimiter}{"file1.txt"}{delimiter}{"file2.txt"}{delimiter}{"res.txt"}", "--mul-thresholds",
+        args_fib = ["./fib", "-b", "-i", f"{iterations}", "-t", f"mul{delimiter}{"file1.txt"}{delimiter}{"file2.txt"}{delimiter}{"res.txt"}", "--mul-thresholds",
                     str(mul_thresholds).removeprefix("[").removesuffix("]")]
     else:
         print("Either k_values or mul_thresholds must be set")
@@ -122,31 +122,39 @@ def find_best_mul_thresholds():
 
     current_dir.joinpath("file1.txt").unlink(missing_ok=True)
     current_dir.joinpath("file2.txt").unlink(missing_ok=True)
-    current_dir.joinpath("file1.txt").write_text(random_hex_string(100000 * 16))
-    current_dir.joinpath("file2.txt").write_text(random_hex_string(100000 * 16))
 
     current_mul_index = 0
-    mul_thresholds: list[int] = [uint64_max_value, uint64_max_value, uint64_max_value, uint64_max_value]
-    for start, stop, step in [
-        (10, 1000, 10),
-        (1000, 10000, 100),
-        (10000, 100000, 1000),
+    mul_thresholds: list[int] = [1, 0, 0, 0]
+    for start, stop, step, iterations in [
+        (5, 50, 5, 1000000),
+        (50, 100, 10, 100000),
+        (100, 500, 100, 10000),
+        (500, 1000, 100, 10000),
+        (1000, 5000, 200, 1000),
+        (5000, 10000, 500, 100),
+        (10000, 20000, 1000, 100),
+        (20000, 100000, 1000, 10),
     ]:
         for size in range(start, stop, step):
             mul_thresholds_copy = mul_thresholds.copy()
 
+            current_dir.joinpath("file1.txt").write_text(random_hex_string(size * 16))
+            current_dir.joinpath("file2.txt").write_text(random_hex_string(size * 16))
+
             mul_thresholds_copy[current_mul_index] = size
-            time1 = run_program(size, mul_thresholds=mul_thresholds_copy)
+            time1 = run_program(size, mul_thresholds=mul_thresholds_copy, iterations=iterations)
+            mul_thresholds_copy[current_mul_index] = size // 2
 
-            mul_thresholds_copy[current_mul_index] = size + step
-            time2 = run_program(size, mul_thresholds=mul_thresholds_copy)
+            mul_thresholds_copy[current_mul_index + 1] = size
+            time2 = run_program(size, mul_thresholds=mul_thresholds_copy, iterations=iterations)
+            mul_thresholds_copy[current_mul_index + 1] = 0
 
-            if time1 < time2:
+            if time1 > time2:
                 print(f"{16 * '-'}")
                 mul_thresholds[current_mul_index] = size
                 current_mul_index += 1
-                if current_mul_index >= len(mul_thresholds):
-                    print("k limit reached")
+                if current_mul_index + 1 >= len(mul_thresholds):
+                    print("All thresholds found")
                     current_dir.joinpath("file1.txt").unlink()
                     current_dir.joinpath("file2.txt").unlink()
                     current_dir.joinpath("fib").unlink()
