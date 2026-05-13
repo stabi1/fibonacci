@@ -66,7 +66,8 @@ bigInt *newBigIntStruct(const size_t start, const size_t end, uint64_t *bigIntAr
 
 //Frees the memory of the BigInteger
 void freeBigInt(bigInt *toDelete) {
-    if (toDelete->arrayOwner) { //if the bigInt is the owner free the array
+    if (toDelete->arrayOwner) {
+        //if the bigInt is the owner free the array
         if (pushBigIntArrayStack(toDelete->bigIntArray, toDelete->completeLength) == -1) {
             free(toDelete->bigIntArray);
         }
@@ -76,9 +77,31 @@ void freeBigInt(bigInt *toDelete) {
     }
 }
 
+// Resizes the bigInt to newTotalSize (newTotalSize must be >= getLen(toResize))
+void resizeBigInt(bigInt *toResize, const size_t newTotalSize, const bool setZero) {
+    if (!toResize->arrayOwner) {
+        fprintf(stderr, "resizeBigInt: x is not array owner\n");
+        exit(EXIT_FAILURE);
+    }
+    const size_t oldLen = getLen(toResize);
+    const size_t sizeToAdd = newTotalSize - oldLen;
+    if (sizeToAdd <= toResize->completeLength - toResize->end) {
+        toResize->end += sizeToAdd;
+    } else {
+        void *tmp = realloc(toResize->bigIntArray, (toResize->start + newTotalSize) * 8);
+        mallocCheck(tmp);
+        toResize->bigIntArray = tmp;
+        toResize->completeLength = toResize->start + newTotalSize;
+        toResize->end = toResize->start + newTotalSize;
+    }
+    if (setZero) {
+        memset(toResize->bigIntArray + toResize->start + oldLen, 0, sizeToAdd * 8);
+    }
+}
+
 //deep copies BigInt
 bigInt *copyBigInt(const bigInt *x) {
-    size_t xLen = x->end - x->start;
+    const size_t xLen = getLen(x);
     bigInt *res = newBigIntNotZeroed(xLen);
     memcpy(res->bigIntArray, x->bigIntArray + x->start, xLen * 8);
     res->negative = x->negative;
@@ -95,7 +118,7 @@ bigInt *allocBigIntStruct() {
     return res;
 }
 
-uint64_t *allocBigIntArray(size_t len, size_t *completeLen, bool setZero) {
+uint64_t *allocBigIntArray(const size_t len, size_t *completeLen, const bool setZero) {
     uint64_t *res;
     if (popBigIntArrayStack(&res, len, completeLen) == -1) {
         if (setZero)
@@ -118,7 +141,7 @@ int pushBigIntStack(bigInt *x) {
     if (stack->top >= stack->size - 1) {
         return -1; // Stack is full
     } else {
-        stack->array[++(stack->top)] = x;
+        stack->array[++stack->top] = x;
         return 0;
     }
 }
@@ -135,12 +158,13 @@ int popBigIntStack(bigInt **x) {
     }
 }
 
-int pushBigIntArrayStack(uint64_t *x, size_t len) {
+int pushBigIntArrayStack(uint64_t *x, const size_t len) {
     if (global_config.deactivateCaches) { return -1; }
     BigIntArrayStack *stack;
     if (len < 125) {
         return -1;
-    } else if (len < 1250) {
+    }
+    if (len < 1250) {
         stack = get_thread_bigIntArrayStack_1KB();
     } else if (len < 12500) {
         stack = get_thread_bigIntArrayStack_10KB();
@@ -158,7 +182,7 @@ int pushBigIntArrayStack(uint64_t *x, size_t len) {
     }
 }
 
-int popBigIntArrayStack(uint64_t **x, size_t len, size_t *completeLen) {
+int popBigIntArrayStack(uint64_t **x, const size_t len, size_t *completeLen) {
     if (global_config.deactivateCaches) { return -1; }
     BigIntArrayStack *stack;
     if (len <= 125) {
@@ -182,10 +206,10 @@ int popBigIntArrayStack(uint64_t **x, size_t len, size_t *completeLen) {
     }
 }
 
-BigIntStack *create_stack(long size) {
-    BigIntStack *stack = (BigIntStack *) malloc(sizeof(BigIntStack)); // all stacks are the same size
+BigIntStack *create_stack(const long size) {
+    BigIntStack *stack = malloc(sizeof(BigIntStack)); // all stacks are the same size
     mallocCheck(stack);
-    stack->top = -1;  // Initially, the stack is empty
+    stack->top = -1; // Initially, the stack is empty
     stack->array = malloc(size * 8);
     mallocCheck(stack->array);
     stack->size = size;
@@ -194,7 +218,7 @@ BigIntStack *create_stack(long size) {
 
 // Frees the stack (used for cleanup when a thread finishes)
 void free_Stack(void *ptr) {
-    BigIntStack *stack = (BigIntStack *) ptr;
+    BigIntStack *stack = ptr;
     if (stack) {
         for (int i = 0; i <= stack->top; ++i) {
             free(stack->array[i]);
@@ -242,7 +266,7 @@ BigIntStack *get_thread_BigIntStack() {
         }
 
 
-        BigIntStack *stack = (BigIntStack *) pthread_getspecific(bigIntStruct_stack_key);
+        BigIntStack *stack = pthread_getspecific(bigIntStruct_stack_key);
         if (!stack) {
             stack = create_stack(MAX_SIZE_BIGINT_STACK);
             if (pthread_setspecific(bigIntStruct_stack_key, stack) != 0) {
@@ -275,7 +299,7 @@ BigIntArrayStack *get_thread_bigIntArrayStack_1KB() {
             for (int i = 0; i < stack->size / 3; i++) {
                 uint64_t *array = malloc(sizeof(uint64_t) * 127);
                 mallocCheck(array);
-                stack->array[++(stack->top)] = array;
+                stack->array[++stack->top] = array;
             }
         }
         cached_stack = stack;
@@ -302,7 +326,7 @@ BigIntArrayStack *get_thread_bigIntArrayStack_10KB() {
             for (int i = 0; i < stack->size / 3; i++) {
                 uint64_t *array = malloc(sizeof(uint64_t) * 1270);
                 mallocCheck(array);
-                stack->array[++(stack->top)] = array;
+                stack->array[++stack->top] = array;
             }
         }
         cached_stack = stack;
@@ -329,11 +353,10 @@ BigIntArrayStack *get_thread_bigIntArrayStack_100KB() {
             for (int i = 0; i < (stack->size / 3) * 2; i++) {
                 uint64_t *array = malloc(sizeof(uint64_t) * 12700);
                 mallocCheck(array);
-                stack->array[++(stack->top)] = array;
+                stack->array[++stack->top] = array;
             }
         }
         cached_stack = stack;
     }
     return cached_stack;
 }
-

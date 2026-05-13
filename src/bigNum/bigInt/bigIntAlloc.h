@@ -21,6 +21,8 @@ typedef struct {
     long size;
 } BigIntArrayStack;
 
+void resizeBigInt(bigInt *toResize, size_t newTotalSize, bool setZero) ;
+
 int pushBigIntStack(bigInt *x);
 
 int popBigIntStack(bigInt **x);

@@ -78,11 +78,11 @@ size_t custom_tzcnt(const uint64_t n) {
 }
 
 size_t max(const size_t a, const size_t b) {
-    return (a > b) ? a : b;
+    return a > b ? a : b;
 }
 
 size_t min(const size_t a, const size_t b) {
-    return (a < b) ? a : b;
+    return a < b ? a : b;
 }
 
 // Function to reverse the lowest 'bits' bits of x -> x<=64

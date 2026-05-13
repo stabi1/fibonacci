@@ -253,12 +253,7 @@ void shiftAddSameNumberSafe(bigInt *x, const bigInt *toShift, const size_t n) {
     const size_t toShiftLen = getLen(toShift);
     if (xLen < toShiftLen + n) {
         // resize
-        void *tmp = realloc(x->bigIntArray, (x->start + toShiftLen + n + 1) * 8);
-        mallocCheck(tmp);
-        x->bigIntArray = tmp;
-        x->completeLength = x->start + toShiftLen + n + 1;
-        x->end = x->start + toShiftLen + n + 1;
-        x->bigIntArray[x->end - 1] = 0;
+        resizeBigInt(x, toShiftLen + n + 1, true);
 
         shiftAddSameNumberHelper(x, toShift, n, xLen);
         stripLeadingZeros(x);
@@ -277,12 +272,7 @@ void shiftAddSameNumberSafe(bigInt *x, const bigInt *toShift, const size_t n) {
                 }
             }
             // resize
-            void* tmp = realloc(x->bigIntArray, (x->start + xLen + 1) * 8);
-            mallocCheck(tmp);
-            x->bigIntArray = tmp;
-            x->completeLength = x->start + xLen + 1;
-            x->end = x->start + toShiftLen + n + 1;
-            x->bigIntArray[x->end - 1] = 0;
+            resizeBigInt(x, xLen + 1, true);
             shiftAddSameNumberHelper(x, toShift, n, xLen);
             stripLeadingZeros(x);
             return;
@@ -295,21 +285,15 @@ void shiftAddSameNumberSafe(bigInt *x, const bigInt *toShift, const size_t n) {
 
 void shiftAddSameNumberHelper(bigInt *x, const bigInt *toShift, const size_t n, const size_t xLenOld) {
     if (xLenOld <= n) {
-        if (xLenOld < n) {
-            memset(x->bigIntArray + x->start + xLenOld, 0, (n - xLenOld) * 8);
-        }
         memcpy(x->bigIntArray + x->start + n, toShift->bigIntArray + toShift->start, getLen(toShift) * 8);
         return;
-    }
-    if (xLenOld < getLen(toShift) + n) {
-        memset(x->bigIntArray + x->start + xLenOld, 0, (getLen(toShift) + n - xLenOld) * 8);
     }
 
     shiftAddSameNumber_Asm(x, toShift, n);
 }
 
 // the caller must guarantee that x is big enough to hold the result
-// x can have leading zero blocks. If x had leading zero blocks, if not filled by the addition they will remain
+// x can have leading zero blocks. If x had leading zero blocks, if not filled by the addition, they will remain
 void shiftAddSameNumber(bigInt *x, const bigInt *toShift, const size_t n) {
     if (!x->arrayOwner) {
         fprintf(stderr, "shiftAddSameNumber: x is not array owner\n");
